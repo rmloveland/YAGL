@@ -33,13 +33,13 @@ sub find_index {
     return;
 }
 
-sub get_neighbor {
+sub get_neighbors {
     my ( $k, $graph ) = @_;
 
     my $index = find_index( $k, $graph );
 
     if ( defined $index ) {
-        return $graph->[$index];
+        return $graph->[$index]->[1];
     }
     else {
         return;
@@ -53,8 +53,6 @@ sub add_neighbor {
     # 1. Check if the key already exists
     my $index = find_index( $k, $graph );
 
-    say STDERR qq[FOUND INDEX for $k at $index] if $index;
-
     if ($index) {
         my $neighbors = $graph->[$index]->[1];
         for my $value (@$v) {
@@ -65,6 +63,44 @@ sub add_neighbor {
     else {
         push @$graph, [ $k, $v ];
     }
+}
+
+sub edge_between {
+    my ( $a, $b, $graph ) = @_;
+
+    my $neighbors = get_neighbors( $a, $graph );
+    if ( $b ~~ @$neighbors ) {
+        return 1;
+    }
+    else { return; }
+}
+
+sub walk_graph {
+    my ( $current, $wanted, $sub, $graph ) = @_;
+
+    state @queue;    # Nodes still to visit.
+    state @path;
+    state %seen;     # Nodes already seen.
+
+    push @queue, $current;
+    push @path,  $current;
+    $seen{$current}++;
+
+    while (@queue) {
+        my $v = pop @queue;
+        $sub->($v);
+        push @path, $v unless $v ~~ @path;
+        my $neighbors = get_neighbors( $v, $graph );
+        for my $neighbor (@$neighbors) {
+            if ( $neighbor eq $wanted ) {
+                $sub->($neighbor);
+                push @path, $neighbor;
+                return @path;
+            }
+            push @queue, $neighbor unless $seen{$neighbor};
+        }
+    }
+    return @path;
 }
 
 sub main {
@@ -83,7 +119,10 @@ sub main {
 
     add_neighbor( 'f', [ 'u', 'u', 'u' ], $graph ); # Update existing graph node
 
-    say Dumper $graph;
+    # say Dumper $graph;
+
+    my @path = walk_graph( 's', 'f', sub { say uc $_[0] }, $graph );
+
 }
 
 main();
