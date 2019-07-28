@@ -1,4 +1,4 @@
 all: perl
 
 perl:
-	perl graph.pl
+	perl graph.pl graph.csv

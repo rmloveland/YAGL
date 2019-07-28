@@ -6,18 +6,25 @@ use experimentals;
 use Data::Dumper;
 use Smart::Match;
 use List::Util qw/ uniq /;
+use Text::CSV;
 
-my $graph = [
-    [ 'f', ['e'] ],
-    [ 'e', [ 'b', 'd', 'f' ] ],
-    [ 'd', [ 's', 'a', 'e' ] ],
-    [ 'c', ['b'] ],
-    [ 'b', [ 'a', 'c', 'e' ] ],
-    [ 'a', [ 's', 'b', 'd' ] ],
-    [ 's', [ 'a', 'd' ] ],
-];
+sub build_graph {
+    my ( $f, $graph ) = @_;
 
-$graph = [];
+    my $csv = Text::CSV->new( { binary => 1 } );
+
+    open my $fh, "<:encoding(utf8)", $f or die "$f: $!";
+
+    while ( my $line = $csv->getline($fh) ) {
+        my @cols     = @$line;
+        my $node     = $cols[0];
+        my $neighbor = $cols[1];
+
+        add_neighbor( $node, [$neighbor], $graph );
+    }
+
+    remove_node( 'node', $graph );    # Bug workaround
+}
 
 sub find_index {
 
@@ -26,8 +33,12 @@ sub find_index {
 
     my $i = 0;
     for my $elem (@$graph) {
+
+        # Definedness check here is necessary because we delete elements
+        # from the graph by setting the element's index to undef.  In
+        # other words, some graph indices can be undef.
         my $head = $elem->[0];
-        return $i if $head eq $wanted;
+        return $i if defined $head && $head eq $wanted;
         $i++;
     }
     return;
@@ -44,6 +55,49 @@ sub get_neighbors {
     else {
         return;
     }
+}
+
+sub remove_node {
+    my ( $node, $graph ) = @_;
+
+    my $index = find_index( $node, $graph );
+
+    $graph->[$index] = undef;
+}
+
+sub get_nodes {
+    ## Graph -> List
+    my $graph = shift;
+    my @nodes;
+    for my $node (@$graph) {
+        push @nodes, $node->[0];
+    }
+    @nodes;
+}
+
+sub to_graphviz {
+    ## Graph -> String
+    my $graph = shift;
+    my @buffer;
+    my %seen;
+
+    push @buffer, qq[graph { ];
+
+    for my $node (@$graph) {
+        next unless defined $node->[0];
+        push @buffer, $node->[0];
+        push @buffer, qq[ -- ];
+        push @buffer, qq[ { ];
+        my $neighbors = $node->[1];
+        for my $node (@$neighbors) {
+            push @buffer, $node;
+        }
+        push @buffer, qq[ } ];
+    }
+
+    push @buffer, qq[ } ];
+
+    return join ' ', @buffer;
 }
 
 sub add_neighbor {
@@ -104,25 +158,21 @@ sub walk_graph {
 }
 
 sub main {
+    my $graph = [];
 
-    # add_neighbor( 's', [ 'b', 'e' ], $graph );
+    die qq[Usage: $0 FILE\n] unless scalar @ARGV >= 1;
 
-    add_neighbor( 's', [ 'a', 'd' ], $graph );
-    add_neighbor( 'a', [ 's', 'b', 'd' ], $graph );
-    add_neighbor( 'b', [ 'a', 'c', 'e' ], $graph );
-    add_neighbor( 'c', ['b'], $graph );
-    add_neighbor( 'd', [ 's', 'a', 'e' ], $graph );
-    add_neighbor( 'e', [ 'b', 'd', 'f' ], $graph );
-    add_neighbor( 'f', ['e'], $graph );
+    my $file = shift @ARGV;
+    build_graph( $file, $graph );
 
-    add_neighbor( 'x', [ 'y', 'z' ], $graph );    # Add new item to graph
-
-    add_neighbor( 'f', [ 'u', 'u', 'u' ], $graph ); # Update existing graph node
-
-    # say Dumper $graph;
-
+    my @nodes = get_nodes($graph);
     my @path = walk_graph( 's', 'f', sub { say uc $_[0] }, $graph );
 
+    my $gv = to_graphviz($graph);
+
+    open my $fh, '>', 'graph.dot' or die $!;
+    say $fh $gv;
+    close $fh;
 }
 
 main();
