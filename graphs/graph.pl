@@ -132,8 +132,8 @@ sub edge_between {
 sub walk_graph {
     my ( $current, $wanted, $sub, $graph ) = @_;
 
+    my @path;        # Path so far
     state @queue;    # Nodes still to visit.
-    state @path;
     state %seen;     # Nodes already seen.
 
     push @queue, $current;
