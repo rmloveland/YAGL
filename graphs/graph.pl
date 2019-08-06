@@ -144,6 +144,7 @@ sub walk_graph {
         my $v = pop @queue;
         $sub->($v);
         push @path, $v unless $v ~~ @path;
+        $seen{$v}++;
         my $neighbors = get_neighbors( $v, $graph );
         for my $neighbor (@$neighbors) {
             if ( $neighbor eq $wanted ) {
