@@ -167,7 +167,10 @@ sub main {
     build_graph( $file, $graph );
 
     my @nodes = get_nodes($graph);
-    my @path = walk_graph( 's', 'f', sub { say uc $_[0] }, $graph );
+
+    my $start = 's';
+    my $end   = 'e';
+    my @path  = walk_graph( $start, $end, sub { say uc $_[0] }, $graph );
 
     my $gv = to_graphviz($graph);
 
