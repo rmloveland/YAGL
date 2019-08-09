@@ -8,6 +8,8 @@ use Smart::Match;
 use List::Util qw/ uniq /;
 use Text::CSV;
 
+use constant DEBUG => undef;
+
 sub build_graph {
     my ( $f, $graph ) = @_;
 
@@ -122,6 +124,8 @@ sub add_neighbor {
 sub edge_between {
     my ( $a, $b, $graph ) = @_;
 
+    return 1 if $a eq $b;
+
     my $neighbors = get_neighbors( $a, $graph );
     if ( $b ~~ @$neighbors ) {
         return 1;
@@ -129,31 +133,50 @@ sub edge_between {
     else { return; }
 }
 
-sub walk_graph {
-    my ( $current, $wanted, $sub, $graph ) = @_;
+sub find_path_between {
+    my ( $start, $end, $graph ) = @_;
 
     my @path;     # Path so far
     my @queue;    # Nodes still to visit.
     my %seen;     # Nodes already seen.
 
-    push @queue, $current;
-    push @path,  $current;
-    $seen{$current}++;
+    push @queue, $start;
+    push @path,  $start;
+    $seen{$start}++;
 
+    my $prev = $start;
     while (@queue) {
-        my $v = pop @queue;
-        $sub->($v);
+
+        my $v = shift @queue;
+        do {
+            say qq[-] x 68;
+            say qq[LOOKING AT '$v'];
+            say qq[\@queue: ], Dumper \@queue;
+            say qq[\@path: ],  Dumper \@path;
+        } if DEBUG;
+
+        unless ( edge_between( $prev, $v, $graph ) ) {
+            say qq[SKIPPING '$v', no path between '$prev' and '$v'!] if DEBUG;
+            next;
+        }
         push @path, $v unless $v ~~ @path;
         $seen{$v}++;
         my $neighbors = get_neighbors( $v, $graph );
+
         for my $neighbor (@$neighbors) {
-            if ( $neighbor eq $wanted ) {
-                $sub->($neighbor);
+            if ( $neighbor eq $end ) {
                 push @path, $neighbor;
                 return @path;
             }
-            push @queue, $neighbor unless $seen{$neighbor};
+            else {
+                unless ( $seen{$neighbor} ) {
+                    say qq[PUSHING '$neighbor' on \@queue] if DEBUG;
+                    push @queue, $neighbor;
+                }
+
+            }
         }
+        $prev = $v;
     }
     return @path;
 }
@@ -168,9 +191,11 @@ sub main {
 
     my @nodes = get_nodes($graph);
 
-    my $start = 's';
-    my $end   = 'e';
-    my @path  = walk_graph( $start, $end, sub { say uc $_[0] }, $graph );
+    my $start = 'c';
+    my $end   = 'f';
+    say qq[I NEED A PATH FROM '$start' TO '$end'];
+    my @path = find_path_between( $start, $end, $graph );
+    say qq[FINAL PATH: ], Dumper \@path;
 
     my $gv = to_graphviz($graph);
 
@@ -180,3 +205,17 @@ sub main {
 }
 
 main();
+
+__END__
+
+perl graph.pl graph.csv.bak
+I NEED A PATH FROM 'c' TO 'f'
+FINAL PATH: $VAR1 = [
+          'c',
+          'b',
+          'a',
+          's',
+          'd',
+          'e',
+          'f'
+        ];
