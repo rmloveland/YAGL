@@ -149,6 +149,8 @@ sub find_path_between {
     my @path;     # Path so far
     my @queue;    # Nodes still to visit.
     my %seen;     # Nodes already seen.
+    my $found;    # Whether we have found the wanted node.
+
     if ( $start eq $end ) {
         push @path, $start;
         return @path;
@@ -179,6 +181,7 @@ sub find_path_between {
 
         for my $neighbor (@$neighbors) {
             if ( $neighbor eq $end ) {
+                $found++;
                 push @path, $neighbor;
                 return @path;
             }
@@ -192,7 +195,7 @@ sub find_path_between {
         }
         $prev = $v;
     }
-    return @path;
+    return $found ? @path : ();
 }
 
 sub main {
