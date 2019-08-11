@@ -149,6 +149,10 @@ sub find_path_between {
     my @path;     # Path so far
     my @queue;    # Nodes still to visit.
     my %seen;     # Nodes already seen.
+    if ( $start eq $end ) {
+        push @path, $start;
+        return @path;
+    }
 
     push @queue, $start;
     push @path,  $start;
