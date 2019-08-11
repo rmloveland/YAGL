@@ -41,7 +41,8 @@ for my $node (@nodes) {
     next if $maybe_neighbor eq $node;
     my $connection_prob = rand 1;
     if ( $connection_prob > $p ) {
-        push @pairs, [ $node, $maybe_neighbor ];
+        push @pairs, [ $node,           $maybe_neighbor ];
+        push @pairs, [ $maybe_neighbor, $node ];
     }
     redo
       if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
