@@ -186,12 +186,10 @@ sub find_path_between {
                 return @path;
             }
             else {
-                unless ( $seen{$neighbor} ) {
-                    say qq[PUSHING '$neighbor' on \@queue] if DEBUG;
-                    push @queue, $neighbor;
-                }
-
+                push @queue, $neighbor
+                  unless $seen{$neighbor};
             }
+            $seen{$neighbor}++;
         }
         $prev = $v;
     }
