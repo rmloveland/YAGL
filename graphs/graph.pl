@@ -131,6 +131,7 @@ sub add_neighbor {
 sub edge_between {
     my ( $a, $b, $graph ) = @_;
 
+    return unless ( defined $a && defined $b );
     return 1 if $a eq $b;
 
     my $neighbors = get_neighbors( $a, $graph );
