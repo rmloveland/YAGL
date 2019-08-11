@@ -143,6 +143,8 @@ sub edge_between {
 sub find_path_between {
     my ( $start, $end, $graph ) = @_;
 
+    return () unless defined $start && defined $end;
+
     my @path;     # Path so far
     my @queue;    # Nodes still to visit.
     my %seen;     # Nodes already seen.
