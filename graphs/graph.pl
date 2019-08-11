@@ -78,8 +78,10 @@ sub get_nodes {
 }
 
 sub to_graphviz {
-    ## Graph -> String
+    ## Graph, Aref -> String
     my $graph = shift;
+    my $path  = shift;
+
     my @buffer;
     my %seen;
 
@@ -92,7 +94,12 @@ sub to_graphviz {
         push @buffer, qq[ { ];
         my $neighbors = $node->[1];
         for my $node (@$neighbors) {
-            push @buffer, $node;
+            if ( $node ~~ @$path ) {
+                push @buffer, qq{$node [color=red]};
+            }
+            else {
+                push @buffer, $node;
+            }
         }
         push @buffer, qq[ } ];
     }
