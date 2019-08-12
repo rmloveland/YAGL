@@ -228,7 +228,7 @@ sub main {
     my @path = find_path_between( $start, $end, $graph );
     say qq[FINAL PATH: ], Dumper \@path;
 
-    my $gv = to_graphviz($graph);
+    my $gv = to_graphviz( $graph, \@path );
 
     open my $fh, '>', 'graph.dot' or die $!;
     say $fh $gv;
