@@ -150,6 +150,7 @@ sub find_path_between {
     my @queue;    # Nodes still to visit.
     my %seen;     # Nodes already seen.
     my $found;    # Whether we have found the wanted node.
+    my $st = {};  # Spanning tree, used to find paths.
 
     if ( $start eq $end ) {
         push @path, $start;
@@ -157,43 +158,55 @@ sub find_path_between {
     }
 
     push @queue, $start;
-    push @path,  $start;
     $seen{$start}++;
 
-    my $prev = $start;
     while (@queue) {
 
         my $v = shift @queue;
-        do {
-            say qq[-] x 68;
-            say qq[LOOKING AT '$v'];
-            say qq[\@queue: ], Dumper \@queue;
-            say qq[\@path: ],  Dumper \@path;
-        } if DEBUG;
 
-        unless ( edge_between( $prev, $v, $graph ) ) {
-            say qq[SKIPPING '$v', no path between '$prev' and '$v'!] if DEBUG;
-            next;
-        }
-        push @path, $v unless $v ~~ @path;
-        $seen{$v}++;
         my $neighbors = get_neighbors( $v, $graph );
 
         for my $neighbor (@$neighbors) {
+            next if $seen{$neighbor};
+            st_add( $v, $neighbor, $st );
             if ( $neighbor eq $end ) {
                 $found++;
-                push @path, $neighbor;
+                @path = st_walk( $start, $end, $st );
                 return @path;
             }
             else {
-                push @queue, $neighbor
-                  unless $seen{$neighbor};
+                push @queue, $neighbor;
             }
             $seen{$neighbor}++;
         }
-        $prev = $v;
     }
     return $found ? @path : ();
+}
+
+sub st_walk {
+    my ( $start, $end, $st ) = @_;
+
+    my @path;
+
+    push @path, $end;
+    my $prev = $st->{$end}->{prev};
+    while (1) {
+        push @path, $prev;
+        $prev = $st->{$prev}->{prev};
+        if ( $prev eq $start ) {
+            push @path, $start;
+            last;
+        }
+        next;
+    }
+    return reverse @path;
+}
+
+sub st_add {
+    ## String String HashRef -> State!
+    my ( $node, $neighbor, $st ) = @_;    # Possibly unnecessary.
+    $st->{$node}->{$neighbor} = 1;
+    $st->{$neighbor}->{prev} = $node;
 }
 
 sub main {
