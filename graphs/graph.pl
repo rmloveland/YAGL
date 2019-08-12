@@ -206,8 +206,11 @@ sub main {
 
     my @nodes = get_nodes($graph);
 
-    my $start = 'c';
-    my $end   = 'f';
+    my $i     = int rand @nodes;
+    my $j     = int rand @nodes;
+    my $start = $nodes[$i];
+    my $end   = $nodes[$j];
+
     say qq[I NEED A PATH FROM '$start' TO '$end'];
     my @path = find_path_between( $start, $end, $graph );
     say qq[FINAL PATH: ], Dumper \@path;
