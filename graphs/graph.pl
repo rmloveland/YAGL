@@ -95,7 +95,7 @@ sub to_graphviz {
         my $neighbors = $node->[1];
         for my $node (@$neighbors) {
             if ( $node ~~ @$path ) {
-                push @buffer, qq{$node [color=red]};
+                push @buffer, qq{$node [style=filled fillcolor=gray]};
             }
             else {
                 push @buffer, $node;
@@ -224,9 +224,10 @@ sub main {
     my $start = $nodes[$i];
     my $end   = $nodes[$j];
 
-    say qq[I NEED A PATH FROM '$start' TO '$end'];
+    say qq[Looking for a path from '$start' to '$end' ...];
     my @path = find_path_between( $start, $end, $graph );
-    say qq[FINAL PATH: ], Dumper \@path;
+    say qq[Found a path from '$start' to '$end'!];
+    say Dumper \@path;
 
     my $gv = to_graphviz( $graph, \@path );
 
