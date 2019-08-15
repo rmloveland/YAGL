@@ -214,8 +214,32 @@ sub st_add {
     $st->{$neighbor}->{prev} = $node;
 }
 
+sub get_attributes {
+    my ( $start, $end, $attrs ) = @_;
+
+    my $pairkey = $start . $end;
+    return $attrs->{$pairkey};
+}
+
+sub add_attribute {
+    ## String String HashRef -> State!
+    # add_attribute('s', 'a', { weight => 12 });
+    my ( $start, $end, $new_attrs, $attrs ) = @_;
+
+    my $pairkey1 = $start . $end;
+    my $pairkey2 = $end . $start;
+
+    # Attributes hashref already exists, so we add to it.  NOTE:
+    # this is a hash so the update is destructive.
+    for ( my ( $k, $v ) = each %$new_attrs ) {
+        $attrs->{$pairkey1}->{$k} = $v;
+        $attrs->{$pairkey2}->{$k} = $v;
+    }
+}
+
 sub main {
     my $graph = [];
+    my $attrs = {};
 
     die qq[Usage: $0 FILE\n] unless scalar @ARGV >= 1;
 
@@ -228,6 +252,14 @@ sub main {
     my $j     = int rand @nodes;
     my $start = $nodes[$i];
     my $end   = $nodes[$j];
+
+    add_attribute( 's', 'a', { weight => 12 }, $attrs );
+    add_attribute( 's', 'd', { weight => 3 },  $attrs );
+    add_attribute( 'd', 'a', { weight => 7 },  $attrs );
+    add_attribute( 'a', 'b', { weight => 1 },  $attrs );
+    add_attribute( 'd', 'e', { weight => 99 }, $attrs );
+    add_attribute( 'b', 'c', { weight => 9 },  $attrs );
+    add_attribute( 'e', 'f', { weight => 4 },  $attrs );
 
     say qq[Looking for a path from '$start' to '$end' ...];
     my @path = find_path_between( $start, $end, $graph );
