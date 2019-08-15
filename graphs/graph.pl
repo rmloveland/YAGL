@@ -196,12 +196,12 @@ sub st_walk {
     push @path, $end;
     my $prev = $st->{$end}->{prev};
     while (1) {
-        push @path, $prev;
-        $prev = $st->{$prev}->{prev};
         if ( $prev eq $start ) {
             push @path, $start;
             last;
         }
+        push @path, $prev;
+        $prev = $st->{$prev}->{prev};
         next;
     }
     return reverse @path;
