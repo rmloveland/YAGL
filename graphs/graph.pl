@@ -11,6 +11,7 @@ use Text::CSV;
 use constant DEBUG => undef;
 
 sub build_graph {
+    ## Filename ArrayRef -> State! IO!
     my ( $f, $graph ) = @_;
 
     my $csv = Text::CSV->new( { binary => 1 } );
@@ -29,16 +30,16 @@ sub build_graph {
 }
 
 sub find_index {
-
-    # Naive linear search
+    ## Int ArrayRef -> Int OR undef
     my ( $wanted, $graph ) = @_;
 
+    # Naive linear search, for now.
     my $i = 0;
     for my $elem (@$graph) {
 
-        # Definedness check here is necessary because we delete elements
-        # from the graph by setting the element's index to undef.  In
-        # other words, some graph indices can be undef.
+        # Definedness check here is necessary because we delete
+        # elements from the graph by setting the element's index to
+        # undef.  In other words, some graph indices can be undef.
         my $head = $elem->[0];
         return $i if defined $head && $head eq $wanted;
         $i++;
@@ -47,6 +48,7 @@ sub find_index {
 }
 
 sub get_neighbors {
+    ## String ArrayRef -> ArrayRef
     my ( $k, $graph ) = @_;
 
     my $index = find_index( $k, $graph );
@@ -60,6 +62,7 @@ sub get_neighbors {
 }
 
 sub remove_node {
+    ## String ArrayRef -> State!
     my ( $node, $graph ) = @_;
 
     my $index = find_index( $node, $graph );
@@ -68,17 +71,17 @@ sub remove_node {
 }
 
 sub get_nodes {
-    ## Graph -> List
+    ## ArrayRef -> Array
     my $graph = shift;
     my @nodes;
     for my $node (@$graph) {
         push @nodes, $node->[0];
     }
-    @nodes;
+    return @nodes;
 }
 
 sub to_graphviz {
-    ## Graph, Aref -> String
+    ## ArrayRef ArrayRef -> String
     my $graph = shift;
     my $path  = shift;
 
@@ -95,7 +98,7 @@ sub to_graphviz {
         my $neighbors = $node->[1];
         for my $node (@$neighbors) {
             if ( $node ~~ @$path ) {
-                push @buffer, qq{$node [style=filled fillcolor=gray]};
+                push @buffer, qq{$node [style=filled fillcolor=red]};
             }
             else {
                 push @buffer, $node;
@@ -110,10 +113,9 @@ sub to_graphviz {
 }
 
 sub add_neighbor {
-    ## String String -> State!
+    ## String String ArrayRef -> State!
     my ( $k, $v, $graph ) = @_;
 
-    # 1. Check if the key already exists
     my $index = find_index( $k, $graph );
 
     if ($index) {
@@ -129,6 +131,7 @@ sub add_neighbor {
 }
 
 sub edge_between {
+    ## String String ArrayRef -> Boolean
     my ( $a, $b, $graph ) = @_;
 
     return unless ( defined $a && defined $b );
@@ -142,6 +145,7 @@ sub edge_between {
 }
 
 sub find_path_between {
+    ## String String ArrayRef -> Array
     my ( $start, $end, $graph ) = @_;
 
     return () unless defined $start && defined $end;
@@ -184,6 +188,7 @@ sub find_path_between {
 }
 
 sub st_walk {
+    ## String String HashRef -> Array
     my ( $start, $end, $st ) = @_;
 
     my @path;
@@ -204,8 +209,8 @@ sub st_walk {
 
 sub st_add {
     ## String String HashRef -> State!
-    my ( $node, $neighbor, $st ) = @_;    # Possibly unnecessary.
-    $st->{$node}->{$neighbor} = 1;
+    my ( $node, $neighbor, $st ) = @_;
+    $st->{$node}->{$neighbor} = 1;      # Possibly unnecessary.
     $st->{$neighbor}->{prev} = $node;
 }
 
