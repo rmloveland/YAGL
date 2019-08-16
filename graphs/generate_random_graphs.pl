@@ -6,9 +6,9 @@ use experimentals;
 use Smart::Match;
 use Data::Dumper;
 
-my $n = 18;     # Number of nodes
-my $p = 0.3;    # Probability of 2 nodes NOT being
-                # connected.
+my $n        = 18;     # Number of nodes
+my $p        = 0.3;    # Probability of 2 nodes NOT being connected.
+my $max_dist = 100;    # Maximum distance between nodes.
 
 my %seen;
 
@@ -40,9 +40,10 @@ for my $node (@nodes) {
     my $maybe_neighbor = $nodes[ rand $#nodes ];
     next if $maybe_neighbor eq $node;
     my $connection_prob = rand 1;
+    my $dist            = int rand $max_dist;
     if ( $connection_prob > $p ) {
-        push @pairs, [ $node,           $maybe_neighbor ];
-        push @pairs, [ $maybe_neighbor, $node ];
+        push @pairs, [ $node,           $maybe_neighbor, $dist ];
+        push @pairs, [ $maybe_neighbor, $node,           $dist ];
     }
     redo
       if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
@@ -50,7 +51,7 @@ for my $node (@nodes) {
 
 say qq[node,neighbor];
 for my $pair (@pairs) {
-    say $pair->[0], ",", $pair->[1];
+    say $pair->[0], ",", $pair->[1], ",", $pair->[2];
 }
 
 __END__
