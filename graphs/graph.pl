@@ -11,8 +11,8 @@ use Text::CSV;
 use constant DEBUG => undef;
 
 sub build_graph {
-    ## Filename ArrayRef -> State! IO!
-    my ( $f, $graph ) = @_;
+    ## Filename ArrayRef HashRef? -> State! IO!
+    my ( $f, $graph, $attrs ) = @_;
 
     my $csv = Text::CSV->new( { binary => 1 } );
 
@@ -22,11 +22,16 @@ sub build_graph {
         my @cols     = @$line;
         my $node     = $cols[0];
         my $neighbor = $cols[1];
+        my $weight   = $cols[2];
+
+        next unless defined $weight;
 
         add_neighbor( $node, [$neighbor], $graph );
-    }
 
-    remove_node( 'node', $graph );    # Bug workaround
+        if ($attrs) {
+            add_attribute( $node, $neighbor, { weight => $weight }, $attrs );
+        }
+    }
 }
 
 sub find_index {
@@ -81,9 +86,8 @@ sub get_nodes {
 }
 
 sub to_graphviz {
-    ## ArrayRef ArrayRef -> String
-    my $graph = shift;
-    my $path  = shift;
+    ## ArrayRef ArrayRef HashRef? -> String
+    my ( $graph, $path, $attrs ) = @_;
 
     my @buffer;
     my %seen;
@@ -244,7 +248,7 @@ sub main {
     die qq[Usage: $0 FILE\n] unless scalar @ARGV >= 1;
 
     my $file = shift @ARGV;
-    build_graph( $file, $graph );
+    build_graph( $file, $graph, $attrs );
 
     my @nodes = get_nodes($graph);
 
