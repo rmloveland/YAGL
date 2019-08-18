@@ -5,9 +5,9 @@ use warnings;
 use experimentals;
 use Data::Dumper;
 use Smart::Match;
-use List::Util qw/ uniq /;
 use Text::CSV;
 use Hash::PriorityQueue;
+use List::Util qw/ min /;
 
 use constant DEBUG => undef;
 
