@@ -7,6 +7,7 @@ use Data::Dumper;
 use Smart::Match;
 use List::Util qw/ uniq /;
 use Text::CSV;
+use Hash::PriorityQueue;
 
 use constant DEBUG => undef;
 
@@ -182,6 +183,103 @@ sub edge_between {
         return 1;
     }
     else { return; }
+}
+
+sub dijkstra {
+    my ( $start, $end, $graph, $attrs ) = @_;
+
+    return () unless defined $start && defined $end;
+
+    my @path;
+    my @queue;
+    my %seen;
+    my $heap = Hash::PriorityQueue->new;
+    my $found;
+    my $st = {};
+
+    $st->{$start}->{distance} = 0;
+    $st->{$start}->{prev}     = undef;
+
+    for my $node ( get_nodes($graph) ) {
+        next if $node eq $start;
+        $st->{$node}->{distance} = 1_000_000;
+        $st->{$node}->{prev}     = undef;
+    }
+
+    push @queue, $start;
+
+    while (@queue) {
+
+        my $v = shift @queue;    # Breadth-first walk.
+
+        my $neighbors = get_neighbors( $v, $graph );
+
+        for my $neighbor (@$neighbors) {
+
+            next if $seen{$neighbor};
+
+            say qq[Looking at neighbor '$neighbor'];
+
+            my $v_distance        = $st->{$v}->{distance};
+            my $neighbor_distance = $st->{$neighbor}->{distance};
+            my $edge_weight       = $attrs->{ $v . $neighbor }->{weight};
+            my $maybe_new_neighbor_distance = $v_distance + $edge_weight;
+
+            say Dumper {
+                v                           => $v,
+                neighbor                    => $neighbor,
+                v_distance                  => $v_distance,
+                neighbor_distance           => $neighbor_distance,
+                edge_weight                 => $edge_weight,
+                maybe_new_neighbor_distance => $maybe_new_neighbor_distance,
+            };
+
+            if ( $maybe_new_neighbor_distance < $neighbor_distance ) {
+                $st->{$neighbor}->{distance} = $maybe_new_neighbor_distance;
+                $st->{$neighbor}->{prev}     = $v;
+            }
+
+            # $st->{$neighbor}->{prev} //= $v;
+
+            if ( $neighbor eq $end ) {
+                $found++;
+                @path = st_weighted_walk( $start, $end, $st );
+                return @path;
+            }
+            else {
+                push @queue, $neighbor;
+            }
+
+            $seen{$neighbor}++;
+        }
+
+        $seen{$v}++;
+    }
+    return ();
+}
+
+sub st_weighted_walk {
+    my ( $start, $end, $st ) = @_;
+
+    my @path;
+    push @path, { node => $end, distance => $st->{$end}->{distance} };
+
+    my $prev     = $st->{$end}->{prev};
+    my $distance = $st->{$end}->{distance};
+
+    while (1) {
+        if ( $prev eq $start ) {
+
+            push @path, { node => $start, distance => $distance };
+            last;
+        }
+
+        push @path, { node => $prev, distance => $distance };
+        $distance = $st->{$prev}->{distance};
+        $prev     = $st->{$prev}->{prev};
+        next;
+    }
+    return reverse @path;
 }
 
 sub find_path_between {
