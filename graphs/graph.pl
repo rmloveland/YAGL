@@ -138,9 +138,10 @@ sub to_weighted_graphviz {
             my $edge_weight = $attrs->{$pairkey}->{weight};
             push @buffer, $v;
             push @buffer, qq{ -- };
-            if ( $neighbor ~~ @path ) {
-                push @buffer,
-                  qq{$neighbor [label="$edge_weight" color=red penwidth=5];\n};
+
+            if ( $neighbor ~~ @path && $v ~~ @path ) {
+                push @buffer, qq{$neighbor [label="$edge_weight"]};
+                push @buffer, qq{$neighbor [style=filled, fillcolor=red];\n};
             }
             else {
                 push @buffer, qq{$neighbor [label="$edge_weight"];\n};
@@ -194,8 +195,7 @@ sub dijkstra {
     my @queue;
     my %seen;
     my $heap = Hash::PriorityQueue->new;
-    my $found;
-    my $st = {};
+    my $st   = {};
 
     $st->{$start}->{distance} = 0;
     $st->{$start}->{prev}     = undef;
@@ -206,19 +206,26 @@ sub dijkstra {
         $st->{$node}->{prev}     = undef;
     }
 
-    push @queue, $start;
+    $heap->insert( $start, $st->{$start}->{distance} );
 
-    while (@queue) {
+    while ( my $v = $heap->pop() ) {
 
-        my $v = shift @queue;    # Breadth-first walk.
+        say q[-] x 68 if DEBUG;
+        say qq[Looking at node '$v' with current distance: ],
+          $st->{$v}->{distance}
+          if DEBUG;
 
         my $neighbors = get_neighbors( $v, $graph );
 
         for my $neighbor (@$neighbors) {
 
             next if $seen{$neighbor};
+            $seen{$neighbor}++;
 
-            say qq[Looking at neighbor '$neighbor'];
+            say
+              qq[Looking at neighbor '$neighbor' with current distance: ],
+              $st->{$neighbor}->{distance}
+              if DEBUG;
 
             my $v_distance        = $st->{$v}->{distance};
             my $neighbor_distance = $st->{$neighbor}->{distance};
@@ -232,25 +239,27 @@ sub dijkstra {
                 neighbor_distance           => $neighbor_distance,
                 edge_weight                 => $edge_weight,
                 maybe_new_neighbor_distance => $maybe_new_neighbor_distance,
-            };
+              }
+              if DEBUG;
 
             if ( $maybe_new_neighbor_distance < $neighbor_distance ) {
+                my $old_distance = $st->{$neighbor}->{distance};
                 $st->{$neighbor}->{distance} = $maybe_new_neighbor_distance;
                 $st->{$neighbor}->{prev}     = $v;
+                say
+qq[Updated distance of neighbor '$neighbor' from $old_distance to ],
+                  $st->{$neighbor}->{distance}
+                  if DEBUG;
+                delete $seen{$neighbor};
             }
 
-            # $st->{$neighbor}->{prev} //= $v;
-
             if ( $neighbor eq $end ) {
-                $found++;
                 @path = st_weighted_walk( $start, $end, $st );
                 return @path;
             }
             else {
-                push @queue, $neighbor;
+                $heap->insert( $neighbor, $st->{$neighbor}->{distance} );
             }
-
-            $seen{$neighbor}++;
         }
 
         $seen{$v}++;
@@ -264,19 +273,16 @@ sub st_weighted_walk {
     my @path;
     push @path, { node => $end, distance => $st->{$end}->{distance} };
 
-    my $prev     = $st->{$end}->{prev};
-    my $distance = $st->{$end}->{distance};
-
+    my $prev = $st->{$end}->{prev};
     while (1) {
         if ( $prev eq $start ) {
 
-            push @path, { node => $start, distance => $distance };
+            push @path, { node => $prev, distance => $st->{$prev}->{distance} };
             last;
         }
 
-        push @path, { node => $prev, distance => $distance };
-        $distance = $st->{$prev}->{distance};
-        $prev     = $st->{$prev}->{prev};
+        push @path, { node => $prev, distance => $st->{$prev}->{distance} };
+        $prev = $st->{$prev}->{prev};
         next;
     }
     return reverse @path;
