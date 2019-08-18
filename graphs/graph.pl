@@ -116,6 +116,42 @@ sub to_graphviz {
     return join ' ', @buffer;
 }
 
+sub to_weighted_graphviz {
+    ## ArrayRef ArrayRef HashRef? -> String
+    my ( $graph, $path, $attrs ) = @_;
+
+    my @buffer;
+    my %seen;
+    my @path;
+
+    @path = map { $_->{node} } @$path;
+
+    push @buffer, qq[graph {\n];
+
+    for my $node (@$graph) {
+        next unless defined $node->[0];
+        my $v         = $node->[0];
+        my $neighbors = $node->[1];
+        for my $neighbor (@$neighbors) {
+            my $pairkey     = $v . $neighbor;
+            my $edge_weight = $attrs->{$pairkey}->{weight};
+            push @buffer, $v;
+            push @buffer, qq{ -- };
+            if ( $neighbor ~~ @path ) {
+                push @buffer,
+                  qq{$neighbor [label="$edge_weight" color=red penwidth=5];\n};
+            }
+            else {
+                push @buffer, qq{$neighbor [label="$edge_weight"];\n};
+            }
+        }
+    }
+
+    push @buffer, qq[ \n} ];
+
+    return join ' ', @buffer;
+}
+
 sub add_neighbor {
     ## String String ArrayRef -> State!
     my ( $k, $v, $graph ) = @_;
