@@ -136,15 +136,13 @@ sub to_weighted_graphviz {
         for my $neighbor (@$neighbors) {
             my $pairkey     = $v . $neighbor;
             my $edge_weight = $attrs->{$pairkey}->{weight};
-            push @buffer, $v;
-            push @buffer, qq{ -- };
 
-            if ( $neighbor ~~ @path && $v ~~ @path ) {
-                push @buffer, qq{$neighbor [label="$edge_weight"]};
-                push @buffer, qq{$neighbor [style=filled, fillcolor=red];\n};
+            if ( $neighbor ~~ @path ) {
+                push @buffer,
+qq{$v -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n};
             }
             else {
-                push @buffer, qq{$neighbor [label="$edge_weight"];\n};
+                push @buffer, qq{$v -- $neighbor [label="$edge_weight"];\n};
             }
         }
     }
