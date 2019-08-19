@@ -39,6 +39,11 @@ sub find_index {
     ## Int ArrayRef -> Int OR undef
     my ( $wanted, $graph ) = @_;
 
+    state %seen;
+
+    my $maybe = $seen{$wanted};
+    return $maybe if defined $maybe;
+
     # Naive linear search, for now.
     my $i = 0;
     for my $elem (@$graph) {
@@ -47,7 +52,10 @@ sub find_index {
         # elements from the graph by setting the element's index to
         # undef.  In other words, some graph indices can be undef.
         my $head = $elem->[0];
-        return $i if defined $head && $head eq $wanted;
+        if ( defined $head && $head eq $wanted ) {
+            $seen{$wanted} = $i;
+            return $i;
+        }
         $i++;
     }
     return;
