@@ -160,7 +160,7 @@ sub add_neighbor {
 
     my $index = find_index( $k, $graph );
 
-    if ($index) {
+    if ( defined $index ) {
         my $neighbors = $graph->[$index]->[1];
         for my $value (@$v) {
             push @$neighbors, $value;
