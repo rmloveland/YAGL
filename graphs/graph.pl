@@ -217,6 +217,8 @@ sub dijkstra {
 
         my $neighbors = get_neighbors( $v, $graph );
 
+        say qq[Neighbors list: ], Dumper $neighbors if DEBUG;
+
         for my $neighbor (@$neighbors) {
 
             next if $seen{$neighbor};
