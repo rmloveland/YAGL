@@ -61,8 +61,7 @@ sub find_index {
         # Definedness check here is necessary because we delete
         # elements from the graph by setting the element's index to
         # undef.  In other words, some graph indices can be undef.
-        my $head = $elem->[0];
-        if ( defined $head && $head eq $wanted ) {
+        if ( defined $elem->[0] && $elem->[0] eq $wanted ) {
             $seen{$wanted} = $i;
             return $i;
         }
