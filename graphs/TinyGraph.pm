@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+package TinyGraph;
 
 use strict;
 use warnings;
@@ -7,13 +7,22 @@ use Data::Dumper;
 use Smart::Match;
 use Text::CSV;
 use Hash::PriorityQueue;
-use List::Util qw/ min /;
 
 use constant DEBUG => undef;
 
-sub build_graph {
+our $attrs = {};
+
+sub new {
+    my $self  = shift;
+    my $graph = [];
+
+    bless $graph, $self;
+    return $graph;
+}
+
+sub build_graph_from_file {
     ## Filename ArrayRef HashRef? -> State! IO!
-    my ( $f, $graph, $attrs ) = @_;
+    my ( $self, $f ) = @_;
 
     my $csv = Text::CSV->new( { binary => 1 } );
 
@@ -27,17 +36,18 @@ sub build_graph {
 
         next unless defined $weight;
 
-        add_neighbor( $node, [$neighbor], $graph );
+        $self->add_neighbor( $node, [$neighbor] );
 
         if ($attrs) {
-            add_attribute( $node, $neighbor, { weight => $weight }, $attrs );
+            $self->add_attribute( $node, $neighbor, { weight => $weight },
+                $attrs );
         }
     }
 }
 
 sub find_index {
     ## Int ArrayRef -> Int OR undef
-    my ( $wanted, $graph ) = @_;
+    my ( $self, $wanted ) = @_;
 
     state %seen;
 
@@ -46,7 +56,7 @@ sub find_index {
 
     # Naive linear search, for now.
     my $i = 0;
-    for my $elem (@$graph) {
+    for my $elem (@$self) {
 
         # Definedness check here is necessary because we delete
         # elements from the graph by setting the element's index to
@@ -63,12 +73,12 @@ sub find_index {
 
 sub get_neighbors {
     ## String ArrayRef -> ArrayRef
-    my ( $k, $graph ) = @_;
+    my ( $self, $k ) = @_;
 
-    my $index = find_index( $k, $graph );
+    my $index = $self->find_index($k);
 
     if ( defined $index ) {
-        return $graph->[$index]->[1];
+        return $self->[$index]->[1];
     }
     else {
         return;
@@ -77,18 +87,18 @@ sub get_neighbors {
 
 sub remove_node {
     ## String ArrayRef -> State!
-    my ( $node, $graph ) = @_;
+    my ( $self, $node ) = @_;
 
-    my $index = find_index( $node, $graph );
+    my $index = $self->find_index($node);
 
-    $graph->[$index] = undef;
+    $self->[$index] = undef;
 }
 
 sub get_nodes {
     ## ArrayRef -> Array
-    my $graph = shift;
+    my $self = shift;
     my @nodes;
-    for my $node (@$graph) {
+    for my $node (@$self) {
         push @nodes, $node->[0];
     }
     return @nodes;
@@ -96,14 +106,14 @@ sub get_nodes {
 
 sub to_graphviz {
     ## ArrayRef ArrayRef HashRef? -> String
-    my ( $graph, $path, $attrs ) = @_;
+    my ( $self, $path ) = @_;
 
     my @buffer;
     my %seen;
 
     push @buffer, qq[graph { ];
 
-    for my $node (@$graph) {
+    for my $node (@$self) {
         next unless defined $node->[0];
         push @buffer, $node->[0];
         push @buffer, qq[ -- ];
@@ -127,7 +137,7 @@ sub to_graphviz {
 
 sub to_weighted_graphviz {
     ## ArrayRef ArrayRef HashRef? -> String
-    my ( $graph, $path, $attrs ) = @_;
+    my ( $self, $path ) = @_;
 
     my @buffer;
     my %seen;
@@ -137,7 +147,7 @@ sub to_weighted_graphviz {
 
     push @buffer, qq[graph {\n];
 
-    for my $node (@$graph) {
+    for my $node (@$self) {
         next unless defined $node->[0];
         my $v         = $node->[0];
         my $neighbors = $node->[1];
@@ -162,30 +172,30 @@ qq{$v -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n
 
 sub add_neighbor {
     ## String String ArrayRef -> State!
-    my ( $k, $v, $graph ) = @_;
+    my ( $self, $k, $v ) = @_;
 
-    my $index = find_index( $k, $graph );
+    my $index = $self->find_index($k);
 
     if ( defined $index ) {
-        my $neighbors = $graph->[$index]->[1];
+        my $neighbors = $self->[$index]->[1];
         for my $value (@$v) {
             push @$neighbors, $value;
         }
-        $graph->[$index]->[1] = $neighbors;
+        $self->[$index]->[1] = $neighbors;
     }
     else {
-        push @$graph, [ $k, $v ];
+        push @$self, [ $k, $v ];
     }
 }
 
 sub edge_between {
     ## String String ArrayRef -> Boolean
-    my ( $a, $b, $graph ) = @_;
+    my ( $self, $a, $b ) = @_;
 
     return unless ( defined $a && defined $b );
     return 1 if $a eq $b;
 
-    my $neighbors = get_neighbors( $a, $graph );
+    my $neighbors = $self->get_neighbors($a);
     if ( $b ~~ @$neighbors ) {
         return 1;
     }
@@ -193,7 +203,7 @@ sub edge_between {
 }
 
 sub dijkstra {
-    my ( $start, $end, $graph, $attrs ) = @_;
+    my ( $self, $start, $end ) = @_;
 
     return () unless defined $start && defined $end;
 
@@ -206,7 +216,7 @@ sub dijkstra {
     $st->{$start}->{distance} = 0;
     $st->{$start}->{prev}     = undef;
 
-    for my $node ( get_nodes($graph) ) {
+    for my $node ( $self->get_nodes ) {
         next if $node eq $start;
         $st->{$node}->{distance} = 1_000_000;
         $st->{$node}->{prev}     = undef;
@@ -221,7 +231,7 @@ sub dijkstra {
           $st->{$v}->{distance}
           if DEBUG;
 
-        my $neighbors = get_neighbors( $v, $graph );
+        my $neighbors = $self->get_neighbors($v);
 
         say qq[Neighbors list: ], Dumper $neighbors if DEBUG;
 
@@ -262,7 +272,7 @@ qq[Updated distance of neighbor '$neighbor' from $old_distance to ],
             }
 
             if ( $neighbor eq $end ) {
-                @path = st_weighted_walk( $start, $end, $st );
+                @path = $self->st_weighted_walk( $start, $end, $st );
                 return @path;
             }
             else {
@@ -276,7 +286,7 @@ qq[Updated distance of neighbor '$neighbor' from $old_distance to ],
 }
 
 sub st_weighted_walk {
-    my ( $start, $end, $st ) = @_;
+    my ( $self, $start, $end, $st ) = @_;
 
     my @path;
     push @path, { node => $end, distance => $st->{$end}->{distance} };
@@ -298,7 +308,7 @@ sub st_weighted_walk {
 
 sub find_path_between {
     ## String String ArrayRef -> Array
-    my ( $start, $end, $graph ) = @_;
+    my ( $self, $start, $end ) = @_;
 
     return () unless defined $start && defined $end;
 
@@ -320,14 +330,14 @@ sub find_path_between {
 
         my $v = shift @queue;
 
-        my $neighbors = get_neighbors( $v, $graph );
+        my $neighbors = $self->get_neighbors($v);
 
         for my $neighbor (@$neighbors) {
             next if $seen{$neighbor};
-            st_add( $v, $neighbor, $st );
+            $self->st_add( $v, $neighbor, $st );
             if ( $neighbor eq $end ) {
                 $found++;
-                @path = st_walk( $start, $end, $st );
+                @path = $self->st_walk( $start, $end, $st );
                 return @path;
             }
             else {
@@ -341,7 +351,7 @@ sub find_path_between {
 
 sub st_walk {
     ## String String HashRef -> Array
-    my ( $start, $end, $st ) = @_;
+    my ( $self, $start, $end, $st ) = @_;
 
     my @path;
 
@@ -361,13 +371,13 @@ sub st_walk {
 
 sub st_add {
     ## String String HashRef -> State!
-    my ( $node, $neighbor, $st ) = @_;
+    my ( $self, $node, $neighbor, $st ) = @_;
     $st->{$node}->{$neighbor} = 1;      # Possibly unnecessary.
     $st->{$neighbor}->{prev} = $node;
 }
 
 sub get_attributes {
-    my ( $start, $end, $attrs ) = @_;
+    my ( $self, $start, $end, $attrs ) = @_;
 
     my $pairkey = $start . $end;
     return $attrs->{$pairkey};
@@ -376,7 +386,7 @@ sub get_attributes {
 sub add_attribute {
     ## String String HashRef -> State!
     # add_attribute('s', 'a', { weight => 12 });
-    my ( $start, $end, $new_attrs, $attrs ) = @_;
+    my ( $self, $start, $end, $new_attrs, $attrs ) = @_;
 
     my $pairkey1 = $start . $end;
     my $pairkey2 = $end . $start;
@@ -389,54 +399,4 @@ sub add_attribute {
     }
 }
 
-sub main {
-    my $graph = [];
-    my $attrs = {};
-
-    die qq[Usage: $0 FILE\n] unless scalar @ARGV >= 1;
-
-    my $file = shift @ARGV;
-    build_graph( $file, $graph, $attrs );
-
-    my @nodes = get_nodes($graph);
-
-    my $i     = int rand @nodes;
-    my $j     = int rand @nodes;
-    my $start = $nodes[$i];
-    my $end   = $nodes[$j];
-
-    add_attribute( 's', 'a', { weight => 12 }, $attrs );
-    add_attribute( 's', 'd', { weight => 3 },  $attrs );
-    add_attribute( 'd', 'a', { weight => 7 },  $attrs );
-    add_attribute( 'a', 'b', { weight => 1 },  $attrs );
-    add_attribute( 'd', 'e', { weight => 99 }, $attrs );
-    add_attribute( 'b', 'c', { weight => 9 },  $attrs );
-    add_attribute( 'e', 'f', { weight => 4 },  $attrs );
-
-    say qq[Looking for a path from '$start' to '$end' ...];
-    my @path = find_path_between( $start, $end, $graph );
-    say qq[Found a path from '$start' to '$end'!];
-    say Dumper \@path;
-
-    my $gv = to_graphviz( $graph, \@path );
-
-    open my $fh, '>', 'graph.dot' or die $!;
-    say $fh $gv;
-    close $fh;
-}
-
-main();
-
-__END__
-
-perl graph.pl graph.csv.bak
-I NEED A PATH FROM 'c' TO 'f'
-FINAL PATH: $VAR1 = [
-          'c',
-          'b',
-          'a',
-          's',
-          'd',
-          'e',
-          'f'
-        ];
+1;
