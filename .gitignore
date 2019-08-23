@@ -1,1 +1,8 @@
 *~
+.precomp
+TAGS
+*.bak
+nytprof*
+*.csv
+*.jpg
+*.dot
