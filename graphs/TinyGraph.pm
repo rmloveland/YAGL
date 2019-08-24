@@ -7,10 +7,13 @@ use Data::Dumper;
 use Smart::Match;
 use Text::CSV;
 use Hash::PriorityQueue;
+use Memoize;
 
 use constant DEBUG => undef;
 
 our $attrs = {};
+
+memoize('find_index');
 
 sub new {
     my $self  = shift;
@@ -49,11 +52,6 @@ sub find_index {
     ## Int ArrayRef -> Int OR undef
     my ( $self, $wanted ) = @_;
 
-    state %seen;
-
-    my $maybe = $seen{$wanted};
-    return $maybe if defined $maybe;
-
     # Naive linear search, for now.
     my $i = 0;
     for my $elem (@$self) {
@@ -62,7 +60,6 @@ sub find_index {
         # elements from the graph by setting the element's index to
         # undef.  In other words, some graph indices can be undef.
         if ( defined $elem->[0] && $elem->[0] eq $wanted ) {
-            $seen{$wanted} = $i;
             return $i;
         }
         $i++;
