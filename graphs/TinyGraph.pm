@@ -39,8 +39,7 @@ sub build_graph_from_file {
         $self->add_neighbor( $node, [$neighbor] );
 
         if ($attrs) {
-            $self->add_attribute( $node, $neighbor, { weight => $weight },
-                $attrs );
+            $self->add_attribute( $node, $neighbor, { weight => $weight } );
         }
     }
 }
@@ -379,7 +378,7 @@ sub get_attributes {
 sub add_attribute {
     ## String String HashRef -> State!
     # add_attribute('s', 'a', { weight => 12 });
-    my ( $self, $start, $end, $new_attrs, $attrs ) = @_;
+    my ( $self, $start, $end, $new_attrs ) = @_;
 
     my $pairkey1 = $start . $end;
     my $pairkey2 = $end . $start;
