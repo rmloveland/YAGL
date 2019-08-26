@@ -44,7 +44,7 @@ sub build_graph_from_file {
     }
 }
 
-sub find_index {
+sub _find_index {
     ## Int ArrayRef -> Int OR undef
     my ( $self, $wanted ) = @_;
 
@@ -67,7 +67,7 @@ sub get_neighbors {
     ## String ArrayRef -> ArrayRef
     my ( $self, $k ) = @_;
 
-    my $index = $self->find_index($k);
+    my $index = $self->_find_index($k);
 
     if ( defined $index ) {
         return $self->[$index]->[1];
@@ -81,7 +81,7 @@ sub remove_node {
     ## String ArrayRef -> State!
     my ( $self, $node ) = @_;
 
-    my $index = $self->find_index($node);
+    my $index = $self->_find_index($node);
 
     $self->[$index] = undef;
 }
@@ -166,7 +166,7 @@ sub add_neighbor {
     ## String ArrayRef HashRef -> State!
     my ( $self, $node, $neighbor, $data ) = @_;
 
-    my $index = $self->find_index($node);
+    my $index = $self->_find_index($node);
 
     unless ( ref($neighbor) eq 'ARRAY' ) {
         my ( $package, $filename, $line ) = caller();
