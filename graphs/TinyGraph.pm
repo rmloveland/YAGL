@@ -7,13 +7,10 @@ use Data::Dumper;
 use Smart::Match;
 use Text::CSV;
 use Hash::PriorityQueue;
-use Memoize;
 
 use constant DEBUG => undef;
 
 our $attrs = {};
-
-memoize('find_index');
 
 sub new {
     my $self  = shift;
