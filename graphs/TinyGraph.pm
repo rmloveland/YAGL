@@ -30,16 +30,16 @@ sub build_graph_from_file {
 
     while ( my $line = $csv->getline($fh) ) {
         my @cols     = @$line;
-        my $node     = $cols[0];
+        my $vertex   = $cols[0];
         my $neighbor = $cols[1];
         my $weight   = $cols[2];
 
         next unless defined $weight;
 
-        $self->add_neighbor( $node, [$neighbor] );
+        $self->add_neighbor( $vertex, [$neighbor] );
 
         if ($attrs) {
-            $self->add_attribute( $node, $neighbor, { weight => $weight } );
+            $self->add_attribute( $vertex, $neighbor, { weight => $weight } );
         }
     }
 }
@@ -77,23 +77,23 @@ sub get_neighbors {
     }
 }
 
-sub remove_node {
+sub remove_vertex {
     ## String ArrayRef -> State!
-    my ( $self, $node ) = @_;
+    my ( $self, $vertex ) = @_;
 
-    my $index = $self->_find_index($node);
+    my $index = $self->_find_index($vertex);
 
     $self->[$index] = undef;
 }
 
-sub get_nodes {
+sub get_vertices {
     ## ArrayRef -> Array
     my $self = shift;
-    my @nodes;
-    for my $node (@$self) {
-        push @nodes, $node->[0];
+    my @vertices;
+    for my $vertex (@$self) {
+        push @vertices, $vertex->[0];
     }
-    return @nodes;
+    return @vertices;
 }
 
 sub to_graphviz {
@@ -105,18 +105,18 @@ sub to_graphviz {
 
     push @buffer, qq[graph { ];
 
-    for my $node (@$self) {
-        next unless defined $node->[0];
-        push @buffer, $node->[0];
+    for my $vertex (@$self) {
+        next unless defined $vertex->[0];
+        push @buffer, $vertex->[0];
         push @buffer, qq[ -- ];
         push @buffer, qq[ { ];
-        my $neighbors = $node->[1];
-        for my $node (@$neighbors) {
-            if ( $node ~~ @$path ) {
-                push @buffer, qq{$node [style=filled fillcolor=red]};
+        my $neighbors = $vertex->[1];
+        for my $vertex (@$neighbors) {
+            if ( $vertex ~~ @$path ) {
+                push @buffer, qq{$vertex [style=filled fillcolor=red]};
             }
             else {
-                push @buffer, $node;
+                push @buffer, $vertex;
             }
         }
         push @buffer, qq[ } ];
@@ -135,14 +135,14 @@ sub to_weighted_graphviz {
     my %seen;
     my @path;
 
-    @path = map { $_->{node} } @$path;
+    @path = map { $_->{vertex} } @$path;
 
     push @buffer, qq[graph {\n];
 
-    for my $node (@$self) {
-        next unless defined $node->[0];
-        my $v         = $node->[0];
-        my $neighbors = $node->[1];
+    for my $vertex (@$self) {
+        next unless defined $vertex->[0];
+        my $v         = $vertex->[0];
+        my $neighbors = $vertex->[1];
         for my $neighbor (@$neighbors) {
             my $pairkey     = $v . $neighbor;
             my $edge_weight = $attrs->{$pairkey}->{weight};
@@ -164,15 +164,15 @@ qq{$v -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n
 
 sub add_neighbor {
     ## String ArrayRef HashRef -> State!
-    my ( $self, $node, $neighbor, $data ) = @_;
+    my ( $self, $vertex, $neighbor, $data ) = @_;
 
-    my $index = $self->_find_index($node);
+    my $index = $self->_find_index($vertex);
 
     unless ( ref($neighbor) eq 'ARRAY' ) {
         my ( $package, $filename, $line ) = caller();
         die <<"EOF";
 on line $line of file $filename:
-  $package\:\:add_neighbor('$node', '$neighbor', '$data'):
+  $package\:\:add_neighbor('$vertex', '$neighbor', '$data'):
     expected arrayref, got '$neighbor'
 EOF
     }
@@ -185,11 +185,11 @@ EOF
         $self->[$index]->[1] = $neighbors;
     }
     else {
-        push @$self, [ $node, $neighbor ];
+        push @$self, [ $vertex, $neighbor ];
     }
 
     if ($data) {
-        $self->add_attribute( $node, $neighbor->[0], $data );
+        $self->add_attribute( $vertex, $neighbor->[0], $data );
     }
 }
 
@@ -221,10 +221,10 @@ sub dijkstra {
     $st->{$start}->{distance} = 0;
     $st->{$start}->{prev}     = undef;
 
-    for my $node ( $self->get_nodes ) {
-        next if $node eq $start;
-        $st->{$node}->{distance} = 1_000_000;
-        $st->{$node}->{prev}     = undef;
+    for my $vertex ( $self->get_vertices ) {
+        next if $vertex eq $start;
+        $st->{$vertex}->{distance} = 1_000_000;
+        $st->{$vertex}->{prev}     = undef;
     }
 
     $heap->insert( $start, $st->{$start}->{distance} );
@@ -232,7 +232,7 @@ sub dijkstra {
     while ( my $v = $heap->pop() ) {
 
         say q[-] x 68 if DEBUG;
-        say qq[Looking at node '$v' with current distance: ],
+        say qq[Looking at vertex '$v' with current distance: ],
           $st->{$v}->{distance}
           if DEBUG;
 
@@ -294,17 +294,18 @@ sub _st_weighted_walk {
     my ( $self, $start, $end, $st ) = @_;
 
     my @path;
-    push @path, { node => $end, distance => $st->{$end}->{distance} };
+    push @path, { vertex => $end, distance => $st->{$end}->{distance} };
 
     my $prev = $st->{$end}->{prev};
     while (1) {
         if ( $prev eq $start ) {
 
-            push @path, { node => $prev, distance => $st->{$prev}->{distance} };
+            push @path,
+              { vertex => $prev, distance => $st->{$prev}->{distance} };
             last;
         }
 
-        push @path, { node => $prev, distance => $st->{$prev}->{distance} };
+        push @path, { vertex => $prev, distance => $st->{$prev}->{distance} };
         $prev = $st->{$prev}->{prev};
         next;
     }
@@ -318,9 +319,9 @@ sub find_path_between {
     return () unless defined $start && defined $end;
 
     my @path;     # Path so far
-    my @queue;    # Nodes still to visit.
-    my %seen;     # Nodes already seen.
-    my $found;    # Whether we have found the wanted node.
+    my @queue;    # Vertices still to visit.
+    my %seen;     # Vertices already seen.
+    my $found;    # Whether we have found the wanted vertex.
     my $st = {};  # Spanning tree, used to find paths.
 
     if ( $start eq $end ) {
@@ -376,9 +377,9 @@ sub _st_walk {
 
 sub _st_add {
     ## String String HashRef -> State!
-    my ( $self, $node, $neighbor, $st ) = @_;
-    $st->{$node}->{$neighbor} = 1;      # Possibly unnecessary.
-    $st->{$neighbor}->{prev} = $node;
+    my ( $self, $vertex, $neighbor, $st ) = @_;
+    $st->{$vertex}->{$neighbor} = 1;      # Possibly unnecessary.
+    $st->{$neighbor}->{prev} = $vertex;
 }
 
 sub get_attributes {
