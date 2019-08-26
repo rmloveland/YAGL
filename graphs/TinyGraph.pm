@@ -163,20 +163,33 @@ qq{$v -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n
 }
 
 sub add_neighbor {
-    ## String String ArrayRef -> State!
-    my ( $self, $k, $v ) = @_;
+    ## String ArrayRef HashRef -> State!
+    my ( $self, $node, $neighbor, $data ) = @_;
 
-    my $index = $self->find_index($k);
+    my $index = $self->find_index($node);
+
+    unless ( ref($neighbor) eq 'ARRAY' ) {
+        my ( $package, $filename, $line ) = caller();
+        die <<"EOF";
+on line $line of file $filename:
+  $package\:\:add_neighbor('$node', '$neighbor', '$data'):
+    expected arrayref, got '$neighbor'
+EOF
+    }
 
     if ( defined $index ) {
         my $neighbors = $self->[$index]->[1];
-        for my $value (@$v) {
+        for my $value (@$neighbor) {
             push @$neighbors, $value;
         }
         $self->[$index]->[1] = $neighbors;
     }
     else {
-        push @$self, [ $k, $v ];
+        push @$self, [ $node, $neighbor ];
+    }
+
+    if ($data) {
+        $self->add_attribute( $node, $neighbor->[0], $data );
     }
 }
 
