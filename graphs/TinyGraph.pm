@@ -277,7 +277,7 @@ qq[Updated distance of neighbor '$neighbor' from $old_distance to ],
             }
 
             if ( $neighbor eq $end ) {
-                @path = $self->st_weighted_walk( $start, $end, $st );
+                @path = $self->_st_weighted_walk( $start, $end, $st );
                 return @path;
             }
             else {
@@ -290,7 +290,7 @@ qq[Updated distance of neighbor '$neighbor' from $old_distance to ],
     return ();
 }
 
-sub st_weighted_walk {
+sub _st_weighted_walk {
     my ( $self, $start, $end, $st ) = @_;
 
     my @path;
@@ -339,10 +339,10 @@ sub find_path_between {
 
         for my $neighbor (@$neighbors) {
             next if $seen{$neighbor};
-            $self->st_add( $v, $neighbor, $st );
+            $self->_st_add( $v, $neighbor, $st );
             if ( $neighbor eq $end ) {
                 $found++;
-                @path = $self->st_walk( $start, $end, $st );
+                @path = $self->_st_walk( $start, $end, $st );
                 return @path;
             }
             else {
@@ -354,7 +354,7 @@ sub find_path_between {
     return $found ? @path : ();
 }
 
-sub st_walk {
+sub _st_walk {
     ## String String HashRef -> Array
     my ( $self, $start, $end, $st ) = @_;
 
@@ -374,7 +374,7 @@ sub st_walk {
     return reverse @path;
 }
 
-sub st_add {
+sub _st_add {
     ## String String HashRef -> State!
     my ( $self, $node, $neighbor, $st ) = @_;
     $st->{$node}->{$neighbor} = 1;      # Possibly unnecessary.
