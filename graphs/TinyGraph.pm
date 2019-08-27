@@ -403,11 +403,11 @@ sub _st_add {
     $st->{$neighbor}->{prev} = $vertex;
 }
 
-sub get_attributes {
-    my ( $self, $start, $end, $attrs ) = @_;
+sub get_attribute {
+    my ( $self, $start, $end, $attribute ) = @_;
 
     my $pairkey = $start . $end;
-    return $attrs->{$pairkey};
+    return $attrs->{$pairkey}->{$attribute};
 }
 
 sub add_attribute {
