@@ -20,13 +20,34 @@ sub new {
     return $graph;
 }
 
-sub build_graph_from_file {
+sub write_graph_to_csv_file {
+    my ( $self, $f ) = @_;
+
+    open my $fh, '>:encoding(utf8)', $f or die "Can't open file '$f': $!\n";
+
+    say $fh, qq[node,neighbor,weight];
+
+    my @vertices = $self->get_vertices;
+
+    for my $vertex (@vertices) {
+        my $neighbors = $self->get_neighbors($vertex);
+        for my $neighbor (@$neighbors) {
+            my $weight = $attrs->{ $vertex . $neighbor }->{weight};
+            my @cols   = ( $vertex, $neighbor, $weight );
+            my $line   = join ',', @cols;
+            say $fh $line;
+        }
+    }
+    close $fh;
+}
+
+sub read_graph_from_csv_file {
     ## Filename ArrayRef HashRef? -> State! IO!
     my ( $self, $f ) = @_;
 
     my $csv = Text::CSV->new( { binary => 1 } );
 
-    open my $fh, "<:encoding(utf8)", $f or die "$f: $!";
+    open my $fh, "<:encoding(utf8)", $f or die "Can't open file '$f': $!\n";
 
     while ( my $line = $csv->getline($fh) ) {
         my @cols     = @$line;
@@ -403,6 +424,59 @@ sub add_attribute {
         $attrs->{$pairkey1}->{$k} = $v;
         $attrs->{$pairkey2}->{$k} = $v;
     }
+}
+
+sub generate_random_vertices {
+    my ( $self, $args ) = @_;
+
+    my $n          = $args->{n};
+    my $p          = $args->{p};
+    my $max_weight = $args->{max_weight};
+
+    my %seen;
+
+    for my $node ( 1 .. $n ) {
+        my $name = $self->_make_vertex_name;
+        redo if $seen{$name};
+        $seen{$name}++;
+    }
+
+    my @nodes = keys %seen;
+
+    my @pairs;
+
+    for my $node (@nodes) {
+        my $maybe_neighbor = $nodes[ rand $#nodes ];
+        next if $maybe_neighbor eq $node;
+        my $connection_prob = rand 1;
+        my $dist            = int rand $max_weight;
+        if ( $connection_prob > $p ) {
+            push @pairs, [ $node,           $maybe_neighbor, $dist ];
+            push @pairs, [ $maybe_neighbor, $node,           $dist ];
+        }
+        redo
+          if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
+    }
+
+    for my $pair (@pairs) {
+        $self->add_neighbor(
+            $pair->[0],
+            [ $pair->[1] ],
+            { weight => $pair->[2] }
+        );
+    }
+}
+
+sub _make_vertex_name {
+    my $n     = int rand 10000;
+    my $chars = qq[a b c d e f g h i j k l m n o p q r s t u v w x y z];
+    my @chars = split / /, $chars;
+
+    my $i  = rand scalar @chars;
+    my $c1 = $chars[$i];
+    my $c2 = $chars[ rand scalar @chars ];
+
+    return qq[$c1$c2$n];
 }
 
 1;
