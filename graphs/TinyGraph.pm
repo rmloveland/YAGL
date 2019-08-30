@@ -25,7 +25,7 @@ sub write_graph_to_csv_file {
 
     open my $fh, '>:encoding(utf8)', $f or die "Can't open file '$f': $!\n";
 
-    say $fh, qq[node,neighbor,weight];
+    say $fh qq[node,neighbor,weight];
 
     my @vertices = $self->get_vertices;
 
@@ -56,6 +56,7 @@ sub read_graph_from_csv_file {
         my $weight   = $cols[2];
 
         next unless defined $weight;
+        next if $vertex eq 'node';
 
         $self->add_neighbor( $vertex, [$neighbor] );
 
