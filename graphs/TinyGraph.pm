@@ -102,6 +102,29 @@ sub get_neighbors {
     }
 }
 
+sub is_empty {
+    ## -> Boolean
+    my $self     = shift;
+    my $count    = 0;
+    my @vertices = $self->get_vertices;
+
+    my $return = 1;
+
+    for my $vertex (@vertices) {
+        if ( defined $vertex ) {
+            undef $return;
+        }
+    }
+    return $return;
+}
+
+sub has_vertex {
+    ## String -> Boolean
+    my ( $self, $vertex ) = @_;
+
+    return $self->_find_index($vertex);
+}
+
 sub remove_vertex {
     ## String -> State!
     my ( $self, $vertex ) = @_;
