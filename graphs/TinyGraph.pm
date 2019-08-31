@@ -509,6 +509,11 @@ sub add_vertex {
     push @$self, [ $vertex, [] ];
 }
 
+sub add_vertices {
+    my ( $self, @vertices ) = @_;
+    $self->add_vertex($_) for @vertices;
+}
+
 sub add_edge {
     ## String String -> State!
     my ( $self, $v1, $v2, $attrs ) = @_;
