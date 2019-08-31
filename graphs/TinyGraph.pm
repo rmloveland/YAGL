@@ -427,6 +427,18 @@ sub add_attribute {
     }
 }
 
+sub add_vertex {
+    ## String -> State!
+    my ( $self, $vertex ) = @_;
+    push @$self, [ $vertex, [] ];
+}
+
+sub add_edge {
+    ## String String -> State!
+    my ( $self, $v1, $v2, $attrs ) = @_;
+    $self->add_neighbor( $v1, [$v2], $attrs );
+}
+
 sub generate_random_vertices {
     my ( $self, $args ) = @_;
 
