@@ -21,6 +21,7 @@ sub new {
 }
 
 sub write_graph_to_csv_file {
+    ## Filename -> State! IO!
     my ( $self, $f ) = @_;
 
     open my $fh, '>:encoding(utf8)', $f or die "Can't open file '$f': $!\n";
@@ -42,7 +43,7 @@ sub write_graph_to_csv_file {
 }
 
 sub read_graph_from_csv_file {
-    ## Filename ArrayRef HashRef? -> State! IO!
+    ## Filename -> State! IO!
     my ( $self, $f ) = @_;
 
     my $csv = Text::CSV->new( { binary => 1 } );
@@ -67,7 +68,7 @@ sub read_graph_from_csv_file {
 }
 
 sub _find_index {
-    ## Int ArrayRef -> Int OR undef
+    ## Int -> Int OR undef
     my ( $self, $wanted ) = @_;
 
     # Naive linear search, for now.
@@ -86,10 +87,10 @@ sub _find_index {
 }
 
 sub get_neighbors {
-    ## String ArrayRef -> ArrayRef
-    my ( $self, $k ) = @_;
+    ## String -> ArrayRef
+    my ( $self, $vertex ) = @_;
 
-    my $index = $self->_find_index($k);
+    my $index = $self->_find_index($vertex);
 
     if ( defined $index ) {
         return $self->[$index]->[1];
@@ -100,7 +101,7 @@ sub get_neighbors {
 }
 
 sub remove_vertex {
-    ## String ArrayRef -> State!
+    ## String -> State!
     my ( $self, $vertex ) = @_;
 
     my $neighbors = $self->get_neighbors($vertex);
@@ -127,7 +128,7 @@ sub remove_vertex {
 }
 
 sub get_vertices {
-    ## ArrayRef -> Array
+    ## -> Array
     my $self = shift;
     my @vertices;
     for my $vertex (@$self) {
@@ -137,7 +138,7 @@ sub get_vertices {
 }
 
 sub to_graphviz {
-    ## ArrayRef ArrayRef HashRef? -> String
+    ## ArrayRef -> String
     my ( $self, $path ) = @_;
 
     my @buffer;
@@ -168,7 +169,7 @@ sub to_graphviz {
 }
 
 sub to_weighted_graphviz {
-    ## ArrayRef ArrayRef HashRef? -> String
+    ## ArrayRef -> String
     my ( $self, $path ) = @_;
 
     my @buffer;
@@ -234,7 +235,7 @@ EOF
 }
 
 sub edge_between {
-    ## String String ArrayRef -> Boolean
+    ## String String -> Boolean
     my ( $self, $a, $b ) = @_;
 
     return unless ( defined $a && defined $b );
@@ -248,6 +249,7 @@ sub edge_between {
 }
 
 sub dijkstra {
+    ## String String -> Array
     my ( $self, $start, $end ) = @_;
 
     return () unless defined $start && defined $end;
@@ -331,6 +333,7 @@ qq[Updated distance of neighbor '$neighbor' from $old_distance to ],
 }
 
 sub _st_weighted_walk {
+    ## String String HashRef -> Array
     my ( $self, $start, $end, $st ) = @_;
 
     my @path;
@@ -353,7 +356,7 @@ sub _st_weighted_walk {
 }
 
 sub find_path_between {
-    ## String String ArrayRef -> Array
+    ## String String -> Array
     my ( $self, $start, $end ) = @_;
 
     return () unless defined $start && defined $end;
@@ -424,12 +427,14 @@ sub _st_add {
 }
 
 sub get_attributes {
+    ## String String -> HashRef OR undef
     my ( $self, $start, $end ) = @_;
     my $pairkey = $start . $end;
     return $attrs->{$pairkey};
 }
 
 sub get_attribute {
+    ## String String String -> Value OR undef
     my ( $self, $start, $end, $attribute ) = @_;
 
     my $pairkey = $start . $end;
@@ -470,6 +475,7 @@ sub add_edge {
 }
 
 sub generate_random_vertices {
+    ## HashRef -> State!
     my ( $self, $args ) = @_;
 
     my $n          = $args->{n};
@@ -511,6 +517,7 @@ sub generate_random_vertices {
 }
 
 sub _make_vertex_name {
+    ## -> String
     my $n     = int rand 10000;
     my $chars = qq[a b c d e f g h i j k l m n o p q r s t u v w x y z];
     my @chars = split / /, $chars;
