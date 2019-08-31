@@ -115,6 +115,7 @@ sub remove_vertex {
         # this vertex.
         for ( my $i = 0 ; $i < @$neighbor_neighbors ; $i++ ) {
             my $neighbor_neighbor = $self->[$neighbor_index]->[1]->[$i];
+            next unless defined $neighbor_neighbor;
             if ( $neighbor_neighbor eq $vertex ) {
                 $self->[$neighbor_index]->[1]->[$i] = undef;
             }
