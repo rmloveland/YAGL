@@ -61,7 +61,7 @@ sub read_graph_from_csv_file {
         $self->add_neighbor( $vertex, [$neighbor] );
 
         if ($attrs) {
-            $self->add_attribute( $vertex, $neighbor, { weight => $weight } );
+            $self->set_attribute( $vertex, $neighbor, { weight => $weight } );
         }
     }
 }
@@ -229,7 +229,7 @@ EOF
     }
 
     if ($data) {
-        $self->add_attribute( $vertex, $neighbor->[0], $data );
+        $self->set_attribute( $vertex, $neighbor->[0], $data );
     }
 }
 
@@ -436,9 +436,9 @@ sub get_attribute {
     return $attrs->{$pairkey}->{$attribute};
 }
 
-sub add_attribute {
+sub set_attribute {
     ## String String HashRef -> State!
-    # add_attribute('s', 'a', { weight => 12 });
+    # set_attribute('s', 'a', { weight => 12 });
     my ( $self, $start, $end, $new_attrs ) = @_;
 
     my $pairkey1 = $start . $end;
