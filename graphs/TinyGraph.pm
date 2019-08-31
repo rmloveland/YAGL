@@ -487,6 +487,22 @@ sub set_attribute {
     }
 }
 
+sub is_complete {
+    my $self = shift;
+
+    my @vertices = $self->get_vertices;
+    my $v        = pop @vertices;
+
+    my $neighbors = $self->get_neighbors($v);
+
+    @vertices = sort { ( $a || '' ) cmp( $b || '' ) } @vertices;
+    my @neighbors = sort { ( $a || '' ) cmp( $b || '' ) } @$neighbors;
+
+    return 1 if @vertices ~~ @neighbors;
+
+    return;
+}
+
 sub add_vertex {
     ## String -> State!
     my ( $self, $vertex ) = @_;
