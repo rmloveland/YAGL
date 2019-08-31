@@ -3,6 +3,7 @@
 TAGS
 *.bak
 nytprof*
-*.csv
 *.jpg
 *.dot
+graphs/*.csv
+* conflicted copy *
