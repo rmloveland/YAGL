@@ -33,7 +33,7 @@ sub write_graph_to_csv_file {
     for my $vertex (@vertices) {
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
-            my $weight = $attrs->{ $vertex . $neighbor }->{weight};
+            my $weight = $attrs->{ $vertex . $neighbor }->{weight} || 0;
             my @cols   = ( $vertex, $neighbor, $weight );
             my $line   = join ',', @cols;
             say $fh $line;
