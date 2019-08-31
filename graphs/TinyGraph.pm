@@ -59,7 +59,7 @@ sub read_graph_from_csv_file {
         next unless defined $weight;
         next if $vertex eq 'node';
 
-        $self->add_neighbor( $vertex, [$neighbor] );
+        $self->_add_neighbor( $vertex, [$neighbor] );
 
         if ($attrs) {
             $self->set_attribute( $vertex, $neighbor, { weight => $weight } );
@@ -231,7 +231,7 @@ qq{$v -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n
     return join ' ', @buffer;
 }
 
-sub add_neighbor {
+sub _add_neighbor {
     ## String ArrayRef HashRef -> State!
     my ( $self, $vertex, $neighbor, $data ) = @_;
 
@@ -241,7 +241,7 @@ sub add_neighbor {
         my ( $package, $filename, $line ) = caller();
         die <<"EOF";
 on line $line of file $filename:
-  $package\:\:add_neighbor('$vertex', '$neighbor', '$data'):
+  $package\:\:_add_neighbor('$vertex', '$neighbor', '$data'):
     expected arrayref, got '$neighbor'
 EOF
     }
@@ -496,8 +496,8 @@ sub add_vertex {
 sub add_edge {
     ## String String -> State!
     my ( $self, $v1, $v2, $attrs ) = @_;
-    $self->add_neighbor( $v1, [$v2], $attrs );
-    $self->add_neighbor( $v2, [$v1], $attrs );
+    $self->_add_neighbor( $v1, [$v2], $attrs );
+    $self->_add_neighbor( $v2, [$v1], $attrs );
 }
 
 }
@@ -536,7 +536,7 @@ sub generate_random_vertices {
     }
 
     for my $pair (@pairs) {
-        $self->add_neighbor(
+        $self->_add_neighbor(
             $pair->[0],
             [ $pair->[1] ],
             { weight => $pair->[2] }
