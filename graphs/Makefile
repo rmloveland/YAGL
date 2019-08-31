@@ -17,3 +17,6 @@ tags: clean
 
 clean:
 	rm TAGS
+
+test:
+	prove
