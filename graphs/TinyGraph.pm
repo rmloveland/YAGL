@@ -165,6 +165,42 @@ sub get_vertices {
     return @vertices;
 }
 
+sub get_edge {
+    ## String String -> ArrayRef
+    my ( $self, $a, $b ) = @_;
+
+    return unless $self->edge_between( $a, $b );
+
+    my $attrs = $self->get_attributes( $a, $b );
+
+    return [ $a, $b, $attrs ];
+}
+
+sub get_edges {
+    ## -> Array
+    my ($self) = @_;
+
+    my @vertices = $self->get_vertices;
+
+    my @answer;
+    my %seen;
+
+    for my $vertex (@vertices) {
+        next unless defined $vertex;
+        my $neighbors = $self->get_neighbors($vertex);
+
+        for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
+            next if $seen{ $vertex . $neighbor };
+            push @answer, $self->get_edge( $vertex, $neighbor );
+            $seen{ $vertex . $neighbor }++;
+            $seen{ $neighbor . $vertex }++;
+        }
+    }
+
+    return @answer;
+}
+
 sub to_graphviz {
     ## ArrayRef -> String
     my ( $self, $path ) = @_;
