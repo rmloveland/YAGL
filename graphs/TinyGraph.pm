@@ -437,6 +437,9 @@ sub add_edge {
     ## String String -> State!
     my ( $self, $v1, $v2, $attrs ) = @_;
     $self->add_neighbor( $v1, [$v2], $attrs );
+    $self->add_neighbor( $v2, [$v1], $attrs );
+}
+
 }
 
 sub generate_random_vertices {
