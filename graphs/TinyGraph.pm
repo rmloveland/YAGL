@@ -103,9 +103,27 @@ sub remove_vertex {
     ## String ArrayRef -> State!
     my ( $self, $vertex ) = @_;
 
-    my $index = $self->_find_index($vertex);
+    my $neighbors = $self->get_neighbors($vertex);
+    my $subname   = qq[remove_vertex()];
 
-    $self->[$index] = undef;
+    for my $neighbor (@$neighbors) {
+        my $neighbor_index     = $self->_find_index($neighbor);
+        my $neighbor_neighbors = $self->[$neighbor_index]->[1];
+
+        # Iterate over neighbors' adjacency lists, deleting mention of
+        # this vertex.
+        for ( my $i = 0 ; $i < @$neighbor_neighbors ; $i++ ) {
+            my $neighbor_neighbor = $self->[$neighbor_index]->[1]->[$i];
+            if ( $neighbor_neighbor eq $vertex ) {
+                $self->[$neighbor_index]->[1]->[$i] = undef;
+            }
+        }
+    }
+
+    my $index = $self->_find_index($vertex);
+    if ( defined $index ) {
+        $self->[$index] = undef;
+    }
 }
 
 sub get_vertices {
@@ -361,6 +379,7 @@ sub find_path_between {
         my $neighbors = $self->get_neighbors($v);
 
         for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
             next if $seen{$neighbor};
             $self->_st_add( $v, $neighbor, $st );
             if ( $neighbor eq $end ) {
@@ -422,6 +441,8 @@ sub add_attribute {
     # Attributes hashref already exists, so we add to it.  NOTE:
     # this is a hash so the update is destructive.
     for ( my ( $k, $v ) = each %$new_attrs ) {
+        next unless defined $k;
+        next if $k eq '';
         $attrs->{$pairkey1}->{$k} = $v;
         $attrs->{$pairkey2}->{$k} = $v;
     }
