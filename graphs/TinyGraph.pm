@@ -71,6 +71,8 @@ sub _find_index {
     ## Int -> Int OR undef
     my ( $self, $wanted ) = @_;
 
+    return unless defined $wanted;
+
     # Naive linear search, for now.
     my $i = 0;
     for my $elem (@$self) {
