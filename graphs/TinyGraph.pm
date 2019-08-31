@@ -110,7 +110,9 @@ sub remove_vertex {
     my $subname   = qq[remove_vertex()];
 
     for my $neighbor (@$neighbors) {
-        my $neighbor_index     = $self->_find_index($neighbor);
+        my $neighbor_index = $self->_find_index($neighbor);
+        next unless defined $neighbor_index;
+
         my $neighbor_neighbors = $self->[$neighbor_index]->[1];
 
         # Iterate over neighbors' adjacency lists, deleting mention of
