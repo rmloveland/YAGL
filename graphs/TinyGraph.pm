@@ -559,6 +559,14 @@ sub add_edge {
     $self->_add_neighbor( $v2, [$v1], $attrs );
 }
 
+sub add_edges {
+    my ( $self, @edges ) = @_;
+
+    for my $elem (@edges) {
+        ## ['a', 'b', { weight => 123 }]
+        my ( $a, $b, $attrs ) = @$elem;
+        $self->add_edge( $a, $b, $attrs );
+    }
 }
 
 sub generate_random_vertices {
