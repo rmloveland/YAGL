@@ -625,4 +625,15 @@ sub _make_vertex_name {
     return qq[$c1$c2$n];
 }
 
+sub get_degree {
+    my ( $self, $vertex ) = @_;
+    if ( $self->has_vertex($vertex) ) {
+        my $neighbors = $self->get_neighbors($vertex);
+        if ( defined $neighbors ) {
+            return scalar @$neighbors;
+        }
+    }
+    return;
+}
+
 1;
