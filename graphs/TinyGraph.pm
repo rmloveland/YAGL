@@ -124,7 +124,8 @@ sub has_vertex {
     ## String -> Boolean
     my ( $self, $vertex ) = @_;
 
-    return $self->_find_index($vertex);
+    return 1 if defined $self->_find_index($vertex);
+    return;
 }
 
 sub remove_vertex {
