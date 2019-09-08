@@ -12,8 +12,8 @@ perl: random
 random:
 	perl generate_random_graphs.pl > graph.csv
 
-tags: clean
-	etags *.pl
+tags:
+	etags --lang=perl *.pm
 
 clean:
 	rm TAGS
