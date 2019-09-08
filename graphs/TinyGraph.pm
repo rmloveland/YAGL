@@ -636,4 +636,17 @@ sub get_degree {
     return;
 }
 
+sub clone {
+    my ($self) = @_;
+    my $class  = ref($self);
+    my $new    = [];
+
+    for my $vertex ( $self->get_vertices ) {
+        my $neighbors = $self->get_neighbors($vertex);
+        push @$new, [ $vertex, [@$neighbors] ];
+    }
+
+    bless $new, $class;
+}
+
 1;
