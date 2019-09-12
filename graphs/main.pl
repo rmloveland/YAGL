@@ -11,17 +11,29 @@ sub main {
     my $g = TinyGraph->new;
     my @path;
 
-    die qq[Usage: $0 FILE\n] unless scalar @ARGV >= 1;
+    $g->generate_random_vertices(
+        { n => 124, p => 0.1, max_weight => 100_000 } );
 
-    my $file = shift @ARGV;
-    $g->build_graph_from_file($file);
+    # Uncomment this if you want to re-run using the last graph.
+    # This can be useful for testing.
+    # $g->read_graph_from_csv_file('foo.csv');
 
-    my @nodes = $g->get_nodes;
+    $g->add_vertex('abc123');
+    $g->add_vertex('xyz789');
+    $g->add_edge( 'abc123', 'xyz789', { weight => 1_000_000 } );
 
-    my $i     = int rand @nodes;
-    my $j     = int rand @nodes;
-    my $start = $nodes[$i];
-    my $end   = $nodes[$j];
+    $g->add_vertex('I_AM_A_TEST');
+    $g->add_edge( 'I_AM_A_TEST', 'abc123', { weight => 12345 } );
+
+    # Write the graph out to a CSV file.
+    $g->write_graph_to_csv_file('foo.csv');
+
+    my @vertices = $g->get_vertices;
+
+    my $i     = int rand @vertices;
+    my $j     = int rand @vertices;
+    my $start = $vertices[$i];
+    my $end   = $vertices[$j];
 
     say qq[Looking for a path from '$start' to '$end' ...];
 
