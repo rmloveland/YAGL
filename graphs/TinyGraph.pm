@@ -64,7 +64,8 @@ sub read_graph_from_csv_file {
         $self->_add_neighbor( $vertex, [$neighbor] );
 
         if ($attrs) {
-            $self->set_attribute( $vertex, $neighbor, { weight => $weight } );
+            $self->set_edge_attribute( $vertex, $neighbor,
+                { weight => $weight } );
         }
     }
 }
@@ -174,7 +175,7 @@ sub get_edge {
 
     return unless $self->edge_between( $a, $b );
 
-    my $attrs = $self->get_attributes( $a, $b );
+    my $attrs = $self->get_edge_attributes( $a, $b );
 
     return [ $a, $b, $attrs ];
 }
@@ -297,7 +298,7 @@ EOF
     }
 
     if ($data) {
-        $self->set_attribute( $vertex, $neighbor->[0], $data );
+        $self->set_edge_attribute( $vertex, $neighbor->[0], $data );
     }
 }
 
@@ -493,14 +494,14 @@ sub _st_add {
     $st->{$neighbor}->{prev} = $vertex;
 }
 
-sub get_attributes {
+sub get_edge_attributes {
     ## String String -> HashRef OR undef
     my ( $self, $start, $end ) = @_;
     my $pairkey = $start . $end;
     return $attrs->{$pairkey};
 }
 
-sub get_attribute {
+sub get_edge_attribute {
     ## String String String -> Value OR undef
     my ( $self, $start, $end, $attribute ) = @_;
 
@@ -508,9 +509,9 @@ sub get_attribute {
     return $attrs->{$pairkey}->{$attribute};
 }
 
-sub set_attribute {
+sub set_edge_attribute {
     ## String String HashRef -> State!
-    # set_attribute('s', 'a', { weight => 12 });
+    # set_edge_attribute('s', 'a', { weight => 12 });
     my ( $self, $start, $end, $new_attrs ) = @_;
 
     my $pairkey1 = $start . $end;
