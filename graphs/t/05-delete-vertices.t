@@ -13,7 +13,7 @@ my $g   = TinyGraph->new;
 
 my $removed = 'sk132';
 
-$g->read_graph_from_csv_file("$cwd/t/05-delete-vertices.csv");
+$g->read_from_csv_file("$cwd/t/05-delete-vertices.csv");
 
 my @before = $g->get_vertices;
 $g->remove_vertex($removed);

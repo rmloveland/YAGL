@@ -10,7 +10,7 @@ use TinyGraph;
 
 my $g   = TinyGraph->new;
 my $cwd = getcwd;
-$g->read_graph_from_csv_file("$cwd/t/10-get-edges.csv");
+$g->read_from_csv_file("$cwd/t/10-get-edges.csv");
 
 my @expected = (
     [

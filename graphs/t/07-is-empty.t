@@ -13,7 +13,7 @@ my $g   = TinyGraph->new;
 
 my $removed = 'sk132';
 
-$g->read_graph_from_csv_file("$cwd/t/07-is-empty.csv");
+$g->read_from_csv_file("$cwd/t/07-is-empty.csv");
 
 my $is_empty = $g->is_empty;
 

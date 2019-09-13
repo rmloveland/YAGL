@@ -16,7 +16,7 @@ sub main {
 
     # Uncomment this if you want to re-run using the last graph.
     # This can be useful for testing.
-    # $g->read_graph_from_csv_file('foo.csv');
+    # $g->read_from_csv_file('foo.csv');
 
     $g->add_vertex('abc123');
     $g->add_vertex('xyz789');

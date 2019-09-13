@@ -12,10 +12,10 @@ $g->generate_random_vertices( { n => 124, p => 0.1, max_weight => 100 } );
 my @v1 = $g->get_vertices;
 
 my $tmpfile = 'tmp.csv';
-$g->write_graph_to_csv_file($tmpfile);
+$g->write_to_csv_file($tmpfile);
 
 my $h = TinyGraph->new;
-$h->read_graph_from_csv_file($tmpfile);
+$h->read_from_csv_file($tmpfile);
 
 my @v2 = $h->get_vertices;
 

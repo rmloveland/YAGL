@@ -11,7 +11,7 @@ use TinyGraph;
 my $g   = TinyGraph->new;
 my $cwd = getcwd;
 
-$g->read_graph_from_csv_file("$cwd/t/03-shortest-path.csv");
+$g->read_from_csv_file("$cwd/t/03-shortest-path.csv");
 
 my $start = 'nt7054';
 my $end   = 'cg7395';
