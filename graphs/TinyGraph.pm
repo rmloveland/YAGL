@@ -528,6 +528,18 @@ sub set_edge_attribute {
     }
 }
 
+sub delete_edge_attributes {
+    ## String String -> Undefined OR State!
+    my ( $self, $start, $end ) = @_;
+    return unless defined $start && defined $end;
+
+    my $pairkey1 = $start . $end;
+    my $pairkey2 = $end . $start;
+    return unless ( exists $attrs->{$pairkey1} && exists $attrs->{$pairkey2} );
+    delete $attrs->{$pairkey1};
+    delete $attrs->{$pairkey2};
+}
+
 sub is_complete {
     my $self = shift;
 
