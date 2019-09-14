@@ -134,9 +134,10 @@ sub remove_vertex {
     my ( $self, $vertex ) = @_;
 
     my $neighbors = $self->get_neighbors($vertex);
-    my $subname   = qq[remove_vertex()];
 
     for my $neighbor (@$neighbors) {
+        $self->delete_edge_attributes( $vertex, $neighbor );
+
         my $neighbor_index = $self->_find_index($neighbor);
         next unless defined $neighbor_index;
 
