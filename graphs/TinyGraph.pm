@@ -136,24 +136,15 @@ sub remove_vertex {
     my $neighbors = $self->get_neighbors($vertex);
 
     for my $neighbor (@$neighbors) {
+
+        # 1. In this pass, we delete all edges between each of this
+        # vertex's neighbor and the vertex. Note the order of the
+        # arguments.
+        $self->_remove_neighbor( $neighbor, $vertex );
         $self->delete_edge_attributes( $vertex, $neighbor );
-
-        my $neighbor_index = $self->_find_index($neighbor);
-        next unless defined $neighbor_index;
-
-        my $neighbor_neighbors = $self->[$neighbor_index]->[1];
-
-        # Iterate over neighbors' adjacency lists, deleting mention of
-        # this vertex.
-        for ( my $i = 0 ; $i < @$neighbor_neighbors ; $i++ ) {
-            my $neighbor_neighbor = $self->[$neighbor_index]->[1]->[$i];
-            next unless defined $neighbor_neighbor;
-            if ( $neighbor_neighbor eq $vertex ) {
-                $self->[$neighbor_index]->[1]->[$i] = undef;
-            }
-        }
     }
 
+    # 2. Now we delete the "root" reference to the vertex.
     my $index = $self->_find_index($vertex);
     if ( defined $index ) {
         $self->[$index] = undef;
@@ -581,6 +572,53 @@ sub add_edges {
         ## ['a', 'b', { weight => 123 }]
         my ( $a, $b, $attrs ) = @$elem;
         $self->add_edge( $a, $b, $attrs );
+    }
+}
+
+sub remove_edge {
+    ## String String -> Boolean State! OR Undef
+    my ( $self, $a, $b ) = @_;
+
+    return unless $self->edge_between( $a, $b );
+
+    # There is some complexity here.  It is legal to remove an edge
+    # between vertices A and B while leaving those vertices intact.
+    # In terms of this implementation, that will mean deleting A from
+    # B's list of neighbors, and deleting B from A's list of
+    # neighbors, while leaving the "root" of each vertex in place.
+
+    $self->_remove_neighbor( $a, $b );
+    $self->_remove_neighbor( $b, $a );
+    $self->delete_edge_attributes( $a, $b );
+
+    return 1;
+}
+
+sub _remove_neighbor {
+    ## String String -> State! OR Undef
+    my ( $self, $vertex, $neighbor ) = @_;
+
+    return unless $self->edge_between( $vertex, $neighbor );
+
+    # my $example = [
+    #     [ 's', [ 'a', 'd' ] ],
+    #     [ 'a', [ 's', 'b', 'd' ] ],
+    #     [ 'b', [ 'a', 'c', 'e' ] ],
+    #     [ 'c', ['b'] ],
+    #     [ 'd', [ 's', 'a', 'e' ] ],
+    #     [ 'e', [ 'b', 'd', 'f' ] ]
+    # ];
+
+    my $vertex_index = $self->_find_index($vertex);
+    return unless defined $vertex_index;
+    my $neighbors = $self->get_neighbors($vertex);
+
+    for ( my $i = 0 ; $i <= @$neighbors ; $i++ ) {
+        my $this = $self->[$vertex_index]->[1]->[$i];
+        next unless defined $this;
+        if ( $this eq $neighbor ) {
+            $self->[$vertex_index]->[1]->[$i] = undef;
+        }
     }
 }
 
