@@ -701,4 +701,24 @@ sub clone {
     bless $new, $class;
 }
 
+sub equals {
+    my ( $self, $other ) = @_;
+
+    return
+      unless $self->isa('TinyGraph')
+      && $other->isa('TinyGraph');
+
+    my @xs = sort { ( $a || '' ) lt( $b || '' ) } $self->get_vertices;
+    my @ys = sort { ( $a || '' ) lt( $b || '' ) } $other->get_vertices;
+
+    return unless @xs ~~ @ys;
+
+    my @es = sort { $a->[0] lt $b->[0] } $self->get_edges;
+    my @fs = sort { $a->[0] lt $b->[0] } $other->get_edges;
+
+    return unless @es ~~ @fs;
+
+    return 1;
+}
+
 1;
