@@ -1,0 +1,182 @@
+#+title: YAGL TODOs
+#+author: Rich Loveland
+#+email: r@rmloveland.com
+
+* Reference
+
+  Adding links to books, web stuff, etc. so I don't have to keep
+  linking them from issues.
+
+  - [[~/Dropbox/Documents/conway-perl-best-practices.chm][Conway, Perl Best Practices]]
+
+  - [[https://books.google.com/books/about/Graph_Algorithms.html?id=m3QTSMYm5rkC][Even, Graph Algorithms]]
+
+* Current
+
+** TODO Rewrite graph representation
+
+   Currently (September 2019), the graph representation looks like
+   this:
+
+   #+BEGIN_SRC perl
+     my $g =  [['s', ['a', 'd']],
+               ['a', ['s', 'b', 'd']],
+               ['b', ['a', 'c', 'e']],
+               ['c', ['b']],
+               ['d', ['s', 'a', 'e']],
+               ['e', ['b', 'd', 'f']]];
+   #+END_SRC
+
+   This is very simple to visualize and understand (and to
+   implement!).  However it has a few problems:
+
+   - Slow to do O(n) array lookup to get the index of a vertex, so we
+     can then iterate across its neighbors (another O(n), thus O(n^2)
+     altogether).
+   - We can't easily add new "hidden" fields to hold e.g. edge
+     attributes, vertex attributes, etc.
+
+   We could solve the 'O(N) array lookup' and 'hard to add hidden
+   fields' issues by using a hash of arrays.  That would make the
+   representation something like:
+
+   #+BEGIN_SRC perl
+     my $g =  {
+               's' => ['a', 'd'],
+               'a' => ['s', 'b', 'd'],
+               'b' => ['a', 'c', 'e'],
+               'c' => ['b'],
+               'd' => ['s', 'a', 'e'],
+               'e' => ['b', 'd', 'f'],
+               '_eattrs' => {},
+               '_vattrs' => {},
+              };
+   #+END_SRC
+
+* Staging
+
+** TODO Implement =$self->add_vertex_attribute= method (and friends)
+
+   - =add_vertex_attribute($vertex, { weight => 123})=
+   - =add_vertex_attributes(@v_attrs)=
+   - =remove_vertex_attribute($vertex, 'weight')=
+
+** TODO Minimum spanning tree
+
+   ... for weighted, undirected graphs
+
+** TODO Refactor (and document!) =_st_add()= and friends
+
+   These are pretty janky and make e.g. the core of Dijkstra kinda
+   hard to read.
+
+   Also, they don't have any docs explaining the core data structure
+   they're using, which is basically a linked list.
+
+   Also, they really need a redesign to be more general and reusable.
+
+** TODO add $self->has_path() method
+
+   Return a boolean instead of the paths as arrays.
+
+   Ideally this should be optimized to be a much cheaper check than to
+   generate all the paths and then throw them away.
+
+** TODO add $self->paths('a', 'b') method
+
+   Given two vertices 'A' and 'B', return one or all of:
+
+   - all of the possible paths between them, as arrays
+
+   - the # of possible paths between them.  This could also be called
+     =$self->connectivity('A', 'B')=
+
+** WAITING ON implement object equals check
+
+   To include:
+
+   - [X] Vertices
+   - [ ] Edge attributes
+   - [ ] Following PBP (see [[Reference]] section)
+
+   -----
+
+   Saturday, September 21, 2019:
+
+   - Currently waiting on [[Rewrite graph representation]] to make more
+     progress on this.
+
+   -----
+
+   Saturday, September 21, 2019:
+
+   - Currently, =$self->equals($a, $b)= checks if:
+     - the vertices are the same
+     - the edges are the same
+   - This is necessary but not sufficient.  However, it will require
+     figuring out how to bring =$attrs= inside the object, which is
+     probaby going to require us to rewrite the base data structure as
+     a hash of arrays (See that issue for more info).
+
+*** TODO Follow practices from PBP
+
+*** TODO Check edge attributes
+*** DONE Check vertices and edges
+
+* Someday/Maybe
+** TODO Write documentation
+
+** TODO Add links to references in documentation
+
+** TODO Create and release a YAGL distribution
+
+   - Dist::Zilla?
+   - Module::Starter::PBP?
+
+** TODO Rename $self->edge_between('A', 'B') to $self->has_edge('A', 'B') ?
+
+   This would need to be part of a larger rethinking of names.
+
+** TODO Consider removing non-core dependencies
+
+   It would be nice to be able to run this bad girl on a core Perl
+   install on any machine, including with older versions of Perl.
+
+   Right now the non-core dependencies are:
+
+   - Smart::Match
+   - Hash::PriorityQueue
+     
+   Estimated scope of work is:
+
+   - Assess usage of these modules
+   - See what smart-matching alternatives exist (if any)
+   - See if it's even worth doing, since it might not be worth caring
+     that much about this, more of a nice-to-have.
+   
+** TODO Devise a consistent method naming scheme
+
+   e.g., Should we rename 'get_vertices' to just 'vertices' ?
+
+   Looks like [[~/Dropbox/Documents/conway-perl-best-practices.chm]] says
+   no.  It recommends calling things =get_foo()= and =set_foo()=.
+   
+** TODO Wrap various =$h{$a . $b}= usages in methods
+
+   It would almost certainly be slower but would make the code easier
+   to read and maintain, DRY, etc.
+
+** TODO Speed up $self->edge_between()
+
+   This could be speeded up in a few different ways:
+
+   - Checking the $attrs hashref.  This is hacky, but would be
+     faster.  I'd have to get more confident that the base data
+     structure and the attrs hash are being updated in lockstep,
+     though.
+
+   - Converting base graph data structure to hash of arrays
+     (better).  This would also have the nice properties:
+
+     - Store attrs in the hash, e.g., =$self->{_attrs) = ...=
+
