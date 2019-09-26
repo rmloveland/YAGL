@@ -35,9 +35,10 @@ sub write_to_csv_file {
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
-            my $weight = $attrs->{ $vertex . $neighbor }->{weight} || 0;
-            my @cols   = ( $vertex, $neighbor, $weight );
-            my $line   = join ',', @cols;
+            my $weight =
+              $self->get_edge_attribute( $vertex, $neighbor, 'weight' ) || 0;
+            my @cols = ( $vertex, $neighbor, $weight );
+            my $line = join ',', @cols;
             say $fh $line;
         }
     }
@@ -245,8 +246,8 @@ sub to_weighted_graphviz {
         my $v         = $vertex->[0];
         my $neighbors = $vertex->[1];
         for my $neighbor (@$neighbors) {
-            my $pairkey     = $v . $neighbor;
-            my $edge_weight = $attrs->{$pairkey}->{weight};
+            my $edge_weight =
+              $self->get_edge_attribute( $v, $neighbor, 'weight' );
 
             if ( $neighbor ~~ @path ) {
                 push @buffer,
