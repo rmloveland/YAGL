@@ -3,12 +3,9 @@ package TinyGraph;
 use strict;
 use warnings;
 use experimentals;
-use Data::Dumper;
 use Smart::Match;
 use Text::CSV;
 use Hash::PriorityQueue;
-
-use constant DEBUG => undef;
 
 our $attrs = {};
 
@@ -342,18 +339,9 @@ sub dijkstra {
     $heap->insert( $start, $st->{$start}->{distance} );
 
     while ( my $v = $heap->pop() ) {
-
-        say q[-] x 68 if DEBUG;
-        say qq[Looking at vertex '$v' with current distance: ],
-          $st->{$v}->{distance}
-          if DEBUG;
-
         my $neighbors = $self->get_neighbors($v);
 
-        say qq[Neighbors list: ], Dumper $neighbors if DEBUG;
-
         for my $neighbor (@$neighbors) {
-
             next if $seen{$neighbor};
             $seen{$neighbor}++;
 
