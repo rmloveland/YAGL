@@ -348,35 +348,24 @@ sub dijkstra {
             next if $seen{$neighbor};
             $seen{$neighbor}++;
 
-            say
-              qq[Looking at neighbor '$neighbor' with current distance: ],
-              $st->{$neighbor}->{distance}
-              if DEBUG;
+            # In this block, we are setting up the information we will
+            # need to answer the question "Have we found a new
+            # shortest path (by distance)?"
+            my $distance_to_self         = $st->{$v}->{distance};
+            my $old_distance_to_neighbor = $st->{$neighbor}->{distance};
+            my $edge_weight_to_neighbor =
+              $self->get_edge_attribute( $v, $neighbor, 'weight' );
+            my $new_distance_to_neighbor =
+              $distance_to_self + $edge_weight_to_neighbor;
 
-            my $v_distance        = $st->{$v}->{distance};
-            my $neighbor_distance = $st->{$neighbor}->{distance};
-            my $edge_weight       = $attrs->{ $v . $neighbor }->{weight};
-            my $maybe_new_neighbor_distance = $v_distance + $edge_weight;
-
-            say Dumper {
-                v                           => $v,
-                neighbor                    => $neighbor,
-                v_distance                  => $v_distance,
-                neighbor_distance           => $neighbor_distance,
-                edge_weight                 => $edge_weight,
-                maybe_new_neighbor_distance => $maybe_new_neighbor_distance,
-              }
-              if DEBUG;
-
-            if ( $maybe_new_neighbor_distance < $neighbor_distance ) {
-                my $old_distance = $st->{$neighbor}->{distance};
-                $st->{$neighbor}->{distance} = $maybe_new_neighbor_distance;
+            # This is the core of Dijkstra's algorithm: Have we
+            # discovered a path whose distance to the neighbor is
+            # shorter than the previously discovered path's distance?
+            # If yes, we update the spanning tree with this new path
+            # information.
+            if ( $new_distance_to_neighbor < $old_distance_to_neighbor ) {
+                $st->{$neighbor}->{distance} = $new_distance_to_neighbor;
                 $st->{$neighbor}->{prev}     = $v;
-                say
-qq[Updated distance of neighbor '$neighbor' from $old_distance to ],
-                  $st->{$neighbor}->{distance}
-                  if DEBUG;
-                delete $seen{$neighbor};
             }
 
             if ( $neighbor eq $end ) {
