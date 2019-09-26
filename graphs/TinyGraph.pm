@@ -627,7 +627,12 @@ sub generate_random_vertices {
     ## HashRef -> State!
     my ( $self, $args ) = @_;
 
-    my $n          = $args->{n};
+    my $n = $args->{n};
+
+    # As we loop through the nodes, for each node A, this is the
+    # probability that another randomly selected node B is NOT
+    # connected to A.  In other words, this is the probability that
+    # there is NOT an edge A-B.
     my $p          = $args->{p};
     my $max_weight = $args->{max_weight};
 
