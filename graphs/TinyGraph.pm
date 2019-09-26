@@ -81,9 +81,9 @@ sub _find_index {
     my $i = 0;
     for my $elem (@$self) {
 
-        # Definedness check here is necessary because we delete
-        # elements from the graph by setting the element's index to
-        # undef.  In other words, some graph indices can be undef.
+        # Definedness check here is necessary because when we delete a
+        # vertex from the graph, we do so by setting the vertex's
+        # array index to undef.
         if ( defined $elem->[0] && $elem->[0] eq $wanted ) {
             return $i;
         }
@@ -136,16 +136,25 @@ sub remove_vertex {
 
     my $neighbors = $self->get_neighbors($vertex);
 
+    # Our general strategy for deleting things is to set the vertex's
+    # position in the array of arrays graph representation to undef.
+    #
+    # In this pass, we delete all edges between each of this vertex's
+    # neighbor and the vertex. Note the order of the arguments:
+    #
+    # - Because we are deleting *this* vertex (and *not* the
+    # neighbor), we have the neighbor (which is not being deleted) set
+    # its connection to this vertex to undef (i.e., deleted).
+    #
+    # - Then, we delete any edge attributes that exist between the two
+    # vertices (since there is no edge there anymore).
     for my $neighbor (@$neighbors) {
-
-        # 1. In this pass, we delete all edges between each of this
-        # vertex's neighbor and the vertex. Note the order of the
-        # arguments.
         $self->_remove_neighbor( $neighbor, $vertex );
         $self->delete_edge_attributes( $vertex, $neighbor );
     }
 
-    # 2. Now we delete the "root" reference to the vertex.
+    # Then, we delete the "root" reference to the vertex by setting it
+    # to undef.
     my $index = $self->_find_index($vertex);
     if ( defined $index ) {
         $self->[$index] = undef;
@@ -571,11 +580,9 @@ sub remove_edge {
 
     return unless $self->edge_between( $a, $b );
 
-    # There is some complexity here.  It is legal to remove an edge
-    # between vertices A and B while leaving those vertices intact.
-    # In terms of this implementation, that will mean deleting A from
-    # B's list of neighbors, and deleting B from A's list of
-    # neighbors, while leaving the "root" of each vertex in place.
+    # We delete A from B's list of neighbors, and delete B from A's
+    # list of neighbors.  Then, we delete any edge attributes, since
+    # said edge no longer exists.
 
     $self->_remove_neighbor( $a, $b );
     $self->_remove_neighbor( $b, $a );
@@ -590,6 +597,9 @@ sub _remove_neighbor {
 
     return unless $self->edge_between( $vertex, $neighbor );
 
+    # Graphs are represented as an array of arrays that look like the
+    # following:
+    #
     # my $example = [
     #     [ 's', [ 'a', 'd' ] ],
     #     [ 'a', [ 's', 'b', 'd' ] ],
@@ -598,6 +608,10 @@ sub _remove_neighbor {
     #     [ 'd', [ 's', 'a', 'e' ] ],
     #     [ 'e', [ 'b', 'd', 'f' ] ]
     # ];
+    #
+    # To delete a specific neighbor, we have to walk this vertex's
+    # list of neighbors (skipping any already deleted neighbors) and
+    # set the neighbor's value to undef.
 
     my $vertex_index = $self->_find_index($vertex);
     return unless defined $vertex_index;
