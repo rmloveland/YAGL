@@ -366,7 +366,7 @@ sub dijkstra {
             }
 
             if ( $neighbor eq $end ) {
-                @path = $self->_st_weighted_walk( $start, $end, $st );
+                @path = $self->_st_walk( $st, $start, $end );
                 return @path;
             }
             else {
@@ -377,29 +377,6 @@ sub dijkstra {
         $seen{$v}++;
     }
     return ();
-}
-
-sub _st_weighted_walk {
-    ## String String HashRef -> Array
-    my ( $self, $start, $end, $st ) = @_;
-
-    my @path;
-    push @path, { vertex => $end, distance => $st->{$end}->{distance} };
-
-    my $prev = $st->{$end}->{prev};
-    while (1) {
-        if ( $prev eq $start ) {
-
-            push @path,
-              { vertex => $prev, distance => $st->{$prev}->{distance} };
-            last;
-        }
-
-        push @path, { vertex => $prev, distance => $st->{$prev}->{distance} };
-        $prev = $st->{$prev}->{prev};
-        next;
-    }
-    return reverse @path;
 }
 
 sub find_path_between {
@@ -431,10 +408,10 @@ sub find_path_between {
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
             next if $seen{$neighbor};
-            $self->_st_add( $v, $neighbor, $st );
+            $st->{$neighbor}->{prev} = $v;
             if ( $neighbor eq $end ) {
                 $found++;
-                @path = $self->_st_walk( $start, $end, $st );
+                @path = $self->_st_walk( $st, $start, $end );
                 return @path;
             }
             else {
@@ -448,28 +425,41 @@ sub find_path_between {
 
 sub _st_walk {
     ## String String HashRef -> Array
-    my ( $self, $start, $end, $st ) = @_;
+    my ( $self, $st, $start, $end ) = @_;
 
     my @path;
 
-    push @path, $end;
-    my $prev = $st->{$end}->{prev};
-    while (1) {
-        if ( $prev eq $start ) {
-            push @path, $start;
-            last;
+    if ( exists $st->{$start}->{distance} ) {
+        push @path, { vertex => $end, distance => $st->{$end}->{distance} };
+        my $prev = $st->{$end}->{prev};
+
+        while (1) {
+            if ( $prev eq $start ) {
+
+                push @path,
+                  { vertex => $prev, distance => $st->{$prev}->{distance} };
+                last;
+            }
+            push @path,
+              { vertex => $prev, distance => $st->{$prev}->{distance} };
+            $prev = $st->{$prev}->{prev};
+            next;
         }
-        push @path, $prev;
-        $prev = $st->{$prev}->{prev};
-        next;
+    }
+    else {
+        push @path, $end;
+        my $prev = $st->{$end}->{prev};
+        while (1) {
+            if ( $prev eq $start ) {
+                push @path, $start;
+                last;
+            }
+            push @path, $prev;
+            $prev = $st->{$prev}->{prev};
+            next;
+        }
     }
     return reverse @path;
-}
-
-sub _st_add {
-    ## String String HashRef -> State!
-    my ( $self, $vertex, $neighbor, $st ) = @_;
-    $st->{$neighbor}->{prev} = $vertex;
 }
 
 sub get_edge_attributes {
