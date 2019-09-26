@@ -17,7 +17,7 @@ my $cwd = getcwd;
 # from the graphviz output.  The graphviz JPG file is in this
 # directory as '04-dijkstra.jpg'.
 
-$g->read_from_csv_file("$cwd/t/04-dijkstra.csv");
+$g->read_csv("$cwd/t/04-dijkstra.csv");
 
 my $start = 'da1705';
 my $end   = 'gk1114';
@@ -91,7 +91,7 @@ is_deeply( $expected, \@got,
 
 my $h = TinyGraph->new;
 
-$h->read_from_csv_file("$cwd/t/04-dijkstra-01.csv");
+$h->read_csv("$cwd/t/04-dijkstra-01.csv");
 
 my ( $start_01, $end_01 ) = ( 'ur522', 'je6938' );
 

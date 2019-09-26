@@ -13,7 +13,7 @@ my $g   = TinyGraph->new;
 
 my $removed = 'sk132';
 
-$g->read_from_csv_file("$cwd/t/06-edge-between.csv");
+$g->read_csv("$cwd/t/06-edge-between.csv");
 
 my $connected = $g->edge_between( 'ds2196', 'io9729' );
 

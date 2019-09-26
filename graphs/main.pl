@@ -16,7 +16,7 @@ sub main {
 
     # Uncomment this if you want to re-run using the last graph.
     # This can be useful for testing.
-    # $g->read_from_csv_file('foo.csv');
+    # $g->read_csv('foo.csv');
 
     $g->add_vertex('abc123');
     $g->add_vertex('xyz789');
@@ -26,7 +26,7 @@ sub main {
     $g->add_edge( 'I_AM_A_TEST', 'abc123', { weight => 12345 } );
 
     # Write the graph out to a CSV file.
-    $g->write_graph_to_csv_file('foo.csv');
+    $g->write_csv('foo.csv');
 
     my @vertices = $g->get_vertices;
 

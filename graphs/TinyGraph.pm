@@ -17,7 +17,7 @@ sub new {
     return $graph;
 }
 
-sub write_to_csv_file {
+sub write_csv {
     ## Filename -> State! IO!
     my ( $self, $f ) = @_;
 
@@ -42,7 +42,7 @@ sub write_to_csv_file {
     close $fh;
 }
 
-sub read_from_csv_file {
+sub read_csv {
     ## Filename -> State! IO!
     my ( $self, $f ) = @_;
 

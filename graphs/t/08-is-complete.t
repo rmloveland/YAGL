@@ -11,7 +11,7 @@ use Data::Dumper;
 my $cwd = getcwd;
 my $g   = TinyGraph->new;
 
-$g->read_from_csv_file("$cwd/t/08-is-complete.csv");
+$g->read_csv("$cwd/t/08-is-complete.csv");
 
 # --------------------------------------------------------------------
 
