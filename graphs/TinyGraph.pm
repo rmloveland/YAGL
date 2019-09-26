@@ -469,7 +469,6 @@ sub _st_walk {
 sub _st_add {
     ## String String HashRef -> State!
     my ( $self, $vertex, $neighbor, $st ) = @_;
-    $st->{$vertex}->{$neighbor} = 1;      # Possibly unnecessary.
     $st->{$neighbor}->{prev} = $vertex;
 }
 
