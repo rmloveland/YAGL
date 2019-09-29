@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use experimentals;
 use lib '.';
-use Test::More tests => 10;
+use Test::More tests => 14;
 use TinyGraph;
 
 my @edges = (
@@ -104,3 +104,24 @@ ok( !defined $hh_eq_h_now,
     "HH->equals(H) should fail since we deleted an edge from HH." );
 ok( !defined $h_eq_hh_now,
     "H->equals(HH) should fail since we deleted an edge from HH." );
+
+# --------------------------------------------------------------------
+# In this test we want to ensure that edge attributes are being tested
+# for equality across copied objects correctly.
+
+# First, we establish a baseline with equal objects.
+
+my $hhh = $hh->clone;
+
+ok( $hh->equals($hhh) == 1, "HH->equals(HHH) works as expected." );
+ok( $hhh->equals($hh) == 1, "HHH->equals(HH) works as expected." );
+
+# Now, we change some edge weights on one object, and test them again.
+# The resulting equality tests should fail in both directions.
+
+$hhh->set_edge_attribute( 's', 'a', { weight => 123 } );
+
+ok( !defined $hh->equals($hhh),
+    "HH->equals(HHH) fails as expected after changing edge attributes." );
+ok( !defined $hhh->equals($hh),
+    "HHH->equals(HH) fails as expected after changing edge attributes." );

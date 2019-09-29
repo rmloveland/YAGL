@@ -8,11 +8,12 @@ use Text::CSV;
 use Hash::PriorityQueue;
 use Storable;
 
-our $attrs = {};
-
 sub new {
     my $self  = shift;
     my $graph = {};
+
+    $graph->{_INTERNAL}->{edge_attrs}   = {};
+    $graph->{_INTERNAL}->{vertex_attrs} = {};
 
     bless $graph, $self;
     return $graph;
@@ -62,7 +63,7 @@ sub read_csv {
 
         $self->_add_neighbor( $vertex, [$neighbor] );
 
-        if ($attrs) {
+        if ( $self->{_INTERNAL}->{edge_attrs} ) {
             $self->set_edge_attribute( $vertex, $neighbor,
                 { weight => $weight } );
         }
@@ -139,6 +140,7 @@ sub get_vertices {
     my @vertices;
     for my $vertex ( keys %$self ) {
         next unless defined $vertex;
+        next if $vertex eq '_INTERNAL';
         push @vertices, $vertex;
     }
     return sort @vertices;
@@ -438,7 +440,7 @@ sub get_edge_attributes {
     ## String String -> HashRef OR undef
     my ( $self, $start, $end ) = @_;
     my $pairkey = $start . $end;
-    return $attrs->{$pairkey};
+    return $self->{_INTERNAL}->{edge_attrs}->{$pairkey};
 }
 
 sub get_edge_attribute {
@@ -446,7 +448,7 @@ sub get_edge_attribute {
     my ( $self, $start, $end, $attribute ) = @_;
 
     my $pairkey = $start . $end;
-    return $attrs->{$pairkey}->{$attribute};
+    return $self->{_INTERNAL}->{edge_attrs}->{$pairkey}->{$attribute};
 }
 
 sub set_edge_attribute {
@@ -462,8 +464,8 @@ sub set_edge_attribute {
     for ( my ( $k, $v ) = each %$new_attrs ) {
         next unless defined $k;
         next if $k eq '';
-        $attrs->{$pairkey1}->{$k} = $v;
-        $attrs->{$pairkey2}->{$k} = $v;
+        $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}->{$k} = $v;
+        $self->{_INTERNAL}->{edge_attrs}->{$pairkey2}->{$k} = $v;
     }
 }
 
@@ -474,9 +476,11 @@ sub delete_edge_attributes {
 
     my $pairkey1 = $start . $end;
     my $pairkey2 = $end . $start;
-    return unless ( exists $attrs->{$pairkey1} && exists $attrs->{$pairkey2} );
-    delete $attrs->{$pairkey1};
-    delete $attrs->{$pairkey2};
+    return
+      unless ( exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}
+        && exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey2} );
+    delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey1};
+    delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey2};
 }
 
 sub is_complete {
@@ -650,6 +654,16 @@ sub clone {
     return $copy;
 }
 
+sub _edge_attrs {
+    my ($self) = @_;
+    return $self->{_INTERNAL}->{edge_attrs};
+}
+
+sub _vertex_attrs {
+    my ($self) = @_;
+    return $self->{_INTERNAL}->{vertex_attrs};
+}
+
 sub equals {
     my ( $self, $other ) = @_;
 
@@ -666,6 +680,11 @@ sub equals {
     my @fs = $other->get_edges;
 
     return unless @es ~~ @fs;
+
+    my $self_attrs  = $self->_edge_attrs;
+    my $other_attrs = $other->_edge_attrs;
+
+    return unless %$self_attrs ~~ %$other_attrs;
 
     return 1;
 }
