@@ -6,12 +6,13 @@ use experimentals;
 use Smart::Match;
 use Text::CSV;
 use Hash::PriorityQueue;
+use Storable;
 
 our $attrs = {};
 
 sub new {
     my $self  = shift;
-    my $graph = [];
+    my $graph = {};
 
     bless $graph, $self;
     return $graph;
@@ -68,35 +69,12 @@ sub read_csv {
     }
 }
 
-sub _find_index {
-    ## Int -> Int OR undef
-    my ( $self, $wanted ) = @_;
-
-    return unless defined $wanted;
-
-    # Naive linear search, for now.
-    my $i = 0;
-    for my $elem (@$self) {
-
-        # Definedness check here is necessary because when we delete a
-        # vertex from the graph, we do so by setting the vertex's
-        # array index to undef.
-        if ( defined $elem->[0] && $elem->[0] eq $wanted ) {
-            return $i;
-        }
-        $i++;
-    }
-    return;
-}
-
 sub get_neighbors {
     ## String -> ArrayRef
     my ( $self, $vertex ) = @_;
 
-    my $index = $self->_find_index($vertex);
-
-    if ( defined $index ) {
-        return $self->[$index]->[1];
+    if ( exists $self->{$vertex} ) {
+        return $self->{$vertex} if defined $self->{$vertex};
     }
     else {
         return;
@@ -106,24 +84,22 @@ sub get_neighbors {
 sub is_empty {
     ## -> Boolean
     my $self     = shift;
-    my $count    = 0;
     my @vertices = $self->get_vertices;
 
-    my $return = 1;
-
-    for my $vertex (@vertices) {
-        if ( defined $vertex ) {
-            undef $return;
-        }
+    if ( scalar @vertices >= 1 ) {
+        return;
     }
-    return $return;
+    else {
+        return 1;
+    }
 }
 
 sub has_vertex {
     ## String -> Boolean
     my ( $self, $vertex ) = @_;
-
-    return 1 if defined $self->_find_index($vertex);
+    if ( exists $self->{$vertex} && defined $self->{$vertex} ) {
+        return 1;
+    }
     return;
 }
 
@@ -152,9 +128,8 @@ sub remove_vertex {
 
     # Then, we delete the "root" reference to the vertex by setting it
     # to undef.
-    my $index = $self->_find_index($vertex);
-    if ( defined $index ) {
-        $self->[$index] = undef;
+    if ( exists $self->{$vertex} ) {
+        delete $self->{$vertex};
     }
 }
 
@@ -162,10 +137,11 @@ sub get_vertices {
     ## -> Array
     my $self = shift;
     my @vertices;
-    for my $vertex (@$self) {
-        push @vertices, $vertex->[0];
+    for my $vertex ( keys %$self ) {
+        next unless defined $vertex;
+        push @vertices, $vertex;
     }
-    return @vertices;
+    return sort @vertices;
 }
 
 sub get_edge {
@@ -184,12 +160,10 @@ sub get_edges {
     my ($self) = @_;
 
     my @vertices = $self->get_vertices;
-
     my @answer;
     my %seen;
 
     for my $vertex (@vertices) {
-        next unless defined $vertex;
         my $neighbors = $self->get_neighbors($vertex);
 
         for my $neighbor (@$neighbors) {
@@ -201,7 +175,7 @@ sub get_edges {
         }
     }
 
-    return @answer;
+    return sort { $a->[0] lt $b->[0] } @answer;
 }
 
 sub to_graphviz {
@@ -213,12 +187,12 @@ sub to_graphviz {
 
     push @buffer, qq[graph { ];
 
-    for my $vertex (@$self) {
-        next unless defined $vertex->[0];
-        push @buffer, $vertex->[0];
+    for my $vertex ( $self->get_vertices ) {
+        next unless defined $vertex;
+        push @buffer, $vertex;
         push @buffer, qq[ -- ];
         push @buffer, qq[ { ];
-        my $neighbors = $vertex->[1];
+        my $neighbors = $self->get_neighbors($vertex);
         for my $vertex (@$neighbors) {
             if ( $vertex ~~ @$path ) {
                 push @buffer, qq{$vertex [style=filled fillcolor=red]};
@@ -247,20 +221,20 @@ sub to_weighted_graphviz {
 
     push @buffer, qq[graph {\n];
 
-    for my $vertex (@$self) {
-        next unless defined $vertex->[0];
-        my $v         = $vertex->[0];
-        my $neighbors = $vertex->[1];
+    for my $vertex ( $self->get_vertices ) {
+        next unless defined $vertex;
+        my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
             my $edge_weight =
-              $self->get_edge_attribute( $v, $neighbor, 'weight' );
+              $self->get_edge_attribute( $vertex, $neighbor, 'weight' );
 
             if ( $neighbor ~~ @path ) {
                 push @buffer,
-qq{$v -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n};
+qq{$vertex -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n};
             }
             else {
-                push @buffer, qq{$v -- $neighbor [label="$edge_weight"];\n};
+                push @buffer,
+                  qq{$vertex -- $neighbor [label="$edge_weight"];\n};
             }
         }
     }
@@ -274,8 +248,6 @@ sub _add_neighbor {
     ## String ArrayRef HashRef -> State!
     my ( $self, $vertex, $neighbor, $data ) = @_;
 
-    my $index = $self->_find_index($vertex);
-
     unless ( ref($neighbor) eq 'ARRAY' ) {
         my ( $package, $filename, $line ) = caller();
         die <<"EOF";
@@ -285,15 +257,15 @@ on line $line of file $filename:
 EOF
     }
 
-    if ( defined $index ) {
-        my $neighbors = $self->[$index]->[1];
+    if ( $self->has_vertex($vertex) ) {
+        my $neighbors = $self->get_neighbors($vertex);
         for my $value (@$neighbor) {
             push @$neighbors, $value;
         }
-        $self->[$index]->[1] = $neighbors;
+        $self->{$vertex} = $neighbors;
     }
     else {
-        push @$self, [ $vertex, $neighbor ];
+        $self->{$vertex} = $neighbor;
     }
 
     if ($data) {
@@ -526,7 +498,8 @@ sub is_complete {
 sub add_vertex {
     ## String -> State!
     my ( $self, $vertex ) = @_;
-    push @$self, [ $vertex, [] ];
+    return if $self->has_vertex($vertex);
+    $self->{$vertex} = [];
 }
 
 sub add_vertices {
@@ -590,15 +563,14 @@ sub _remove_neighbor {
     # list of neighbors (skipping any already deleted neighbors) and
     # set the neighbor's value to undef.
 
-    my $vertex_index = $self->_find_index($vertex);
-    return unless defined $vertex_index;
+    return unless $self->has_vertex($vertex);
     my $neighbors = $self->get_neighbors($vertex);
 
     for ( my $i = 0 ; $i <= @$neighbors ; $i++ ) {
-        my $this = $self->[$vertex_index]->[1]->[$i];
+        my $this = $self->{$vertex}->[$i];
         next unless defined $this;
         if ( $this eq $neighbor ) {
-            $self->[$vertex_index]->[1]->[$i] = undef;
+            $self->{$vertex}->[$i] = undef;
         }
     }
 }
@@ -667,24 +639,15 @@ sub get_degree {
     my ( $self, $vertex ) = @_;
     if ( $self->has_vertex($vertex) ) {
         my $neighbors = $self->get_neighbors($vertex);
-        if ( defined $neighbors ) {
-            return scalar @$neighbors;
-        }
+        return scalar @$neighbors;
     }
     return;
 }
 
 sub clone {
     my ($self) = @_;
-    my $class  = ref($self);
-    my $new    = [];
-
-    for my $vertex ( $self->get_vertices ) {
-        my $neighbors = $self->get_neighbors($vertex);
-        push @$new, [ $vertex, [@$neighbors] ];
-    }
-
-    bless $new, $class;
+    my $copy = Storable::dclone($self);
+    return $copy;
 }
 
 sub equals {
@@ -694,13 +657,13 @@ sub equals {
       unless $self->isa('TinyGraph')
       && $other->isa('TinyGraph');
 
-    my @xs = sort { ( $a || '' ) lt( $b || '' ) } $self->get_vertices;
-    my @ys = sort { ( $a || '' ) lt( $b || '' ) } $other->get_vertices;
+    my @xs = $self->get_vertices;
+    my @ys = $other->get_vertices;
 
     return unless @xs ~~ @ys;
 
-    my @es = sort { $a->[0] lt $b->[0] } $self->get_edges;
-    my @fs = sort { $a->[0] lt $b->[0] } $other->get_edges;
+    my @es = $self->get_edges;
+    my @fs = $other->get_edges;
 
     return unless @es ~~ @fs;
 
