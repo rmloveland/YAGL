@@ -1,16 +1,13 @@
 all: dot
 
 dot: perl
-	dot -O -Tjpg graph.dot 
+	dot -O -Tjpg graph.dot
 
-profile: random
-	perl -d:NYTProf main.pl graph.csv && nytprofhtml --open
+profile:
+	perl -d:NYTProf main.pl && nytprofhtml --open
 
-perl: random
-	perl main.pl graph.csv
-
-random:
-	perl generate_random_graphs.pl > graph.csv
+perl:
+	perl main.pl
 
 tags:
 	etags --lang=perl *.pm
