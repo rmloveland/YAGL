@@ -5,7 +5,7 @@ use warnings;
 use experimentals;
 use lib '.';
 use Test::More tests => 14;
-use TinyGraph;
+use YAGL;
 
 my @edges = (
     [ 's', 'a', { weight => 560 } ],
@@ -18,10 +18,10 @@ my @edges = (
     [ 'e', 'f', { weight => 35 } ],
 );
 
-my $g = TinyGraph->new;
+my $g = YAGL->new;
 $g->add_edges(@edges);
 
-my $h = TinyGraph->new;
+my $h = YAGL->new;
 $h->add_edges(@edges);
 
 # --------------------------------------------------------------------
@@ -60,7 +60,7 @@ my @edges2 = (
     [ 'a', 'd', { weight => 843 } ],
 );
 
-my $k = TinyGraph->new;
+my $k = YAGL->new;
 $k->add_edges(@edges2);
 
 my $k_eq_h = $k->equals($h);
@@ -75,7 +75,7 @@ ok( !defined $h_eq_k,
 # If we delete an edge from a graph HH attributes are different from H should fail
 # the equality test.
 
-my $hh = TinyGraph->new;
+my $hh = YAGL->new;
 $hh->add_edges(@edges);
 
 # First, we make sure it is truly the same as H.

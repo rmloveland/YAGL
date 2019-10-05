@@ -6,9 +6,9 @@ use experimentals;
 use lib '.';
 use Test::More tests => 1;
 use Cwd;
-use TinyGraph;
+use YAGL;
 
-my $g = TinyGraph->new;
+my $g = YAGL->new;
 
 my @expected = (
     [ 'a', 'b', { weight => 1 } ],

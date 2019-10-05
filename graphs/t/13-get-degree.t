@@ -6,10 +6,10 @@ use experimentals;
 use lib '.';
 use Test::More tests => 3;
 use Cwd;
-use TinyGraph;
+use YAGL;
 use Data::Dumper;
 
-my $g = TinyGraph->new;
+my $g = YAGL->new;
 
 my @new = (
     [ 'a', 'b', { weight => 1 } ],

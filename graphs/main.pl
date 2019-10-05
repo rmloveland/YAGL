@@ -5,10 +5,10 @@ use warnings;
 use experimentals;
 use Data::Dumper;
 use lib '.';
-require TinyGraph;
+require YAGL;
 
 sub main {
-    my $g = TinyGraph->new;
+    my $g = YAGL->new;
     my @path;
 
     $g->generate_random_vertices(

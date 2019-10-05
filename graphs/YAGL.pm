@@ -1,4 +1,4 @@
-package TinyGraph;
+package YAGL;
 
 use strict;
 use warnings;
@@ -668,8 +668,8 @@ sub equals {
     my ( $self, $other ) = @_;
 
     return
-      unless $self->isa('TinyGraph')
-      && $other->isa('TinyGraph');
+      unless $self->isa('YAGL')
+      && $other->isa('YAGL');
 
     my @xs = $self->get_vertices;
     my @ys = $other->get_vertices;

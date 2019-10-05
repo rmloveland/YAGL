@@ -5,11 +5,11 @@ use warnings;
 use lib '.';
 use Test::More tests => 2;
 use Cwd;
-use TinyGraph;
+use YAGL;
 use Data::Dumper;
 
 my $cwd = getcwd;
-my $g   = TinyGraph->new;
+my $g   = YAGL->new;
 
 $g->read_csv("$cwd/t/08-is-complete.csv");
 

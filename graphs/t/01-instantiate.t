@@ -4,10 +4,10 @@ use strict;
 use warnings;
 use lib '.';
 use Test::More tests => 1;
-use TinyGraph;
+use YAGL;
 
-my $g = TinyGraph->new;
+my $g = YAGL->new;
 
-my $is = $g->isa('TinyGraph');
+my $is = $g->isa('YAGL');
 
-isa_ok( $g, 'TinyGraph' );
+isa_ok( $g, 'YAGL' );

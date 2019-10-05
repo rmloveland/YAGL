@@ -5,9 +5,9 @@ use warnings;
 use experimentals;
 use lib '.';
 use Test::More tests => 5;
-use TinyGraph;
+use YAGL;
 
-my $g = TinyGraph->new;
+my $g = YAGL->new;
 
 my @new = (
     [ 's', 'a', { weight => 560 } ],

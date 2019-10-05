@@ -5,9 +5,9 @@ use warnings;
 use lib '.';
 use Test::More tests => 2;
 use Cwd;
-use TinyGraph;
+use YAGL;
 
-my $g   = TinyGraph->new;
+my $g   = YAGL->new;
 my $cwd = getcwd;
 
 # --------------------------------------------------------------------
@@ -89,7 +89,7 @@ is_deeply( $expected, \@got,
 # visually from the graphviz output.  The graphviz JPG file is in this
 # directory as '04-dijkstra-01.jpg'.
 
-my $h = TinyGraph->new;
+my $h = YAGL->new;
 
 $h->read_csv("$cwd/t/04-dijkstra-01.csv");
 

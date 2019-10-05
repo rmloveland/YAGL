@@ -7,9 +7,9 @@ use lib '.';
 use Test::More tests => 1;
 use Cwd;
 use Smart::Match;
-use TinyGraph;
+use YAGL;
 
-my $g = TinyGraph->new;
+my $g = YAGL->new;
 
 my @to_add = qw/a b c d e f/;
 

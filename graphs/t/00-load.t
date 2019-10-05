@@ -5,4 +5,4 @@ use warnings;
 use lib '.';
 use Test::More tests => 1;
 
-BEGIN { use_ok 'TinyGraph' }
+BEGIN { use_ok 'YAGL' }
