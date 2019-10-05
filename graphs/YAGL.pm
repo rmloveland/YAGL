@@ -8,6 +8,11 @@ use Text::CSV;
 use Hash::PriorityQueue;
 use Storable;
 
+=head1 YAGL - Yet Another Graph Library
+
+=head2 GRAPH INITIALIZATION AND RANDOMIZATION
+=cut
+
 sub new {
     my $self  = shift;
     my $graph = {};
@@ -18,6 +23,56 @@ sub new {
     bless $graph, $self;
     return $graph;
 }
+
+sub generate_random_vertices {
+    ## HashRef -> State!
+    my ( $self, $args ) = @_;
+
+    my $n = $args->{n};
+
+    # As we loop through the nodes, for each node A, this is the
+    # probability that another randomly selected node B is NOT
+    # connected to A.  In other words, this is the probability that
+    # there is NOT an edge A-B.
+    my $p          = $args->{p};
+    my $max_weight = $args->{max_weight};
+
+    my %seen;
+
+    for my $node ( 1 .. $n ) {
+        my $name = $self->_make_vertex_name;
+        redo if $seen{$name};
+        $seen{$name}++;
+    }
+
+    my @nodes = keys %seen;
+
+    my @pairs;
+
+    for my $node (@nodes) {
+        my $maybe_neighbor = $nodes[ rand $#nodes ];
+        next if $maybe_neighbor eq $node;
+        my $connection_prob = rand 1;
+        my $dist            = int rand $max_weight;
+        if ( $connection_prob > $p ) {
+            push @pairs, [ $node,           $maybe_neighbor, $dist ];
+            push @pairs, [ $maybe_neighbor, $node,           $dist ];
+        }
+        redo
+          if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
+    }
+
+    for my $pair (@pairs) {
+        $self->_add_neighbor(
+            $pair->[0],
+            [ $pair->[1] ],
+            { weight => $pair->[2] }
+        );
+    }
+}
+
+=head2 GRAPH SERIALIZATION
+=cut
 
 sub write_csv {
     ## Filename -> State! IO!
@@ -68,116 +123,6 @@ sub read_csv {
                 { weight => $weight } );
         }
     }
-}
-
-sub get_neighbors {
-    ## String -> ArrayRef
-    my ( $self, $vertex ) = @_;
-
-    if ( exists $self->{$vertex} ) {
-        return $self->{$vertex} if defined $self->{$vertex};
-    }
-    else {
-        return;
-    }
-}
-
-sub is_empty {
-    ## -> Boolean
-    my $self     = shift;
-    my @vertices = $self->get_vertices;
-
-    if ( scalar @vertices >= 1 ) {
-        return;
-    }
-    else {
-        return 1;
-    }
-}
-
-sub has_vertex {
-    ## String -> Boolean
-    my ( $self, $vertex ) = @_;
-    if ( exists $self->{$vertex} && defined $self->{$vertex} ) {
-        return 1;
-    }
-    return;
-}
-
-sub remove_vertex {
-    ## String -> State!
-    my ( $self, $vertex ) = @_;
-
-    my $neighbors = $self->get_neighbors($vertex);
-
-    # Our general strategy for deleting things is to set the vertex's
-    # position in the array of arrays graph representation to undef.
-    #
-    # In this pass, we delete all edges between each of this vertex's
-    # neighbor and the vertex. Note the order of the arguments:
-    #
-    # - Because we are deleting *this* vertex (and *not* the
-    # neighbor), we have the neighbor (which is not being deleted) set
-    # its connection to this vertex to undef (i.e., deleted).
-    #
-    # - Then, we delete any edge attributes that exist between the two
-    # vertices (since there is no edge there anymore).
-    for my $neighbor (@$neighbors) {
-        $self->_remove_neighbor( $neighbor, $vertex );
-        $self->delete_edge_attributes( $vertex, $neighbor );
-    }
-
-    # Then, we delete the "root" reference to the vertex by setting it
-    # to undef.
-    if ( exists $self->{$vertex} ) {
-        delete $self->{$vertex};
-    }
-}
-
-sub get_vertices {
-    ## -> Array
-    my $self = shift;
-    my @vertices;
-    for my $vertex ( keys %$self ) {
-        next unless defined $vertex;
-        next if $vertex eq '_INTERNAL';
-        push @vertices, $vertex;
-    }
-    return sort @vertices;
-}
-
-sub get_edge {
-    ## String String -> ArrayRef
-    my ( $self, $a, $b ) = @_;
-
-    return unless $self->edge_between( $a, $b );
-
-    my $attrs = $self->get_edge_attributes( $a, $b );
-
-    return [ $a, $b, $attrs ];
-}
-
-sub get_edges {
-    ## -> Array
-    my ($self) = @_;
-
-    my @vertices = $self->get_vertices;
-    my @answer;
-    my %seen;
-
-    for my $vertex (@vertices) {
-        my $neighbors = $self->get_neighbors($vertex);
-
-        for my $neighbor (@$neighbors) {
-            next unless defined $neighbor;
-            next if $seen{ $vertex . $neighbor };
-            push @answer, $self->get_edge( $vertex, $neighbor );
-            $seen{ $vertex . $neighbor }++;
-            $seen{ $neighbor . $vertex }++;
-        }
-    }
-
-    return sort { $a->[0] lt $b->[0] } @answer;
 }
 
 sub to_graphviz {
@@ -246,33 +191,160 @@ qq{$vertex -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=re
     return join ' ', @buffer;
 }
 
-sub _add_neighbor {
-    ## String ArrayRef HashRef -> State!
-    my ( $self, $vertex, $neighbor, $data ) = @_;
+=head2 BOOLEAN METHODS
+=cut
 
-    unless ( ref($neighbor) eq 'ARRAY' ) {
-        my ( $package, $filename, $line ) = caller();
-        die <<"EOF";
-on line $line of file $filename:
-  $package\:\:_add_neighbor('$vertex', '$neighbor', '$data'):
-    expected arrayref, got '$neighbor'
-EOF
-    }
+sub is_empty {
+    ## -> Boolean
+    my $self     = shift;
+    my @vertices = $self->get_vertices;
 
-    if ( $self->has_vertex($vertex) ) {
-        my $neighbors = $self->get_neighbors($vertex);
-        for my $value (@$neighbor) {
-            push @$neighbors, $value;
-        }
-        $self->{$vertex} = $neighbors;
+    if ( scalar @vertices >= 1 ) {
+        return;
     }
     else {
-        $self->{$vertex} = $neighbor;
+        return 1;
+    }
+}
+
+sub is_complete {
+    my $self = shift;
+
+    my @vertices = $self->get_vertices;
+    my $v        = pop @vertices;
+
+    my $neighbors = $self->get_neighbors($v);
+
+    @vertices = sort { ( $a || '' ) cmp( $b || '' ) } @vertices;
+    my @neighbors = sort { ( $a || '' ) cmp( $b || '' ) } @$neighbors;
+
+    return 1 if @vertices ~~ @neighbors;
+
+    return;
+}
+
+=head2 METHODS ON VERTICES
+=cut
+
+sub add_vertex {
+    ## String -> State!
+    my ( $self, $vertex ) = @_;
+    return if $self->has_vertex($vertex);
+    $self->{$vertex} = [];
+}
+
+sub add_vertices {
+    my ( $self, @vertices ) = @_;
+    $self->add_vertex($_) for @vertices;
+}
+
+sub get_neighbors {
+    ## String -> ArrayRef
+    my ( $self, $vertex ) = @_;
+
+    if ( exists $self->{$vertex} ) {
+        return $self->{$vertex} if defined $self->{$vertex};
+    }
+    else {
+        return;
+    }
+}
+
+sub has_vertex {
+    ## String -> Boolean
+    my ( $self, $vertex ) = @_;
+    if ( exists $self->{$vertex} && defined $self->{$vertex} ) {
+        return 1;
+    }
+    return;
+}
+
+sub remove_vertex {
+    ## String -> State!
+    my ( $self, $vertex ) = @_;
+
+    my $neighbors = $self->get_neighbors($vertex);
+
+    # Our general strategy for deleting things is to set the vertex's
+    # position in the array of arrays graph representation to undef.
+    #
+    # In this pass, we delete all edges between each of this vertex's
+    # neighbor and the vertex. Note the order of the arguments:
+    #
+    # - Because we are deleting *this* vertex (and *not* the
+    # neighbor), we have the neighbor (which is not being deleted) set
+    # its connection to this vertex to undef (i.e., deleted).
+    #
+    # - Then, we delete any edge attributes that exist between the two
+    # vertices (since there is no edge there anymore).
+    for my $neighbor (@$neighbors) {
+        $self->_remove_neighbor( $neighbor, $vertex );
+        $self->delete_edge_attributes( $vertex, $neighbor );
     }
 
-    if ($data) {
-        $self->set_edge_attribute( $vertex, $neighbor->[0], $data );
+    # Then, we delete the "root" reference to the vertex by setting it
+    # to undef.
+    if ( exists $self->{$vertex} ) {
+        delete $self->{$vertex};
     }
+}
+
+sub get_vertices {
+    ## -> Array
+    my $self = shift;
+    my @vertices;
+    for my $vertex ( keys %$self ) {
+        next unless defined $vertex;
+        next if $vertex eq '_INTERNAL';
+        push @vertices, $vertex;
+    }
+    return sort @vertices;
+}
+
+sub get_degree {
+    my ( $self, $vertex ) = @_;
+    if ( $self->has_vertex($vertex) ) {
+        my $neighbors = $self->get_neighbors($vertex);
+        return scalar @$neighbors;
+    }
+    return;
+}
+
+=head2 METHODS ON EDGES
+=cut
+
+sub get_edge {
+    ## String String -> ArrayRef
+    my ( $self, $a, $b ) = @_;
+
+    return unless $self->edge_between( $a, $b );
+
+    my $attrs = $self->get_edge_attributes( $a, $b );
+
+    return [ $a, $b, $attrs ];
+}
+
+sub get_edges {
+    ## -> Array
+    my ($self) = @_;
+
+    my @vertices = $self->get_vertices;
+    my @answer;
+    my %seen;
+
+    for my $vertex (@vertices) {
+        my $neighbors = $self->get_neighbors($vertex);
+
+        for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
+            next if $seen{ $vertex . $neighbor };
+            push @answer, $self->get_edge( $vertex, $neighbor );
+            $seen{ $vertex . $neighbor }++;
+            $seen{ $neighbor . $vertex }++;
+        }
+    }
+
+    return sort { $a->[0] lt $b->[0] } @answer;
 }
 
 sub edge_between {
@@ -288,6 +360,90 @@ sub edge_between {
     }
     else { return; }
 }
+
+sub get_edge_attributes {
+    ## String String -> HashRef OR undef
+    my ( $self, $start, $end ) = @_;
+    my $pairkey = $start . $end;
+    return $self->{_INTERNAL}->{edge_attrs}->{$pairkey};
+}
+
+sub get_edge_attribute {
+    ## String String String -> Value OR undef
+    my ( $self, $start, $end, $attribute ) = @_;
+
+    my $pairkey = $start . $end;
+    return $self->{_INTERNAL}->{edge_attrs}->{$pairkey}->{$attribute};
+}
+
+sub set_edge_attribute {
+    ## String String HashRef -> State!
+    # set_edge_attribute('s', 'a', { weight => 12 });
+    my ( $self, $start, $end, $new_attrs ) = @_;
+
+    my $pairkey1 = $start . $end;
+    my $pairkey2 = $end . $start;
+
+    # Attributes hashref already exists, so we add to it.  NOTE:
+    # this is a hash so the update is destructive.
+    for ( my ( $k, $v ) = each %$new_attrs ) {
+        next unless defined $k;
+        next if $k eq '';
+        $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}->{$k} = $v;
+        $self->{_INTERNAL}->{edge_attrs}->{$pairkey2}->{$k} = $v;
+    }
+}
+
+sub delete_edge_attributes {
+    ## String String -> Undefined OR State!
+    my ( $self, $start, $end ) = @_;
+    return unless defined $start && defined $end;
+
+    my $pairkey1 = $start . $end;
+    my $pairkey2 = $end . $start;
+    return
+      unless ( exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}
+        && exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey2} );
+    delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey1};
+    delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey2};
+}
+
+sub add_edge {
+    ## String String -> State!
+    my ( $self, $v1, $v2, $attrs ) = @_;
+    $self->_add_neighbor( $v1, [$v2], $attrs );
+    $self->_add_neighbor( $v2, [$v1], $attrs );
+}
+
+sub add_edges {
+    my ( $self, @edges ) = @_;
+
+    for my $elem (@edges) {
+        ## ['a', 'b', { weight => 123 }]
+        my ( $a, $b, $attrs ) = @$elem;
+        $self->add_edge( $a, $b, $attrs );
+    }
+}
+
+sub remove_edge {
+    ## String String -> Boolean State! OR Undef
+    my ( $self, $a, $b ) = @_;
+
+    return unless $self->edge_between( $a, $b );
+
+    # We delete A from B's list of neighbors, and delete B from A's
+    # list of neighbors.  Then, we delete any edge attributes, since
+    # said edge no longer exists.
+
+    $self->_remove_neighbor( $a, $b );
+    $self->_remove_neighbor( $b, $a );
+    $self->delete_edge_attributes( $a, $b );
+
+    return 1;
+}
+
+=head2 PATH SEARCH METHODS
+=cut
 
 sub dijkstra {
     ## String String -> Array
@@ -397,6 +553,106 @@ sub find_path_between {
     return $found ? @path : ();
 }
 
+=head2 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
+=cut
+
+sub clone {
+    my ($self) = @_;
+    my $copy = Storable::dclone($self);
+    return $copy;
+}
+
+sub equals {
+    my ( $self, $other ) = @_;
+
+    return
+      unless $self->isa('YAGL')
+      && $other->isa('YAGL');
+
+    my @xs = $self->get_vertices;
+    my @ys = $other->get_vertices;
+
+    return unless @xs ~~ @ys;
+
+    my @es = $self->get_edges;
+    my @fs = $other->get_edges;
+
+    return unless @es ~~ @fs;
+
+    my $self_attrs  = $self->_edge_attrs;
+    my $other_attrs = $other->_edge_attrs;
+
+    return unless %$self_attrs ~~ %$other_attrs;
+
+    return 1;
+}
+
+=head2 INTERNAL HELPER METHODS
+=cut
+
+sub _add_neighbor {
+    ## String ArrayRef HashRef -> State!
+    my ( $self, $vertex, $neighbor, $data ) = @_;
+
+    unless ( ref($neighbor) eq 'ARRAY' ) {
+        my ( $package, $filename, $line ) = caller();
+        die <<"EOF";
+on line $line of file $filename:
+  $package\:\:_add_neighbor('$vertex', '$neighbor', '$data'):
+    expected arrayref, got '$neighbor'
+EOF
+    }
+
+    if ( $self->has_vertex($vertex) ) {
+        my $neighbors = $self->get_neighbors($vertex);
+        for my $value (@$neighbor) {
+            push @$neighbors, $value;
+        }
+        $self->{$vertex} = $neighbors;
+    }
+    else {
+        $self->{$vertex} = $neighbor;
+    }
+
+    if ($data) {
+        $self->set_edge_attribute( $vertex, $neighbor->[0], $data );
+    }
+}
+
+sub _remove_neighbor {
+    ## String String -> State! OR Undef
+    my ( $self, $vertex, $neighbor ) = @_;
+
+    return unless $self->edge_between( $vertex, $neighbor );
+
+    # Graphs are represented as an array of arrays that look like the
+    # following:
+    #
+    # my $example = [
+    #     [ 's', [ 'a', 'd' ] ],
+    #     [ 'a', [ 's', 'b', 'd' ] ],
+    #     [ 'b', [ 'a', 'c', 'e' ] ],
+    #     [ 'c', ['b'] ],
+    #     [ 'd', [ 's', 'a', 'e' ] ],
+    #     [ 'e', [ 'b', 'd', 'f' ] ]
+    # ];
+    #
+    # To delete a specific neighbor, we have to walk this vertex's
+    # list of neighbors (skipping any already deleted neighbors) and
+    # set the neighbor's value to undef.
+
+    return unless $self->has_vertex($vertex);
+    my $neighbors = $self->get_neighbors($vertex);
+
+    for ( my $i = 0 ; $i <= @$neighbors ; $i++ ) {
+        my $this = $self->{$vertex}->[$i];
+        next unless defined $this;
+        if ( $this eq $neighbor ) {
+            $self->{$vertex}->[$i] = undef;
+        }
+    }
+}
+
 sub _st_walk {
     ## String String HashRef -> Array
     my ( $self, $st, $start, $end ) = @_;
@@ -436,194 +692,14 @@ sub _st_walk {
     return reverse @path;
 }
 
-sub get_edge_attributes {
-    ## String String -> HashRef OR undef
-    my ( $self, $start, $end ) = @_;
-    my $pairkey = $start . $end;
-    return $self->{_INTERNAL}->{edge_attrs}->{$pairkey};
+sub _edge_attrs {
+    my ($self) = @_;
+    return $self->{_INTERNAL}->{edge_attrs};
 }
 
-sub get_edge_attribute {
-    ## String String String -> Value OR undef
-    my ( $self, $start, $end, $attribute ) = @_;
-
-    my $pairkey = $start . $end;
-    return $self->{_INTERNAL}->{edge_attrs}->{$pairkey}->{$attribute};
-}
-
-sub set_edge_attribute {
-    ## String String HashRef -> State!
-    # set_edge_attribute('s', 'a', { weight => 12 });
-    my ( $self, $start, $end, $new_attrs ) = @_;
-
-    my $pairkey1 = $start . $end;
-    my $pairkey2 = $end . $start;
-
-    # Attributes hashref already exists, so we add to it.  NOTE:
-    # this is a hash so the update is destructive.
-    for ( my ( $k, $v ) = each %$new_attrs ) {
-        next unless defined $k;
-        next if $k eq '';
-        $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}->{$k} = $v;
-        $self->{_INTERNAL}->{edge_attrs}->{$pairkey2}->{$k} = $v;
-    }
-}
-
-sub delete_edge_attributes {
-    ## String String -> Undefined OR State!
-    my ( $self, $start, $end ) = @_;
-    return unless defined $start && defined $end;
-
-    my $pairkey1 = $start . $end;
-    my $pairkey2 = $end . $start;
-    return
-      unless ( exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}
-        && exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey2} );
-    delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey1};
-    delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey2};
-}
-
-sub is_complete {
-    my $self = shift;
-
-    my @vertices = $self->get_vertices;
-    my $v        = pop @vertices;
-
-    my $neighbors = $self->get_neighbors($v);
-
-    @vertices = sort { ( $a || '' ) cmp( $b || '' ) } @vertices;
-    my @neighbors = sort { ( $a || '' ) cmp( $b || '' ) } @$neighbors;
-
-    return 1 if @vertices ~~ @neighbors;
-
-    return;
-}
-
-sub add_vertex {
-    ## String -> State!
-    my ( $self, $vertex ) = @_;
-    return if $self->has_vertex($vertex);
-    $self->{$vertex} = [];
-}
-
-sub add_vertices {
-    my ( $self, @vertices ) = @_;
-    $self->add_vertex($_) for @vertices;
-}
-
-sub add_edge {
-    ## String String -> State!
-    my ( $self, $v1, $v2, $attrs ) = @_;
-    $self->_add_neighbor( $v1, [$v2], $attrs );
-    $self->_add_neighbor( $v2, [$v1], $attrs );
-}
-
-sub add_edges {
-    my ( $self, @edges ) = @_;
-
-    for my $elem (@edges) {
-        ## ['a', 'b', { weight => 123 }]
-        my ( $a, $b, $attrs ) = @$elem;
-        $self->add_edge( $a, $b, $attrs );
-    }
-}
-
-sub remove_edge {
-    ## String String -> Boolean State! OR Undef
-    my ( $self, $a, $b ) = @_;
-
-    return unless $self->edge_between( $a, $b );
-
-    # We delete A from B's list of neighbors, and delete B from A's
-    # list of neighbors.  Then, we delete any edge attributes, since
-    # said edge no longer exists.
-
-    $self->_remove_neighbor( $a, $b );
-    $self->_remove_neighbor( $b, $a );
-    $self->delete_edge_attributes( $a, $b );
-
-    return 1;
-}
-
-sub _remove_neighbor {
-    ## String String -> State! OR Undef
-    my ( $self, $vertex, $neighbor ) = @_;
-
-    return unless $self->edge_between( $vertex, $neighbor );
-
-    # Graphs are represented as an array of arrays that look like the
-    # following:
-    #
-    # my $example = [
-    #     [ 's', [ 'a', 'd' ] ],
-    #     [ 'a', [ 's', 'b', 'd' ] ],
-    #     [ 'b', [ 'a', 'c', 'e' ] ],
-    #     [ 'c', ['b'] ],
-    #     [ 'd', [ 's', 'a', 'e' ] ],
-    #     [ 'e', [ 'b', 'd', 'f' ] ]
-    # ];
-    #
-    # To delete a specific neighbor, we have to walk this vertex's
-    # list of neighbors (skipping any already deleted neighbors) and
-    # set the neighbor's value to undef.
-
-    return unless $self->has_vertex($vertex);
-    my $neighbors = $self->get_neighbors($vertex);
-
-    for ( my $i = 0 ; $i <= @$neighbors ; $i++ ) {
-        my $this = $self->{$vertex}->[$i];
-        next unless defined $this;
-        if ( $this eq $neighbor ) {
-            $self->{$vertex}->[$i] = undef;
-        }
-    }
-}
-
-sub generate_random_vertices {
-    ## HashRef -> State!
-    my ( $self, $args ) = @_;
-
-    my $n = $args->{n};
-
-    # As we loop through the nodes, for each node A, this is the
-    # probability that another randomly selected node B is NOT
-    # connected to A.  In other words, this is the probability that
-    # there is NOT an edge A-B.
-    my $p          = $args->{p};
-    my $max_weight = $args->{max_weight};
-
-    my %seen;
-
-    for my $node ( 1 .. $n ) {
-        my $name = $self->_make_vertex_name;
-        redo if $seen{$name};
-        $seen{$name}++;
-    }
-
-    my @nodes = keys %seen;
-
-    my @pairs;
-
-    for my $node (@nodes) {
-        my $maybe_neighbor = $nodes[ rand $#nodes ];
-        next if $maybe_neighbor eq $node;
-        my $connection_prob = rand 1;
-        my $dist            = int rand $max_weight;
-        if ( $connection_prob > $p ) {
-            push @pairs, [ $node,           $maybe_neighbor, $dist ];
-            push @pairs, [ $maybe_neighbor, $node,           $dist ];
-        }
-        redo
-          if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
-    }
-
-    for my $pair (@pairs) {
-        $self->_add_neighbor(
-            $pair->[0],
-            [ $pair->[1] ],
-            { weight => $pair->[2] }
-        );
-    }
+sub _vertex_attrs {
+    my ($self) = @_;
+    return $self->{_INTERNAL}->{vertex_attrs};
 }
 
 sub _make_vertex_name {
@@ -637,56 +713,6 @@ sub _make_vertex_name {
     my $c2 = $chars[ rand scalar @chars ];
 
     return qq[$c1$c2$n];
-}
-
-sub get_degree {
-    my ( $self, $vertex ) = @_;
-    if ( $self->has_vertex($vertex) ) {
-        my $neighbors = $self->get_neighbors($vertex);
-        return scalar @$neighbors;
-    }
-    return;
-}
-
-sub clone {
-    my ($self) = @_;
-    my $copy = Storable::dclone($self);
-    return $copy;
-}
-
-sub _edge_attrs {
-    my ($self) = @_;
-    return $self->{_INTERNAL}->{edge_attrs};
-}
-
-sub _vertex_attrs {
-    my ($self) = @_;
-    return $self->{_INTERNAL}->{vertex_attrs};
-}
-
-sub equals {
-    my ( $self, $other ) = @_;
-
-    return
-      unless $self->isa('YAGL')
-      && $other->isa('YAGL');
-
-    my @xs = $self->get_vertices;
-    my @ys = $other->get_vertices;
-
-    return unless @xs ~~ @ys;
-
-    my @es = $self->get_edges;
-    my @fs = $other->get_edges;
-
-    return unless @es ~~ @fs;
-
-    my $self_attrs  = $self->_edge_attrs;
-    my $other_attrs = $other->_edge_attrs;
-
-    return unless %$self_attrs ~~ %$other_attrs;
-
-    return 1;
 }
 
 1;
