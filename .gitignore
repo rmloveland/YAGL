@@ -7,3 +7,4 @@ nytprof*
 *.dot
 graphs/*.csv
 * conflicted copy *
+.picasa.ini
