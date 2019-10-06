@@ -223,6 +223,33 @@ sub is_complete {
     return;
 }
 
+sub is_tree {
+    my ($self) = @_;
+
+    return unless $self->is_connected;
+
+    my @e = $self->get_edges;
+    my @v = $self->get_vertices;
+
+    my $e = @e;
+    my $v = @v;
+
+    return unless $e == $v - 1;
+}
+
+sub is_connected {
+    my ($self) = @_;
+
+    my @vertices = $self->get_vertices;
+
+    my $start = pop @vertices;
+
+    for my $v (@vertices) {
+        return unless $self->find_path_between( $start, $v );
+    }
+    return 1;
+}
+
 =head2 METHODS ON VERTICES
 =cut
 
