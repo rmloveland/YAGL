@@ -310,6 +310,41 @@ sub get_degree {
     return;
 }
 
+sub set_vertex_attribute {
+    ## String HashRef -> State!
+    # set_edge_attribute('s', 'a', { weight => 12 });
+    my ( $self, $vertex, $new_attrs ) = @_;
+    return unless $self->has_vertex($vertex);
+
+    # Attributes hashref already exists, so we add to it.  NOTE:
+    # this is a hash so the update is destructive.
+    for ( my ( $k, $v ) = each %$new_attrs ) {
+        next unless defined $k;
+        next if $k eq '';
+        $self->{_INTERNAL}->{vertex_attrs}->{$vertex}->{$k} = $v;
+    }
+}
+
+sub get_vertex_attribute {
+    ## String String -> Value OR undef
+    my ( $self, $vertex, $attribute ) = @_;
+    return $self->{_INTERNAL}->{vertex_attrs}->{$vertex}->{$attribute};
+}
+
+sub get_vertex_attributes {
+    ## String -> HashRef OR undef
+    my ( $self, $vertex ) = @_;
+    return unless $self->has_vertex($vertex);
+    return $self->{_INTERNAL}->{vertex_attrs}->{$vertex};
+}
+
+sub delete_vertex_attributes {
+    ## String -> Undefined OR State!
+    my ( $self, $vertex ) = @_;
+    return unless $self->has_vertex($vertex);
+    delete $self->{_INTERNAL}->{vertex_attrs}->{$vertex};
+}
+
 =head2 METHODS ON EDGES
 =cut
 
