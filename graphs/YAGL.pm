@@ -5,6 +5,7 @@ use warnings;
 use experimentals;
 use Smart::Match;
 use Text::CSV;
+use GraphViz;
 use Hash::PriorityQueue;
 use Storable;
 
@@ -128,67 +129,56 @@ sub read_csv {
 sub to_graphviz {
     ## ArrayRef -> String
     my ( $self, $path ) = @_;
+    my $gv = GraphViz->new( directed => 0 );
 
-    my @buffer;
     my %seen;
-
-    push @buffer, qq[graph { ];
-
     for my $vertex ( $self->get_vertices ) {
         next unless defined $vertex;
-        push @buffer, $vertex;
-        push @buffer, qq[ -- ];
-        push @buffer, qq[ { ];
+        $gv->add_node( $vertex, style => 'filled' );
         my $neighbors = $self->get_neighbors($vertex);
-        for my $vertex (@$neighbors) {
-            if ( $vertex ~~ @$path ) {
-                push @buffer, qq{$vertex [style=filled fillcolor=red]};
+        for my $neighbor (@$neighbors) {
+            $gv->add_node($neighbor);
+            $gv->add_edge( $vertex, $neighbor )
+              unless $seen{ $vertex . $neighbor };
+            if ( $neighbor ~~ @$path ) {
+                $gv->add_node( $neighbor, fillcolor => 'red' );
             }
-            else {
-                push @buffer, $vertex;
-            }
+            $seen{ $neighbor . $vertex }++;
+            $seen{ $vertex . $neighbor }++;
         }
-        push @buffer, qq[ } ];
     }
 
-    push @buffer, qq[ } ];
-
-    return join ' ', @buffer;
+    return $gv->as_canon;
 }
 
 sub to_weighted_graphviz {
     ## ArrayRef -> String
     my ( $self, $path ) = @_;
 
-    my @buffer;
     my %seen;
-    my @path;
+    my @path = map { $_->{vertex} } @$path;
 
-    @path = map { $_->{vertex} } @$path;
-
-    push @buffer, qq[graph {\n];
+    my $gv = GraphViz->new( directed => 0, style => 'filled' );
 
     for my $vertex ( $self->get_vertices ) {
         next unless defined $vertex;
+        $gv->add_node( $vertex, style => 'filled' );
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
             my $edge_weight =
               $self->get_edge_attribute( $vertex, $neighbor, 'weight' );
-
+            $gv->add_node($neighbor);
+            $gv->add_edge( $vertex, $neighbor, label => $edge_weight )
+              unless $seen{ $vertex . $neighbor };
             if ( $neighbor ~~ @path ) {
-                push @buffer,
-qq{$vertex -- $neighbor [label="$edge_weight"] $neighbor [style=filled, color=red];\n};
+                $gv->add_node( $neighbor, fillcolor => 'red' );
             }
-            else {
-                push @buffer,
-                  qq{$vertex -- $neighbor [label="$edge_weight"];\n};
-            }
+            $seen{ $neighbor . $vertex }++;
+            $seen{ $vertex . $neighbor }++;
         }
     }
 
-    push @buffer, qq[ \n} ];
-
-    return join ' ', @buffer;
+    return $gv->as_canon;
 }
 
 =head2 BOOLEAN METHODS
