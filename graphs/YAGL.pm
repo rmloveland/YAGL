@@ -12,6 +12,7 @@ use Storable;
 =head1 YAGL - Yet Another Graph Library
 
 =head2 GRAPH INITIALIZATION AND RANDOMIZATION
+
 =cut
 
 sub new {
@@ -73,6 +74,7 @@ sub generate_random_vertices {
 }
 
 =head2 GRAPH SERIALIZATION
+
 =cut
 
 sub write_csv {
@@ -182,6 +184,7 @@ sub to_weighted_graphviz {
 }
 
 =head2 BOOLEAN METHODS
+
 =cut
 
 sub is_empty {
@@ -246,6 +249,7 @@ sub has_cycle {
 }
 
 =head2 METHODS ON VERTICES
+
 =cut
 
 sub add_vertex {
@@ -380,6 +384,7 @@ sub get_vertex_color {
 }
 
 =head2 METHODS ON EDGES
+
 =cut
 
 sub get_edge {
@@ -513,6 +518,7 @@ sub remove_edge {
 }
 
 =head2 PATH SEARCH METHODS
+
 =cut
 
 sub dijkstra {
@@ -624,6 +630,7 @@ sub find_path_between {
 }
 
 =head2 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
+
 =cut
 
 sub clone {
@@ -658,6 +665,7 @@ sub equals {
 }
 
 =head2 INTERNAL HELPER METHODS
+
 =cut
 
 sub _add_neighbor {
