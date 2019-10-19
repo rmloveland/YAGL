@@ -362,6 +362,18 @@ sub delete_vertex_attributes {
     delete $self->{_INTERNAL}->{vertex_attrs}->{$vertex};
 }
 
+sub set_vertex_color {
+    ## String String -> Undefined OR State!
+    my ( $self, $vertex, $color ) = @_;
+    $self->set_vertex_attribute( $vertex, { color => $color } );
+}
+
+sub get_vertex_color {
+    ## String -> String OR Undefined
+    my ( $self, $vertex ) = @_;
+    $self->get_vertex_attribute( $vertex, 'color' );
+}
+
 =head2 METHODS ON EDGES
 =cut
 
@@ -765,6 +777,124 @@ sub _make_vertex_name {
     my $c2 = $chars[ rand scalar @chars ];
 
     return qq[$c1$c2$n];
+}
+
+=head2 GRAPH COLORING METHODS
+
+=cut
+
+sub get_color_degree {
+    ## String -> Integer
+    my ( $self, $vertex ) = @_;
+    my $count = 0;
+    my @colors;
+    my $neighbors = $self->get_neighbors($vertex);
+    for my $neighbor (@$neighbors) {
+        my $color = $self->get_vertex_color($neighbor);
+        if ($color) {
+            $count++;
+            push @colors, $color;
+        }
+    }
+    return ( $count, @colors );
+}
+
+sub color_vertices {
+    ## -> State!
+    my ($self) = @_;
+
+    # This algorithm is due to Brelaz, as described in Skiena,
+    # _Implementing Discrete Mathematics_.
+    #
+    # 1. Number the colors from 1 to k.
+    #
+    # 2. Color the vertex of largest degree with color 1.
+    #
+    # 3. Then repeatedly select the vertex with highest _color
+    # degree_, where the color degree is the number of adjacent
+    # vertices which have already been colored, and color it with the
+    # smallest possible color.
+
+    my @colors =
+      qw/ violet indigo orange yellow blue green red/;    # Ordered by indices
+    my @vertices_by_degree =
+      sort { $self->get_degree($a) > $self->get_degree($b) }
+      $self->get_vertices;
+
+    my $v = pop @vertices_by_degree;
+    $self->set_vertex_color( $v, $colors[0] );
+
+    my @vertices_by_color_degree =
+      sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
+      $self->get_vertices;
+
+    while ( my $v = pop @vertices_by_color_degree ) {
+        my ( $count, @adjacent_colors ) = $self->get_color_degree($v);
+        for my $color (@colors) {
+            $self->set_vertex_color( $v, $color )
+              unless $color ~~ @adjacent_colors;
+        }
+        @vertices_by_color_degree =
+          sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
+          @vertices_by_color_degree;
+    }
+}
+
+sub vertex_colors {
+    ## -> Array[Hashref]
+    my ($self) = @_;
+    my @colors;
+    for my $vertex ( $self->get_vertices ) {
+        push @colors,
+          [ $vertex, { color => $self->get_vertex_color($vertex) } ];
+    }
+    return @colors;
+}
+
+sub chromatic_number {
+    ## -> Integer OR Undef
+    my ($self) = @_;
+    my $n      = 0;
+    my @colors = $self->vertex_colors;
+    return unless @colors;
+
+    my %colors;
+    for my $elem (@colors) {
+        my $color = $elem->[1]->{color};
+        $colors{$color}++;
+    }
+    my @keys = keys %colors;
+    if (@keys) {
+        $n = scalar @keys;
+    }
+    return $n;
+}
+
+sub to_colored_graphviz {
+    ## -> String
+    my ($self) = @_;
+    my $gv = GraphViz->new( directed => 0, style => 'filled' );
+
+    my %seen;
+    for my $vertex ( $self->get_vertices ) {
+        next unless defined $vertex;
+        $gv->add_node(
+            $vertex,
+            style => 'filled',
+            color => $self->get_vertex_color($vertex)
+        );
+        my $neighbors = $self->get_neighbors($vertex);
+        for my $neighbor (@$neighbors) {
+            my $color = $self->get_vertex_color($neighbor);
+            $gv->add_node( $neighbor, fillcolor => $color );
+            $gv->add_edge( $vertex, $neighbor )
+              unless $seen{ $vertex . $neighbor };
+            $seen{ $neighbor . $vertex }++;
+            $seen{ $vertex . $neighbor }++;
+        }
+    }
+
+    return $gv->as_canon;
 }
 
 1;
