@@ -240,6 +240,11 @@ sub is_connected {
     return 1;
 }
 
+sub has_cycle {
+    my ($self) = @_;
+    return $self->is_tree ? undef : 1;
+}
+
 =head2 METHODS ON VERTICES
 =cut
 
