@@ -320,7 +320,8 @@ sub get_vertices {
         next if $vertex eq '_INTERNAL';
         push @vertices, $vertex;
     }
-    return sort @vertices;
+    @vertices = sort @vertices;
+    return @vertices;
 }
 
 sub get_degree {
@@ -413,7 +414,8 @@ sub get_edges {
         }
     }
 
-    return sort { $a->[0] lt $b->[0] } @answer;
+    @answer = sort { $a->[0] lt $b->[0] } @answer;
+    return @answer;
 }
 
 sub edge_between {
