@@ -335,7 +335,6 @@ sub get_degree {
 
 sub set_vertex_attribute {
     ## String HashRef -> State!
-    # set_edge_attribute('s', 'a', { weight => 12 });
     my ( $self, $vertex, $new_attrs ) = @_;
     return unless $self->has_vertex($vertex);
 
