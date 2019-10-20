@@ -114,7 +114,6 @@ sub read_csv {
         my $neighbor = $cols[1];
         my $weight   = $cols[2];
 
-        next unless defined $weight;
         next if $vertex eq 'node';
 
         $self->_add_neighbor( $vertex, [$neighbor] );
