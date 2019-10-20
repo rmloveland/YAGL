@@ -239,6 +239,26 @@ sub has_cycle {
     return $self->is_tree ? undef : 1;
 }
 
+sub is_weighted {
+    ## -> Number
+    my ($self) = @_;
+
+    my @vertices = $self->get_vertices;
+    my $sum;
+    my %seen;
+  VERTEX: for my $vertex (@vertices) {
+        my $neighbors = $self->get_neighbors($vertex);
+        for my $neighbor (@$neighbors) {
+            next VERTEX if $seen{ $vertex . $neighbor };
+            next VERTEX if $seen{ $neighbor . $vertex };
+            $sum += $self->get_edge_attribute( $vertex, $neighbor, 'weight' );
+            $seen{ $vertex . $neighbor }++;
+            $seen{ $neighbor . $vertex }++;
+        }
+    }
+    return $sum;
+}
+
 =head2 METHODS ON VERTICES
 
 =cut
