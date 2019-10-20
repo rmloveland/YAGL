@@ -259,6 +259,15 @@ sub is_weighted {
     return $sum;
 }
 
+sub is_colored {
+    ## -> Number
+    my ($self) = @_;
+    my @vertices = $self->get_vertices;
+    my @colors = grep { $self->get_vertex_color($_) } @vertices;
+
+    return scalar @vertices == scalar @colors;
+}
+
 =head2 METHODS ON VERTICES
 
 =cut
@@ -864,6 +873,13 @@ sub color_vertices {
         @vertices_by_color_degree =
           sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
           @vertices_by_color_degree;
+    }
+}
+
+sub uncolor_vertices {
+    my ($self) = @_;
+    for my $vertex ( $self->get_vertices ) {
+        $self->set_vertex_color( $vertex, undef );
     }
 }
 

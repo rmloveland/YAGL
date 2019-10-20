@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use experimentals;
 use lib '.';
-use Test::More tests => 4;
+use Test::More tests => 7;
 use YAGL;
 use Cwd;
 
@@ -14,7 +14,11 @@ my $g = YAGL->new;
 
 $g->read_csv("$cwd/t/20-vertex-coloring-00.csv");
 
+ok( !$g->is_colored, "G is not yet colored, as expected." );
+
 $g->color_vertices;
+
+ok( $g->is_colored > 0, "G is now colored, as expected." );
 
 my @expected = (
     [
@@ -3494,6 +3498,14 @@ my @got2 = $h->vertex_colors;
 
 is_deeply( \@expected2, \@got2, "The coloring of H was as expected." );
 
+# Chromatic number
+
 my $n2 = $h->chromatic_number;
 
 ok( $n2 == 4, "Chromatic number of H is 4 as expected." );
+
+# Now, we remove all coloring from the graph.
+
+$g->uncolor_vertices;
+
+ok( !$g->is_colored, "G is once again uncolored, as expected." );
