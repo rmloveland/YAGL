@@ -550,10 +550,10 @@ sub dijkstra {
             # shortest path (by distance)?"
             my $distance_to_self         = $st->{$v}->{distance};
             my $old_distance_to_neighbor = $st->{$neighbor}->{distance};
-            my $edge_weight_to_neighbor =
+            my $neighbor_edge_weight =
               $self->get_edge_attribute( $v, $neighbor, 'weight' );
             my $new_distance_to_neighbor =
-              $distance_to_self + $edge_weight_to_neighbor;
+              $distance_to_self + $neighbor_edge_weight;
 
             # This is the core of Dijkstra's algorithm: Have we
             # discovered a path whose distance to the neighbor is
