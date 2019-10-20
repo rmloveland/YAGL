@@ -88,10 +88,8 @@ sub write_csv {
     my @vertices = $self->get_vertices;
 
     for my $vertex (@vertices) {
-        next unless defined $vertex;
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
-            next unless defined $neighbor;
             my $weight =
               $self->get_edge_attribute( $vertex, $neighbor, 'weight' ) || 0;
             my @cols = ( $vertex, $neighbor, $weight );
@@ -135,7 +133,6 @@ sub to_graphviz {
 
     my %seen;
     for my $vertex ( $self->get_vertices ) {
-        next unless defined $vertex;
         $gv->add_node( $vertex, style => 'filled' );
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
@@ -163,7 +160,6 @@ sub to_weighted_graphviz {
     my $gv = GraphViz->new( directed => 0, style => 'filled' );
 
     for my $vertex ( $self->get_vertices ) {
-        next unless defined $vertex;
         $gv->add_node( $vertex, style => 'filled' );
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
@@ -269,7 +265,11 @@ sub get_neighbors {
     my ( $self, $vertex ) = @_;
 
     if ( exists $self->{$vertex} ) {
-        return $self->{$vertex} if defined $self->{$vertex};
+        if ( defined $self->{$vertex} ) {
+            my $neighbors = $self->{$vertex};
+            @$neighbors = grep { defined $_ } @$neighbors;
+            return $neighbors;
+        }
     }
     else {
         return;
@@ -410,7 +410,6 @@ sub get_edges {
         my $neighbors = $self->get_neighbors($vertex);
 
         for my $neighbor (@$neighbors) {
-            next unless defined $neighbor;
             next if $seen{ $vertex . $neighbor };
             push @answer, $self->get_edge( $vertex, $neighbor );
             $seen{ $vertex . $neighbor }++;
@@ -612,7 +611,6 @@ sub find_path_between {
         my $neighbors = $self->get_neighbors($v);
 
         for my $neighbor (@$neighbors) {
-            next unless defined $neighbor;
             next if $seen{$neighbor};
             $st->{$neighbor}->{prev} = $v;
             if ( $neighbor eq $end ) {
@@ -891,7 +889,6 @@ sub to_colored_graphviz {
 
     my %seen;
     for my $vertex ( $self->get_vertices ) {
-        next unless defined $vertex;
         $gv->add_node(
             $vertex,
             style => 'filled',
