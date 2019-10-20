@@ -117,11 +117,7 @@ sub read_csv {
         next if $vertex eq 'node';
 
         $self->_add_neighbor( $vertex, [$neighbor] );
-
-        if ( $self->{_INTERNAL}->{edge_attrs} ) {
-            $self->set_edge_attribute( $vertex, $neighbor,
-                { weight => $weight } );
-        }
+        $self->set_edge_attribute( $vertex, $neighbor, { weight => $weight } );
     }
 }
 
