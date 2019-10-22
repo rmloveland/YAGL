@@ -117,8 +117,7 @@ sub read_csv {
 
         next if $vertex eq 'node';
 
-        $self->_add_neighbor( $vertex, [$neighbor] );
-        $self->set_edge_attribute( $vertex, $neighbor, { weight => $weight } );
+        $self->add_edge( $vertex, $neighbor, { weight => $weight } );
     }
 }
 
@@ -685,7 +684,7 @@ EOF
     if ( $self->has_vertex($vertex) ) {
         my $neighbors = $self->get_neighbors($vertex);
         for my $value (@$neighbor) {
-            push @$neighbors, $value;
+            push @$neighbors, $value unless $value ~~ @$neighbors;
         }
         $self->{$vertex} = $neighbors;
     }

@@ -1053,7 +1053,7 @@ my @expected2 = (
     [
         'fv7200',
         {
-            'color' => 'green'
+            'color' => 'yellow'
         }
     ],
     [
@@ -1791,7 +1791,7 @@ my @expected2 = (
     [
         'lt7281',
         {
-            'color' => 'blue'
+            'color' => 'green'
         }
     ],
     [
