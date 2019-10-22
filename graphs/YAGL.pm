@@ -123,49 +123,24 @@ sub read_csv {
 
 sub to_graphviz {
     ## ArrayRef -> String
-    my ( $self, $path ) = @_;
-    my $gv = GraphViz->new( directed => 0 );
+    my ($self) = @_;
 
     my %seen;
-    for my $vertex ( $self->get_vertices ) {
-        $gv->add_node( $vertex, style => 'filled' );
-        my $neighbors = $self->get_neighbors($vertex);
-        for my $neighbor (@$neighbors) {
-            $gv->add_node($neighbor);
-            $gv->add_edge( $vertex, $neighbor )
-              unless $seen{ $vertex . $neighbor };
-            if ( $neighbor ~~ @$path ) {
-                $gv->add_node( $neighbor, fillcolor => 'red' );
-            }
-            $seen{ $neighbor . $vertex }++;
-            $seen{ $vertex . $neighbor }++;
-        }
-    }
 
-    return $gv->as_canon;
-}
-
-sub to_weighted_graphviz {
-    ## ArrayRef -> String
-    my ( $self, $path ) = @_;
-
-    my %seen;
-    my @path = map { $_->{vertex} } @$path;
-
-    my $gv = GraphViz->new( directed => 0, style => 'filled' );
+    my $gv = GraphViz->new( directed => $self->is_directed, style => 'filled' );
 
     for my $vertex ( $self->get_vertices ) {
-        $gv->add_node( $vertex, style => 'filled' );
+        my $color = $self->get_vertex_color($vertex);
+        $gv->add_node( $vertex, style => 'filled', fillcolor => $color );
         my $neighbors = $self->get_neighbors($vertex);
+
         for my $neighbor (@$neighbors) {
             my $edge_weight =
               $self->get_edge_attribute( $vertex, $neighbor, 'weight' );
-            $gv->add_node($neighbor);
+            my $color = $self->get_vertex_color($neighbor);
+            $gv->add_node( $neighbor, fillcolor => $color );
             $gv->add_edge( $vertex, $neighbor, label => $edge_weight )
               unless $seen{ $vertex . $neighbor };
-            if ( $neighbor ~~ @path ) {
-                $gv->add_node( $neighbor, fillcolor => 'red' );
-            }
             $seen{ $neighbor . $vertex }++;
             $seen{ $vertex . $neighbor }++;
         }
@@ -886,32 +861,6 @@ sub chromatic_number {
         $n = scalar @keys;
     }
     return $n;
-}
-
-sub to_colored_graphviz {
-    ## -> String
-    my ($self) = @_;
-    my $gv = GraphViz->new( directed => 0, style => 'filled' );
-
-    my %seen;
-    for my $vertex ( $self->get_vertices ) {
-        $gv->add_node(
-            $vertex,
-            style => 'filled',
-            color => $self->get_vertex_color($vertex)
-        );
-        my $neighbors = $self->get_neighbors($vertex);
-        for my $neighbor (@$neighbors) {
-            my $color = $self->get_vertex_color($neighbor);
-            $gv->add_node( $neighbor, fillcolor => $color );
-            $gv->add_edge( $vertex, $neighbor )
-              unless $seen{ $vertex . $neighbor };
-            $seen{ $neighbor . $vertex }++;
-            $seen{ $vertex . $neighbor }++;
-        }
-    }
-
-    return $gv->as_canon;
 }
 
 1;
