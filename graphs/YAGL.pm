@@ -16,8 +16,11 @@ use Storable;
 =cut
 
 sub new {
-    my $self  = shift;
+    my ( $self, @args ) = @_;
     my $graph = {};
+
+    my %args = @args;
+    $graph->{_INTERNAL}->{is_directed} = $args{is_directed};
 
     $graph->{_INTERNAL}->{edge_attrs}   = {};
     $graph->{_INTERNAL}->{vertex_attrs} = {};
@@ -52,24 +55,20 @@ sub generate_random_vertices {
     my @pairs;
 
     for my $node (@nodes) {
+        $self->add_vertex($node);
         my $maybe_neighbor = $nodes[ rand $#nodes ];
         next if $maybe_neighbor eq $node;
         my $connection_prob = rand 1;
         my $dist            = int rand $max_weight;
         if ( $connection_prob > $p ) {
-            push @pairs, [ $node,           $maybe_neighbor, $dist ];
-            push @pairs, [ $maybe_neighbor, $node,           $dist ];
+            push @pairs, [ $node, $maybe_neighbor, $dist ];
         }
         redo
           if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
     }
 
     for my $pair (@pairs) {
-        $self->_add_neighbor(
-            $pair->[0],
-            [ $pair->[1] ],
-            { weight => $pair->[2] }
-        );
+        $self->add_edge( $pair->[0], $pair->[1], { weight => $pair->[2] } );
     }
 }
 
@@ -109,15 +108,22 @@ sub read_csv {
 
     open my $fh, "<:encoding(utf8)", $f or die "Can't open file '$f': $!\n";
 
-    while ( my $line = $csv->getline($fh) ) {
+    my %seen;
+  LINE: while ( my $line = $csv->getline($fh) ) {
         my @cols     = @$line;
         my $vertex   = $cols[0];
         my $neighbor = $cols[1];
         my $weight   = $cols[2];
 
-        next if $vertex eq 'node';
+        next LINE if $vertex eq 'node';
+        if ( $self->is_directed ) {
+            if ( $seen{ $neighbor . $vertex } ) {
+                next LINE;
+            }
+        }
 
         $self->add_edge( $vertex, $neighbor, { weight => $weight } );
+        $seen{ $neighbor . $vertex }++;
     }
 }
 
@@ -221,6 +227,11 @@ sub is_colored {
     my @colors   = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
+}
+
+sub is_directed {
+    my ($self) = @_;
+    return $self->{_INTERNAL}->{is_directed};
 }
 
 =head2 METHODS ON VERTICES
@@ -462,7 +473,7 @@ sub add_edge {
     ## String String -> State!
     my ( $self, $v1, $v2, $attrs ) = @_;
     $self->_add_neighbor( $v1, [$v2], $attrs );
-    $self->_add_neighbor( $v2, [$v1], $attrs );
+    $self->_add_neighbor( $v2, [$v1], $attrs ) unless $self->is_directed;
 }
 
 sub add_edges {
@@ -788,6 +799,15 @@ sub get_color_degree {
 sub color_vertices {
     ## -> State!
     my ($self) = @_;
+
+    if ( $self->is_directed ) {
+        my ( $package, $filename, $line ) = caller();
+        die <<"EOF";
+on line $line of file $filename:
+  $package\:\:_color_vertices():
+    is not implemented for directed graphs!
+EOF
+    }
 
     # This algorithm is due to Brelaz, as described in Skiena,
     # _Implementing Discrete Mathematics_.
