@@ -39,11 +39,11 @@ sub main {
 
     # Unweighted, undirected graphs.
     @path = $g->find_path_between( $start, $end );
-    my $viz = $g->to_graphviz( \@path );
 
-    # Weighted, undirected graphs,
-    # @path = $g->dijkstra( $start, $end );
-    # my $viz = $g->to_weighted_graphviz( \@path );
+    for my $vertex (@path) {
+        $g->set_vertex_color( $vertex, 'red' );
+    }
+    my $viz = $g->to_graphviz;
 
     say qq[Found a path from '$start' to '$end'];
     say Dumper \@path;
