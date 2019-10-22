@@ -90,6 +90,7 @@ sub write_csv {
     for my $vertex (@vertices) {
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
             my $weight =
               $self->get_edge_attribute( $vertex, $neighbor, 'weight' ) || 0;
             my @cols = ( $vertex, $neighbor, $weight );
@@ -261,9 +262,9 @@ sub is_weighted {
 
 sub is_colored {
     ## -> Number
-    my ($self) = @_;
+    my ($self)   = @_;
     my @vertices = $self->get_vertices;
-    my @colors = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -289,11 +290,7 @@ sub get_neighbors {
     my ( $self, $vertex ) = @_;
 
     if ( exists $self->{$vertex} ) {
-        if ( defined $self->{$vertex} ) {
-            my $neighbors = $self->{$vertex};
-            @$neighbors = grep { defined $_ } @$neighbors;
-            return $neighbors;
-        }
+        return $self->{$vertex} if defined $self->{$vertex};
     }
     else {
         return;
@@ -434,6 +431,7 @@ sub get_edges {
         my $neighbors = $self->get_neighbors($vertex);
 
         for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
             next if $seen{ $vertex . $neighbor };
             push @answer, $self->get_edge( $vertex, $neighbor );
             $seen{ $vertex . $neighbor }++;
@@ -635,6 +633,7 @@ sub find_path_between {
         my $neighbors = $self->get_neighbors($v);
 
         for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
             next if $seen{$neighbor};
             $st->{$neighbor}->{prev} = $v;
             if ( $neighbor eq $end ) {
