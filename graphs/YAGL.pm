@@ -84,7 +84,7 @@ sub write_csv {
 
     open my $fh, '>:encoding(utf8)', $f or die "Can't open file '$f': $!\n";
 
-    say $fh qq[node,neighbor,weight];
+    say $fh qq[node,neighbor,weight,is_directed];
 
     my @vertices = $self->get_vertices;
 
@@ -95,6 +95,7 @@ sub write_csv {
             my $weight =
               $self->get_edge_attribute( $vertex, $neighbor, 'weight' ) || 0;
             my @cols = ( $vertex, $neighbor, $weight );
+            $self->is_directed ? push @cols, '1' : push @cols, '0';
             my $line = join ',', @cols;
             say $fh $line;
         }
@@ -112,10 +113,11 @@ sub read_csv {
 
     my %seen;
   LINE: while ( my $line = $csv->getline($fh) ) {
-        my @cols     = @$line;
-        my $vertex   = $cols[0];
-        my $neighbor = $cols[1];
-        my $weight   = $cols[2];
+        my @cols        = @$line;
+        my $vertex      = $cols[0];
+        my $neighbor    = $cols[1];
+        my $weight      = $cols[2];
+        my $is_directed = $cols[3];
 
         next LINE if $vertex eq 'node';
         if ( $self->is_directed ) {
@@ -124,6 +126,13 @@ sub read_csv {
             }
         }
 
+        die
+qq[Directed graph cannot read in serialized copy of undirected graph\n]
+          if ( $self->is_directed && !$is_directed );
+
+        die
+qq[Undirected graph cannot read in serialized copy of directed graph\n]
+          if ( !$self->is_directed && $is_directed );
         $self->add_edge( $vertex, $neighbor, { weight => $weight } );
         $seen{ $neighbor . $vertex }++;
     }
