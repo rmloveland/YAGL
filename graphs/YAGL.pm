@@ -656,28 +656,28 @@ sub equals {
 
 sub _add_neighbor {
     ## String ArrayRef HashRef -> State!
-    my ( $self, $vertex, $neighbor, $edge_attrs ) = @_;
+    my ( $self, $vertex, $new_neighbor, $edge_attrs ) = @_;
 
-    unless ( ref($neighbor) eq 'ARRAY' ) {
+    unless ( ref($new_neighbor) eq 'ARRAY' ) {
         my ( $package, $filename, $line ) = caller();
         die <<"EOF";
 on line $line of file $filename:
-  $package\:\:_add_neighbor('$vertex', '$neighbor', '$edge_attrs'):
-    expected arrayref, got '$neighbor'
+  $package\:\:_add_neighbor('$vertex', '$new_neighbor', '$edge_attrs'):
+    expected arrayref, got '$new_neighbor'
 EOF
     }
 
     if ( $self->has_vertex($vertex) ) {
         my $neighbors = $self->get_neighbors($vertex);
-        for my $value (@$neighbor) {
+        for my $value (@$new_neighbor) {
             push @$neighbors, $value unless $value ~~ @$neighbors;
         }
         $self->{$vertex} = $neighbors;
     }
     else {
-        $self->{$vertex} = $neighbor;
+        $self->{$vertex} = $new_neighbor;
     }
-    $self->set_edge_attribute( $vertex, $neighbor->[0], $edge_attrs );
+    $self->set_edge_attribute( $vertex, $new_neighbor->[0], $edge_attrs );
 }
 
 sub _remove_neighbor {
