@@ -55,13 +55,15 @@ sub generate_random_vertices {
     my @pairs;
 
     for my $node (@nodes) {
-        $self->add_vertex($node);
         my $maybe_neighbor = $nodes[ rand $#nodes ];
         next if $maybe_neighbor eq $node;
         my $connection_prob = rand 1;
         my $dist            = int rand $max_weight;
         if ( $connection_prob > $p ) {
             push @pairs, [ $node, $maybe_neighbor, $dist ];
+            unless ( $self->is_directed ) {
+                push @pairs, [ $maybe_neighbor, $node, $dist ];
+            }
         }
         redo
           if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
