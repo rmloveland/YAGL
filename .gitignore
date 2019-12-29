@@ -6,5 +6,7 @@ nytprof*
 *.jpg
 *.dot
 graphs/*.csv
+graphs/t/02-serialize-graph-to-csv.csv
 * conflicted copy *
 .picasa.ini
+.DS_Store*
