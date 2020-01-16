@@ -15,13 +15,6 @@
 
 * Staging
 
-** TODO Implement graph coloring
-
-   Several algorithms:
-
-   - Vertex merging from Lukacz
-   - The one from Skiena's _Implementing Discrete Mathematics_
-
 ** TODO Implement vertex merging
 
    This is a prerequisite for graph coloring (at least one method,
@@ -33,6 +26,14 @@
 
 * Someday/Maybe
 
+** TODO csv: write a specification for the serialization format
+
+   As the [[csv: unweighted graphs should have -1 in the weight column]]
+   TODO item shows, there are edge cases in the format that have not
+   been thought through.
+
+** TODO csv: unweighted graphs should have -1 in the weight column
+   
 ** TODO get_edge(s) should *only* return a list of edges (not edge attributes)
 
 ** TODO Implement =is_isomorphic()= method

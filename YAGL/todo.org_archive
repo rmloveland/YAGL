@@ -261,3 +261,23 @@ Archived entries from file c:/Users/rml/Dropbox/Code/personal/essential-algorith
   - G is circuit-free and has n-1 edges (where n = |V|)
   - G is connected and has n-1 edges (where n = |V|)
 
+
+* DONE Implement graph coloring
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2020-01-16 Thu 08:15
+  :ARCHIVE_FILE: ~/Dropbox/Code/personal/essential-algorithms/YAGL/todo.org
+  :ARCHIVE_OLPATH: Staging
+  :ARCHIVE_CATEGORY: todo
+  :ARCHIVE_TODO: DONE
+  :END:
+
+  Several algorithms:
+
+  - Vertex merging from Lukacz
+  - The one from Skiena's _Implementing Discrete Mathematics_
+
+
+  Thursday, January 16, 2020:
+
+  - This was fixed in [[orgit-rev:~/Dropbox/Code/personal/essential-algorithms/::e3e34b8][e3e34b8: Add graph coloring methods and tests]]
+
