@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use lib '.';
+use lib 'lib';
 use Test::More tests => 2;
 use Cwd;
 use YAGL;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use experimentals;
-use lib '.';
+use lib 'lib';
 use Test::More tests => 5;
 use YAGL;
 
