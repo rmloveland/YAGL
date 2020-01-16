@@ -895,3 +895,107 @@ sub chromatic_number {
 }
 
 1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+YAGL - Yet Another Graph Library
+
+=head1 VERSION
+
+version 0.1
+
+=head1 SYNOPSIS
+
+    use YAGL;
+
+    my $g = YAGL->new;
+
+    # Populate the graph with 124 vertices, with randomly allocated
+    # weighted edges between some of the vertices.
+    $g->generate_random_vertices(
+        { n => 124, p => 0.1, max_weight => 100_000 } );
+
+    # Add vertices and edges to the graph.
+    $g->add_vertex('abc123');
+    $g->add_vertex('xyz789');
+    $g->add_edge( 'abc123', 'xyz789', { weight => 1_000_000 } );
+
+    $g->add_vertex('I_AM_A_TEST');
+    $g->add_edge( 'I_AM_A_TEST', 'abc123', { weight => 12345 } );
+
+    # Write the graph out to a CSV file.
+    $g->write_csv('foo.csv');
+
+    # Pick a start and end vertex at random from the graph.
+    my @vertices = $g->get_vertices;
+
+    my $i     = int rand @vertices;
+    my $j     = int rand @vertices;
+    my $start = $vertices[$i];
+    my $end   = $vertices[$j];
+
+    say qq[Looking for a path from '$start' to '$end' ...];
+
+    # Using BFS, find a path between the start and end vertices, if
+    # any.  Otherwise this returns undef.
+    my @path;
+    @path = $g->find_path_between( $start, $end );
+
+    # Get a string representation of the graph in the graphviz
+    # language for passing to graphviz tools like `dot`.
+    my $viz = $g->to_graphviz;
+
+=head1 DESCRIPTION
+
+This module implements a number of algorithms on directed and undirected graphs.  Features include:
+
+=over
+
+=item * Breadth-first search of unweighted graphs to find the shortest path in terms of number of nodes.
+
+=item * Dijkstra's algorithm for finding the shortest path through a weighted (directed or undirected) graph.
+
+=item * Graph coloring for undirected graphs.
+
+=item * Serializing graphs to and from CSV files.  This is very useful for testing.
+
+=item * Generating random graphs.
+
+=item * Automated tests for all features.
+
+=back
+
+Note that this library is still in development.
+
+=head1 SEE ALSO
+
+=over
+
+=item * Graph, by Jarkko Hietaniemi
+
+=item * Graph::Fast by Lars Stoltenow
+
+=item * Boost::Graph by David Burdick (FIXME: This does not build on my machine)
+
+=back
+
+=head1 AUTHOR
+
+Richard Loveland <r@rmloveland.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2019, 2020 by Rich Loveland
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
+
+
