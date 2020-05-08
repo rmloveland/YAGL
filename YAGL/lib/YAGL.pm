@@ -8,10 +8,19 @@ use Text::CSV;
 use GraphViz;
 use Hash::PriorityQueue;
 use Storable;
+use Data::Dumper;
 
 =head1 YAGL - Yet Another Graph Library
 
 =head2 GRAPH INITIALIZATION AND RANDOMIZATION
+
+=over
+
+=item new
+
+Initialize a new graph.
+
+To make it directed, pass 'is_directed => 1' as an argument.
 
 =cut
 
@@ -28,6 +37,32 @@ sub new {
     bless $graph, $self;
     return $graph;
 }
+
+=item generate_random_vertices
+
+Generate a bunch of vertices with random names, and distribute edges
+randomly among them.
+
+Arguments:
+
+=over
+
+=item n
+
+Number of vertices.
+
+=item p
+
+Probability that any given node will B<not> be connected to another node.
+
+=item max_weight
+
+The maximum weight of any vertex.  Vertex weights are randomly
+generated up to this number.
+
+=back
+
+=cut
 
 sub generate_random_vertices {
     ## HashRef -> State!
@@ -74,7 +109,15 @@ sub generate_random_vertices {
     }
 }
 
+=back
+
 =head2 GRAPH SERIALIZATION
+
+=over
+
+=item write_csv
+
+Write a CSV representation of this graph out to a (named) file.
 
 =cut
 
@@ -102,6 +145,12 @@ sub write_csv {
     }
     close $fh;
 }
+
+=item read_csv
+
+Read in a CSV file that represents a graph.
+
+=cut
 
 sub read_csv {
     ## Filename -> State! IO!
@@ -138,6 +187,12 @@ qq[Undirected graph cannot read in serialized copy of directed graph\n]
     }
 }
 
+=item to_graphviz
+
+Generate a Graphviz representation of this graph (really, a string).
+
+=cut
+
 sub to_graphviz {
     ## ArrayRef -> String
     my ($self) = @_;
@@ -166,7 +221,15 @@ sub to_graphviz {
     return $gv->as_canon;
 }
 
+=back
+
 =head2 BOOLEAN METHODS
+
+=over
+
+=item is_empty
+
+Returns true if the graph is empty - that is, if it has no vertices.
 
 =cut
 
@@ -182,6 +245,13 @@ sub is_empty {
         return 1;
     }
 }
+
+=item is_complete
+
+Return true if this is a complete graph.  A complete graph is one
+wherein each vertex is connected to every other vertex.
+
+=cut
 
 sub is_complete {
     my $self = shift;
@@ -199,6 +269,14 @@ sub is_complete {
     return;
 }
 
+=item is_tree
+
+Return true if this graph is a tree.  A graph is a tree if its number
+of edges is one fewer than its number of vertices.  This definition is
+taken from Even's book I<Graph Algorithms>.
+
+=cut
+
 sub is_tree {
     my ($self) = @_;
 
@@ -213,6 +291,13 @@ sub is_tree {
     return unless $e == $v - 1;
 }
 
+=item is_connected
+
+Return true if for each vertex A in this graph, there is a path
+between A and every other vertex in the graph.
+
+=cut
+
 sub is_connected {
     my ($self) = @_;
 
@@ -226,10 +311,24 @@ sub is_connected {
     return 1;
 }
 
+=item has_cycle
+
+Return true if there is a cycle in this graph; in other words, if this
+graph is not a tree.
+
+=cut
+
 sub has_cycle {
     my ($self) = @_;
     return $self->is_tree ? undef : 1;
 }
+
+=item is_colored
+
+Return true if this graph has already been colored using the
+C<YAGL::color_vertices> method.
+
+=cut
 
 sub is_colored {
     ## -> Number
@@ -240,12 +339,28 @@ sub is_colored {
     return scalar @vertices == scalar @colors;
 }
 
+=item is_directed
+
+Return true if this is a directed graph.  Graphs can only be marked as
+directed during object initialization, by passing C<is_directed=>1> as
+an argument to C<YAGL::new>.
+
+=cut
+
 sub is_directed {
     my ($self) = @_;
     return $self->{_INTERNAL}->{is_directed};
 }
 
+=back
+
 =head2 METHODS ON VERTICES
+
+=over
+
+=item add_vertex
+
+Add a vertex to this graph, if it does not already exist.
 
 =cut
 
@@ -256,10 +371,28 @@ sub add_vertex {
     $self->{$vertex} = [];
 }
 
+=item add_vertices
+
+Add multiple vertices to this graph.  Takes an array as its argument.
+
+    my @to_add = qw/a b c d e f/;
+    $g->add_vertices(@to_add);
+
+=cut
+
 sub add_vertices {
     my ( $self, @vertices ) = @_;
     $self->add_vertex($_) for @vertices;
 }
+
+=item get_neighbors
+
+Given a vertex in the graph, get its neighbors - that is, the other
+vertices to which it is connected.
+
+    $g->get_neighbors('s');
+
+=cut
 
 sub get_neighbors {
     ## String -> ArrayRef
@@ -273,6 +406,14 @@ sub get_neighbors {
     }
 }
 
+=item has_vertex
+
+Return true if the vertex in question is a part of the graph.
+
+    $g->has_vertex('a');
+
+=cut
+
 sub has_vertex {
     ## String -> Boolean
     my ( $self, $vertex ) = @_;
@@ -281,6 +422,17 @@ sub has_vertex {
     }
     return;
 }
+
+=item remove_vertex
+
+Remove the named vertex from the graph, if it exists.
+
+    $g->remove_vertex('s');
+
+Note that removing a vertex will also delete all edges (and edge
+attributes) between the given vertex and its former neighbors.
+
+=cut
 
 sub remove_vertex {
     ## String -> State!
@@ -312,6 +464,14 @@ sub remove_vertex {
     }
 }
 
+=item get_vertices
+
+Return a list of the vertices in the graph.
+
+    my @v = $g->get_vertices;
+
+=cut
+
 sub get_vertices {
     ## -> Array
     my $self = shift;
@@ -325,6 +485,13 @@ sub get_vertices {
     return @vertices;
 }
 
+=item get_degree
+
+Given a vertex V, return the degree of that vertex -- that is, the
+number of edges between V and other vertices (its neighbors).
+
+=cut
+
 sub get_degree {
     my ( $self, $vertex ) = @_;
     if ( $self->has_vertex($vertex) ) {
@@ -333,6 +500,12 @@ sub get_degree {
     }
     return;
 }
+
+=item set_vertex_attribute
+
+Given a vertex V, store a hashref of attributes about that vertex.
+
+=cut
 
 sub set_vertex_attribute {
     ## String HashRef -> State!
@@ -347,6 +520,17 @@ sub set_vertex_attribute {
         $self->{_INTERNAL}->{vertex_attrs}->{$vertex}->{$k} = $v;
     }
 }
+
+=item get_vertex_attribute
+
+Given a vertex V and an attribute string, retrieve the value of that attribute.
+
+    my $weight = $g->get_vertex_attribute('s', 'weight');
+    # 123
+
+=back
+
+=cut
 
 sub get_vertex_attribute {
     ## String String -> Value OR undef
@@ -446,6 +630,12 @@ sub get_edge_attribute {
 
     my $pairkey = $start . $end;
     return $self->{_INTERNAL}->{edge_attrs}->{$pairkey}->{$attribute};
+}
+
+sub get_edge_weight {
+    ## String String -> Value OR undef
+    my ( $self, $start, $end, $attribute ) = @_;
+    return $self->get_edge_attribute( $start, $end, 'weight' );
 }
 
 sub set_edge_attribute {
@@ -624,6 +814,46 @@ sub find_path_between {
         }
     }
     return $found ? @path : ();
+}
+
+sub dfs {
+    ## String String -> Array
+    my ( $self, $start, $sub ) = @_;
+
+    return () unless defined $start;
+
+    my @path;     # Path so far
+    my @queue;    # Vertices still to visit.
+    my %seen;     # Vertices already seen.
+
+    push @queue, $start;
+    $seen{$start}++;
+
+    while (@queue) {
+        my $v = pop @queue;
+        $sub->($v);
+
+        my $neighbors = $self->get_neighbors($v);
+        for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
+            next if $seen{$neighbor};
+            push @queue, $neighbor;
+            $seen{$neighbor}++;
+        }
+    }
+}
+
+sub is_planar {
+    my ($self) = @_;
+
+    my $edge_count   = $self->get_edges;
+    my $vertex_count = $self->get_vertices;
+
+    say Dumper { edge_count => $edge_count, vertex_count => $vertex_count };
+
+    if ( $edge_count > ( 3 * $vertex_count ) ) {
+        return;
+    }
 }
 
 =head2 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
@@ -997,5 +1227,3 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
-
-
