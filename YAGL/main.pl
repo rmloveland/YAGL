@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use experimentals;
 use Data::Dumper;
-use lib '.';
+use lib 'lib';
 require YAGL;
 
 sub main {
