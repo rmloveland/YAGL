@@ -61,7 +61,10 @@ my @points = (
     [ 15, 2 ], [ 13, 16 ], [ 3, 12 ], [ 12, 10 ],
 );
 
-@points = make_random_points( 600, 600, 36 );
+# Scale the point sizes so they are appropriate in a 600x600 SVG image.
+@points = map { [ $_->[X] * 40, $_->[Y] * 40 ] } @points;
+
+# @points = make_random_points( 600, 600, 8 );
 
 my %points;
 for ( my $i = 0 ; $i < @k ; $i++ ) {
@@ -97,25 +100,32 @@ sub get_anchor {
 
     my $min_x = 1_000_000;
     my $min_y = 1_000_000;
+    my $anchor;
 
     for my $p (@points) {
         if ( $p->[Y] < $min_y ) {
-            $min_y = $p->[Y];
+            $min_y  = $p->[Y];
+            $anchor = $p;
         }
         if ( $p->[X] < $min_x ) {
             $min_x = $p->[X];
         }
-
     }
-
-    my $ideal_anchor = [ $min_x, $min_y ];
-    @points =
-      sort { distance( $ideal_anchor, $a ) <=> distance( $ideal_anchor, $b ) }
-      @points;
-    return $points[0];
+    return $anchor;
 }
 
-sub convex_hull_graham {
+sub clockwise {
+    my ( $p1, $p2, $p3 ) = @_;
+
+    # Return POSITIVE if turning right (clockwise)
+    # Return NEGATIVE if turning left (counterclockwise)
+    # Return ZERO if on the same vector
+
+    return ( $p3->[X] - $p1->[X] ) * ( $p2->[Y] - $p1->[Y] ) -
+      ( $p2->[X] - $p1->[X] ) * ( $p3->[Y] - $p1->[Y] );
+}
+
+sub convex_hull {
     ## Array -> Array
     my @polygon = @_;
 
@@ -161,13 +171,9 @@ sub simple_closed_path {
     my @path;
 
     my $anchor = get_anchor(@points);
-
-    say Dumper { anchor => $anchor };
-
     @path = sort { theta( $anchor, $a ) <=> theta( $anchor, $b ) } @points;
 
     push @path, $path[0];
-
     return @path;
 }
 
