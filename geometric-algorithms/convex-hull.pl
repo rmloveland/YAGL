@@ -10,6 +10,8 @@ use SVG::Plot;
 use constant X => 0;
 use constant Y => 1;
 
+use constant DEBUG => undef;
+
 sub make_point {
     my ( $x, $y ) = @_;
     return [ $x, $y ];
@@ -50,26 +52,11 @@ sub theta {
         $t = 4 + $t;
     }
 
-    return $t * 90;
+    my $answer = $t * 90;
+    return $answer;
 }
 
 my @k = qw/a b c d e f g h i j k l m n o p/;
-
-my @points = (
-    [ 3, 9 ], [ 11, 1 ], [ 6, 8 ], [ 4,  3 ], [ 5,  15 ], [ 8,  11 ],
-    [ 1, 6 ], [ 7,  4 ], [ 9, 7 ], [ 14, 5 ], [ 10, 13 ], [ 16, 14 ],
-    [ 15, 2 ], [ 13, 16 ], [ 3, 12 ], [ 12, 10 ],
-);
-
-# Scale the point sizes so they are appropriate in a 600x600 SVG image.
-@points = map { [ $_->[X] * 40, $_->[Y] * 40 ] } @points;
-
-# @points = make_random_points( 600, 600, 8 );
-
-my %points;
-for ( my $i = 0 ; $i < @k ; $i++ ) {
-    $points{ $k[$i] } = $points[$i];
-}
 
 sub theta2 {
     my ( $anchor, $p2 ) = @_;
@@ -128,39 +115,50 @@ sub clockwise {
 sub convex_hull {
     ## Array -> Array
     my @polygon = @_;
+    my @hull;
 
     # Input: The ordered list of points that make up the simple polygon.
     #
     # Output: The ordered list of points that makes up the convex hull;
 
-    my @hull;
-
-    # while ( my ( $p1, $p2, $p3 ) = splice @polygon, 0, 3 ) {
-    #     if ( clockwise( $p1, $p2, $p3 ) >= 0 ) {
-    #         push @hull, ( $p1, $p2, $p3 );
-    #     }
-    # }
-
-    my $anchor    = get_anchor(@polygon);
-    my $prev_dist = 0;
-  LOOP: while ( my $curr = pop @polygon ) {
-
-        my $dist_from_anchor = distance( $anchor, $curr );
-
-        push @hull, $curr;
-
-        if ( $dist_from_anchor >= $prev_dist ) {
-
-            # If the current point is further from the anchor than the
-            # previous point, we pop the previous point from the hull
-            # and add the current one.
-            $prev_dist = $dist_from_anchor;
-            pop @hull;
-            push @hull, $curr;
+    my $min_x = 1_000_000_000;
+    my $leftmost;
+    for my $p (@polygon) {
+        if ( $p->[X] < $min_x ) {
+            $min_x    = $p->[X];
+            $leftmost = $p;
         }
     }
 
-    push @hull, $hull[0];
+    push @hull, $leftmost;
+
+    # Start at index 1 to skip the anchor.
+    my $leftmost_index = 0;
+    my $max_theta      = 0;
+  LOOP: for ( my $i = 1 ; $i < @polygon ; $i++ ) {
+        my $theta = theta( $hull[$#hull], $polygon[$i] );
+
+        say qq[THETA: $theta] if DEBUG;
+
+        if ( $theta > $max_theta ) {
+            $max_theta = $theta;
+            say qq[NEW MAX THETA: $max_theta] if DEBUG;
+            $leftmost_index = $i;
+        }
+    }
+
+    if ( @polygon > 0 && $polygon[$leftmost_index] != $hull[0] ) {
+        say qq[pushing @{$polygon[$leftmost_index]} onto hull] if DEBUG;
+        push @hull, $polygon[$leftmost_index];
+        say qq[POLYGON BEFORE:], Dumper \@polygon if DEBUG;
+        splice( @polygon, $leftmost_index, 1 );
+        say qq[POLYGON AFTER:], Dumper \@polygon if DEBUG;
+        $max_theta      = 0;
+        $leftmost_index = 0;
+        goto LOOP;
+    }
+
+    push @hull, $hull[0] unless $hull[0] eq $hull[$#hull];
     return @hull;
 }
 
@@ -198,13 +196,37 @@ sub plot_points {
 }
 
 sub main {
-    my @path = simple_closed_path(@points);
+    my @points = (
+        [ 3,  9 ],  [ 11, 1 ],  [ 6,  8 ],  [ 4,  3 ],
+        [ 5,  15 ], [ 8,  11 ], [ 1,  6 ],  [ 7,  4 ],
+        [ 9,  7 ],  [ 14, 5 ],  [ 10, 13 ], [ 16, 14 ],
+        [ 15, 2 ],  [ 13, 16 ], [ 3,  12 ], [ 12, 10 ],
+    );
 
-    my $plot = plot_points(@path);
+    # Scale the point sizes so they are appropriate in a 600x600 SVG image.
+    my @scaled = map { [ $_->[X] * 40, $_->[Y] * 40 ] } @points;
 
-    open my $fh, '>', 'convex-hull.svg';
-    say $fh $plot;
+    my @path = simple_closed_path(@scaled);
+
+    open my $fh, '>', 'closed-path.svg';
+    say $fh plot_points(@path);
     close $fh;
+
+    my @hull = convex_hull(@path);
+
+    # Hull from Sedgewick 2nd ed.: B M L N E O G D
+    # B: [11,  1]
+    # M: [15,  2]
+    # L: [16, 14]
+    # N: [13, 16]
+    # E: [5,  15]
+    # O: [3,  12]
+    # G: [1,   6]
+    # D: [4,   3]
+
+    open my $fh2, '>', 'convex-hull.svg';
+    say $fh2 plot_points(@hull);
+    close $fh2;
 }
 
 main();
