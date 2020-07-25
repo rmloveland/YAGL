@@ -332,9 +332,9 @@ C<YAGL::color_vertices> method.
 
 sub is_colored {
     ## -> Number
-    my ($self)   = @_;
+    my ($self) = @_;
     my @vertices = $self->get_vertices;
-    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -360,7 +360,10 @@ sub is_directed {
 
 =item add_vertex
 
-Add a vertex to this graph, if it does not already exist.
+Add a vertex V to this graph, if it does not already exist.  Return
+C<undef> if V already exists.
+
+    $g->add_vertex('s');
 
 =cut
 
@@ -528,8 +531,6 @@ Given a vertex V and an attribute string, retrieve the value of that attribute.
     my $weight = $g->get_vertex_attribute('s', 'weight');
     # 123
 
-=back
-
 =cut
 
 sub get_vertex_attribute {
@@ -538,12 +539,30 @@ sub get_vertex_attribute {
     return $self->{_INTERNAL}->{vertex_attrs}->{$vertex}->{$attribute};
 }
 
+=item get_vertex_attributes
+
+Given a vertex V, return all of the vertex's attributes, whatever they
+are.  Reads from the object's internal hashref, so beware: these
+values could be anything.
+
+    my $attrs = $g->get_vertex_attributes('s');
+
+=cut
+
 sub get_vertex_attributes {
     ## String -> HashRef OR undef
     my ( $self, $vertex ) = @_;
     return unless $self->has_vertex($vertex);
     return $self->{_INTERNAL}->{vertex_attrs}->{$vertex};
 }
+
+=item delete_vertex_attributes
+
+Given a vertex V, delete all of its attributes (if any).
+
+    $g->delete_vertex_attributes('s');
+
+=cut
 
 sub delete_vertex_attributes {
     ## String -> Undefined OR State!
@@ -552,11 +571,31 @@ sub delete_vertex_attributes {
     delete $self->{_INTERNAL}->{vertex_attrs}->{$vertex};
 }
 
+=item set_vertex_color
+
+Given a vertex V and some color C, sets a 'color' attribute on
+V. Shorthand for using C<set_vertex_attribute>.
+
+    $g->set_vertex_color('s', 'red');
+
+=cut
+
 sub set_vertex_color {
     ## String String -> Undefined OR State!
     my ( $self, $vertex, $color ) = @_;
     $self->set_vertex_attribute( $vertex, { color => $color } );
 }
+
+=item get_vertex_color
+
+Given a vertex V, get its color (if any).  Shorthand for calling
+C<get_vertex_attribute>.
+
+    $g->get_vertex_color('s');
+
+=back
+
+=cut
 
 sub get_vertex_color {
     ## String -> String OR Undefined
