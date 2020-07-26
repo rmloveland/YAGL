@@ -605,6 +605,17 @@ sub get_vertex_color {
 
 =head2 METHODS ON EDGES
 
+=over
+
+=item get_edge
+
+Get the edge between two vertices, A and B.  Return C<undef> if no
+such edge exists.  If the edge does exist, return an array reference
+containing A, B, and a (possibly empty) hash reference of edge
+attributes.
+
+    my $edge = $g->get_edge('s', 'a');
+
 =cut
 
 sub get_edge {
@@ -617,6 +628,16 @@ sub get_edge {
 
     return [ $a, $b, $attrs ];
 }
+
+=item get_edges
+
+Get a list containing all of the edges in the graph.  Specifically,
+this will be a list of array references, with the contents of each
+array reference as described in the documentation for C<get_edge()>.
+
+    my @edges = $g->get_edges;
+
+=cut
 
 sub get_edges {
     ## -> Array
@@ -642,6 +663,17 @@ sub get_edges {
     return @answer;
 }
 
+=item edge_between
+
+Given two vertices A and B, return something truthy if there exists an
+edge between A and B.  Otherwise, return C<undef>.
+
+    if ($g->edge_between('s', 'a')) {
+      say 'Yes';
+    }
+
+=cut
+
 sub edge_between {
     ## String String -> Boolean
     my ( $self, $a, $b ) = @_;
@@ -656,12 +688,32 @@ sub edge_between {
     else { return; }
 }
 
+=item get_edge_attributes
+
+Given two vertices A and B that have an edge between them, return
+whatever attributes are stored for that edge.  Note that this can be
+any arbitrary Perl data structure that could be stored in a hash
+reference.
+
+=cut
+
 sub get_edge_attributes {
     ## String String -> HashRef OR undef
     my ( $self, $start, $end ) = @_;
+
     my $pairkey = $start . $end;
     return $self->{_INTERNAL}->{edge_attrs}->{$pairkey};
 }
+
+=item get_edge_attribute
+
+Given two vertices A and B that have an edge between them, and a
+specific (text) attribute T, return whatever values are associated
+with T for that edge.  For example, a (numeric) weight.
+
+    my $edge_weight = $g->get_edge_attribute('s', 'a', 'weight');
+
+=cut
 
 sub get_edge_attribute {
     ## String String String -> Value OR undef
@@ -671,11 +723,30 @@ sub get_edge_attribute {
     return $self->{_INTERNAL}->{edge_attrs}->{$pairkey}->{$attribute};
 }
 
+=item get_edge_weight
+
+Shortcut for the following call to C<get_edge_attribute()>.
+
+    my $edge_weight = $g->get_edge_attribute('s', 'a', 'weight');
+
+=cut
+
 sub get_edge_weight {
     ## String String -> Value OR undef
     my ( $self, $start, $end, $attribute ) = @_;
+
     return $self->get_edge_attribute( $start, $end, 'weight' );
 }
+
+=item set_edge_attribute
+
+Given two vertices A and B that have an edge between them, store a
+specific attribute key-value pair (a hash reference) that you want to
+associate with that edge.
+
+    my $edge_weight = $g->set_edge_attribute('s', 'a', { weight => 123 });
+
+=cut
 
 sub set_edge_attribute {
     ## String String HashRef -> State!
@@ -695,6 +766,15 @@ sub set_edge_attribute {
     }
 }
 
+=item delete_edge_attributes
+
+Given two vertices A and B that have an edge between them, delete all
+of the attributes (weight, color, etc.) associated with that edge.
+
+    $g->delete_edge_attributes('s', 'a');
+
+=cut
+
 sub delete_edge_attributes {
     ## String String -> Undefined OR State!
     my ( $self, $start, $end ) = @_;
@@ -709,12 +789,37 @@ sub delete_edge_attributes {
     delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey2};
 }
 
+=item add_edge
+
+Given two vertices A and B, add an edge between them, as well as a
+hash reference containing any attributes that should be associated
+with that edge.  Note that if either of the vertices do not yet exist,
+they will be created.
+
+    $g->add_edge('s', 'a', { name => 'my great edge'});
+
+=cut
+
 sub add_edge {
     ## String String -> State!
     my ( $self, $v1, $v2, $attrs ) = @_;
     $self->_add_neighbor( $v1, [$v2], $attrs );
     $self->_add_neighbor( $v2, [$v1], $attrs ) unless $self->is_directed;
 }
+
+=item add_edges
+
+Given a list of array references that describe vertices in the format
+
+    [['a', 'b', { weight => 123 }], ... ]
+
+add all of the edges listed, as well as the attributes that should be
+associated with each edge.  Note that if either of the vertices do not
+yet exist, they will be created.
+
+    $g->add_edge('s', 'a', { name => 'my great edge'});
+
+=cut
 
 sub add_edges {
     my ( $self, @edges ) = @_;
@@ -725,6 +830,17 @@ sub add_edges {
         $self->add_edge( $a, $b, $attrs );
     }
 }
+
+=item remove_edge
+
+Given two vertices A and B, remove the edge (if any) between them, as
+well as any associated attributes.
+
+    $g->remove_edge('s', 'a');
+
+=back
+
+=cut
 
 sub remove_edge {
     ## String String -> Boolean State! OR Undef
