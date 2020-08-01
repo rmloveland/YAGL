@@ -484,6 +484,21 @@ sub get_vertices {
         next if $vertex eq '_INTERNAL';
         push @vertices, $vertex;
     }
+
+=pod
+
+TODO: Remove this call to C<sort>.  It has a large performance cost
+for large graphs.  On a recent "word ladder" run with the 5757-vertex
+WORDS graph from the Stanford Graphbase, of 522s of runtime, this call
+to C<sort> cost 30s (30/522 = ~6%).
+
+AFAICT there is no good reason for the sorting; it was done to get
+some tests to pass -- likely the graph cloning equality tests, if
+memory serves.  Therefore the action item is to remove this call to
+C<sort>, see what breaks in the tests, and fix it.
+
+=cut
+
     @vertices = sort @vertices;
     return @vertices;
 }
