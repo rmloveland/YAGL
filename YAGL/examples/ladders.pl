@@ -27,30 +27,49 @@ C<chr()> values).  See the C<chksum()> subroutine for the details.
 
 =pod
 
-Next, we load the graph up with the words.  For each word, we store
-its checksum in a vertex attribute.  (Note that it's not clear yet if
-this is actually needed.)
+In this section, we generate the hash tables that will be used to
+determine if two words are "adjacent" to one another in the graph.
+That is, are they the same except for one letter?  E.g. "grape" and
+"graph" are adjacent, while "plane" and "plows" are not.
 
 =cut
 
+    my %words;
     for my $word (@words) {
-        $g->add_vertex($word);
-        $g->set_vertex_attribute( $word, { chksum => $chksum{$word} } );
+        my @word = split //, $word;
+        for ( my $i = 0 ; $i < @word ; $i++ ) {
+            my $c = $word[$i];
+            $word[$i] = '_';
+            my $variant = join '', @word;
+            push @{ $words{$variant} }, $word;
+            $word[$i] = $c;
+        }
     }
 
 =pod
 
-Next, we add edges to the graph.  An edge is added between two words
-if the words in question differ by only one character.
+Now that we have tables storing all of the "holey variants" of each
+word, we iterate over the table keys.  For each key, we add edges
+between all of the values associated with that key.  This should work
+because the data structure looks something like:
+
+    {
+      "_ords" => ["words", "cords", ...],
+      ...,
+    }
 
 =cut
 
-    for ( my $i = 0 ; $i < @words ; $i++ ) {
-        for ( my $j = 0 ; $j < $i ; $j++ ) {
-            my ( $u, $v ) = ( $words[$i], $words[$j] );
-            if ( differ_by_one_char( $u, $v ) ) {
-                my $v_sum = $g->get_vertex_attribute( $v, 'chksum' );
-                my $u_sum = $g->get_vertex_attribute( $u, 'chksum' );
+    for my $k ( keys %words ) {
+        my $vertices = $words{$k};
+
+        # Each of these vertices needs to have an edge between them.
+        for ( my $i = 0 ; $i < @$vertices ; $i++ ) {
+            for ( my $j = 0 ; $j < $i ; $j++ ) {
+                my $u     = $vertices->[$i];
+                my $v     = $vertices->[$j];
+                my $v_sum = $chksum{$v};
+                my $u_sum = $chksum{$u};
                 my $weight =
                   $v_sum > $u_sum ? $v_sum - $u_sum : $u_sum - $v_sum;
                 $g->add_edge( $u, $v, { weight => $weight } );
