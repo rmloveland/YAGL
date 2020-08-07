@@ -21,6 +21,8 @@ $g->write_csv($tmpfile);
 my $h = YAGL->new;
 $h->read_csv($tmpfile);
 
+unlink $tmpfile;
+
 my @v2 = $h->get_vertices;
 my @e2 = $h->get_edges;
 
