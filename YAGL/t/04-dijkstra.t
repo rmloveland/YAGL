@@ -14,8 +14,7 @@ my $cwd = getcwd;
 # Test #1
 #
 # A test based on a randomly generated CSV that I verified visually
-# from the graphviz output.  The graphviz JPG file is in this
-# directory as '04-dijkstra.jpg'.
+# from the graphviz output.
 
 $g->read_csv("$cwd/t/04-dijkstra.csv");
 
@@ -86,8 +85,7 @@ is_deeply( $expected, \@got,
 # Test #2
 #
 # Another test based on a randomly generated CSV that I verified
-# visually from the graphviz output.  The graphviz JPG file is in this
-# directory as '04-dijkstra-01.jpg'.
+# visually from the graphviz output.
 
 my $h = YAGL->new;
 
