@@ -10,6 +10,8 @@ use Hash::PriorityQueue;
 use Storable;
 use Data::Dumper;
 
+our $VERSION = '0.1';
+
 =head1 YAGL - Yet Another Graph Library
 
 =head2 GRAPH INITIALIZATION AND RANDOMIZATION
