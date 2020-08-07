@@ -3,10 +3,9 @@
 use strict;
 use warnings;
 use autodie;
-use experimentals;
+use feature qw/ say /;
 use lib '../lib';
 use YAGL;
-use Data::Dumper;
 
 sub main {
     my $g     = YAGL->new;
@@ -107,7 +106,8 @@ calculate our own "checksum" for each word as mentioned previously.
 
     my @path = $g->dijkstra( $start, $end );
 
-    say qq[PATH: ], Dumper \@path;
+    say qq[PATH: ];
+    say for @path;
 
     my $gv = undef;
     do {

@@ -3,9 +3,8 @@
 use strict;
 use warnings;
 use autodie;
-use experimentals;
+use feature qw/ say /;
 use Graph;
-use Data::Dumper;
 
 sub main {
 
@@ -124,7 +123,8 @@ calculate our own "checksum" for each word as mentioned previously.
     say qq[Looking for a path between '$start' and '$end'];
     my @path = $g->SP_Dijkstra( $start, $end );
 
-    say qq[PATH: ], Dumper \@path;
+    say qq[PATH: ];
+    say for @path;
 }
 
 sub chksum {

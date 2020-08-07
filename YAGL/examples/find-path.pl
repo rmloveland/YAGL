@@ -2,8 +2,7 @@
 
 use strict;
 use warnings;
-use experimentals;
-use Data::Dumper;
+use feature qw/ say /;
 use lib 'lib';
 require YAGL;
 
@@ -46,7 +45,7 @@ sub main {
     my $viz = $g->to_graphviz;
 
     say qq[Found a path from '$start' to '$end'];
-    say Dumper \@path;
+    say for @path;
 
     open my $fh, '>', 'graph.dot' or die $!;
     say $fh $viz;
