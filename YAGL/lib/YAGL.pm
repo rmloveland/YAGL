@@ -2,15 +2,15 @@ package YAGL;
 
 use strict;
 use warnings;
-use experimentals;
+use feature qw/ say /;
 use Smart::Match;
 use Text::CSV;
 use GraphViz;
 use Hash::PriorityQueue;
 use Storable;
-use Data::Dumper;
 
 our $VERSION = '0.1';
+no warnings 'experimental';    # For Smart::Match
 
 =pod
 
@@ -1101,8 +1101,6 @@ sub is_planar {
 
     my $edge_count   = $self->get_edges;
     my $vertex_count = $self->get_vertices;
-
-    say Dumper { edge_count => $edge_count, vertex_count => $vertex_count };
 
     if ( $edge_count > ( 3 * $vertex_count ) ) {
         return;
