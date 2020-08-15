@@ -415,9 +415,9 @@ C<YAGL::color_vertices> method.
 
 sub is_colored {
     ## -> Number
-    my ($self)   = @_;
+    my ($self) = @_;
     my @vertices = $self->get_vertices;
-    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -1067,6 +1067,84 @@ sub find_path_between {
         }
     }
     return $found ? @path : ();
+}
+
+=item mst
+
+The F<mst> method finds the minimum spanning tree of the current graph object.  As such, it takes no arguments.
+
+=cut
+
+sub mst {
+    ## -> YAGL OR undef
+    my ($self) = @_;
+
+    my @queue;
+    my %seen;
+    my $heap = Hash::PriorityQueue->new;
+
+    my @vertices = $self->get_vertices;
+    my $start    = $vertices[ int rand @vertices ];
+
+    my $mst = YAGL->new;
+
+    $mst->add_vertex($start);
+    $mst->set_vertex_attribute( $start, { distance => 0 } );
+
+    for my $vertex (@vertices) {
+        next if $vertex eq $start;
+        $mst->add_vertex($vertex);
+        $mst->set_vertex_attribute( $vertex, { distance => 1_000_000 } );
+    }
+
+    $heap->insert( $start, $mst->get_vertex_attribute( $start, 'distance' ) );
+
+    while ( my $v = $heap->pop() ) {
+        my $neighbors = $self->get_neighbors($v);
+
+        for my $neighbor (@$neighbors) {
+            next if $seen{$neighbor};
+            $seen{$neighbor}++;
+
+            say qq[Looking at '$neighbor'];
+
+            # In this block, we are setting up the information we will
+            # need to answer the question "Have we found a new
+            # shortest path (by distance)?"
+            my $distance_to_self = $mst->get_vertex_attribute( $v, 'distance' );
+            my $old_distance_to_neighbor =
+              $mst->get_vertex_attribute( $neighbor, 'distance' );
+            my $neighbor_edge_weight =
+              $self->get_edge_attribute( $v, $neighbor, 'weight' );
+            my $new_distance_to_neighbor =
+              $distance_to_self + $neighbor_edge_weight;
+
+            # This is the core of Dijkstra's algorithm: Have we
+            # discovered a path whose distance to the neighbor is
+            # shorter than the previously discovered path's distance?
+            # If yes, we update the spanning tree with this new path
+            # information.
+            if ( $new_distance_to_neighbor < $old_distance_to_neighbor ) {
+                $mst->set_vertex_attribute( $neighbor,
+                    { distance => $new_distance_to_neighbor } );
+                $mst->add_edge( $v, $neighbor,
+                    { weight => $neighbor_edge_weight } );
+            }
+
+            if (   $mst->is_connected
+                && scalar $mst->get_vertices == scalar @vertices
+                && $mst->is_tree )
+            {
+                return $mst;
+            }
+            else {
+                $heap->insert( $neighbor,
+                    $mst->get_vertex_attribute( $neighbor, 'distance' ) );
+            }
+        }
+        $seen{$v}++;
+    }
+    return ();
 }
 
 sub dfs {
