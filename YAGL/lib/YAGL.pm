@@ -1072,25 +1072,26 @@ sub find_path_between {
 =pod
 
 The F<mst> method finds the minimum spanning tree of the current graph
-object.  As such, it takes no arguments; instead, it randomly selects
-a starting vertex and builds the spanning tree from there.
-
-Note: There may be better ways to select the starting vertex than at
-random; for example, perhaps the vertex with the lowest degree?  Need
-to look into this question.
+object.  As such, it takes no arguments; instead, it searches for the
+lowest-weight edge in the graph, chooses a vertex from one end of that
+edge as the starting vertex, and builds the spanning tree from there.
 
 =cut
 
 sub mst {
-    ## -> YAGL OR undef
+    ## -> YAGL OR Undef
     my ($self) = @_;
+
+    return unless $self->is_connected;
 
     my @queue;
     my %seen;
     my $heap = Hash::PriorityQueue->new;
 
     my @vertices = $self->get_vertices;
-    my $start    = $vertices[ int rand @vertices ];
+    my @edges    = $self->get_edges;
+    @edges = sort { $a->[2]->{weight} <=> $b->[2]->{weight} } @edges;
+    my $start = $edges[0]->[1];
 
     my $mst = YAGL->new;
 
@@ -1112,8 +1113,6 @@ sub mst {
             next if $seen{$neighbor};
             $seen{$neighbor}++;
 
-            say qq[Looking at '$neighbor'];
-
             # In this block, we are setting up the information we will
             # need to answer the question "Have we found a new
             # shortest path (by distance)?"
@@ -1125,11 +1124,11 @@ sub mst {
             my $new_distance_to_neighbor =
               $distance_to_self + $neighbor_edge_weight;
 
-            # This is the core of Dijkstra's algorithm: Have we
-            # discovered a path whose distance to the neighbor is
-            # shorter than the previously discovered path's distance?
-            # If yes, we update the spanning tree with this new path
-            # information.
+            # This is the core of Jarnik-Prim (as well as Dijkstra's)
+            # algorithm: Have we discovered a path whose distance to
+            # the neighbor is shorter than the previously discovered
+            # path's distance?  If yes, we update the spanning tree
+            # with this new path information.
             if ( $new_distance_to_neighbor < $old_distance_to_neighbor ) {
                 $mst->set_vertex_attribute( $neighbor,
                     { distance => $new_distance_to_neighbor } );
@@ -1150,7 +1149,7 @@ sub mst {
         }
         $seen{$v}++;
     }
-    return ();
+    return;
 }
 
 sub dfs {
