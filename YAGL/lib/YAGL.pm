@@ -1069,9 +1069,15 @@ sub find_path_between {
     return $found ? @path : ();
 }
 
-=item mst
+=pod
 
-The F<mst> method finds the minimum spanning tree of the current graph object.  As such, it takes no arguments.
+The F<mst> method finds the minimum spanning tree of the current graph
+object.  As such, it takes no arguments; instead, it randomly selects
+a starting vertex and builds the spanning tree from there.
+
+Note: There may be better ways to select the starting vertex than at
+random; for example, perhaps the vertex with the lowest degree?  Need
+to look into this question.
 
 =cut
 
