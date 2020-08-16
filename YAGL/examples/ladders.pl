@@ -99,6 +99,22 @@ since we do not use the weighting system defined in SGB's F<words.dat>
 -- we only used the word list and criteria for adding edges, and
 calculate our own "checksum" for each word as mentioned previously.
 
+For example, the path from 'words' to 'graph' is as follows:
+
+    words
+    woods
+    goods
+    goads
+    grads
+    grade
+    grape
+    graph
+
+(Incidentally, I have tested the above with Hietaniemi's C<Graph>
+module and gotten the same path, which gives me some confidence in the
+implementation of Dijkstra's algorithm; see C<ladders-g.pl> for the
+code.)
+
 =cut
 
     my $start = 'words';
@@ -107,7 +123,7 @@ calculate our own "checksum" for each word as mentioned previously.
     my @path = $g->dijkstra( $start, $end );
 
     say qq[PATH: ];
-    say for @path;
+    say $_->{vertex} for @path;
 
     my $gv = undef;
     do {
