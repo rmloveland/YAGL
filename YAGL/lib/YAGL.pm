@@ -95,7 +95,7 @@ Note that this library is still in development.
 
 =cut
 
-=head2 GRAPH INITIALIZATION AND RANDOMIZATION
+=head1 GRAPH INITIALIZATION AND RANDOMIZATION
 
 =over
 
@@ -194,7 +194,7 @@ sub generate_random_vertices {
 
 =back
 
-=head2 GRAPH SERIALIZATION
+=head1 GRAPH SERIALIZATION
 
 =over
 
@@ -311,7 +311,7 @@ sub to_graphviz {
 
 =back
 
-=head2 BOOLEAN METHODS
+=head1 BOOLEAN METHODS
 
 =over
 
@@ -442,7 +442,7 @@ sub is_directed {
 
 =back
 
-=head2 METHODS ON VERTICES
+=head1 METHODS ON VERTICES
 
 =over
 
@@ -706,7 +706,7 @@ sub get_vertex_color {
     $self->get_vertex_attribute( $vertex, 'color' );
 }
 
-=head2 METHODS ON EDGES
+=head1 METHODS ON EDGES
 
 =over
 
@@ -962,7 +962,7 @@ sub remove_edge {
     return 1;
 }
 
-=head2 PATH SEARCH METHODS
+=head1 PATH SEARCH METHODS
 
 =cut
 
@@ -1195,7 +1195,7 @@ sub is_planar {
     }
 }
 
-=head2 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
+=head1 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
 
 =cut
 
@@ -1230,7 +1230,7 @@ sub equals {
     return 1;
 }
 
-=head2 INTERNAL HELPER METHODS
+=head1 INTERNAL HELPER METHODS
 
 =cut
 
@@ -1356,7 +1356,7 @@ sub _make_vertex_name {
     return qq[$c1$c2$n];
 }
 
-=head2 GRAPH COLORING METHODS
+=head1 GRAPH COLORING METHODS
 
 =cut
 
