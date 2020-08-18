@@ -285,17 +285,22 @@ sub to_graphviz {
     my $gv = GraphViz->new( directed => $self->is_directed, style => 'filled' );
 
     for my $vertex ( $self->get_vertices ) {
-        my $color = $self->get_vertex_color($vertex);
-        $gv->add_node( $vertex, style => 'filled', fillcolor => $color );
+        my $vertex_color = $self->get_vertex_color($vertex);
+        $gv->add_node( $vertex, style => 'filled', fillcolor => $vertex_color );
         my $neighbors = $self->get_neighbors($vertex);
 
         for my $neighbor (@$neighbors) {
             my $edge_weight =
               $self->get_edge_attribute( $vertex, $neighbor, 'weight' );
-            my $color = $self->get_vertex_color($neighbor);
-            $gv->add_node( $neighbor, fillcolor => $color );
-            $gv->add_edge( $vertex, $neighbor, label => $edge_weight )
-              unless $seen{ $vertex . $neighbor };
+            my $edge_color =
+              $self->get_edge_attribute( $vertex, $neighbor, 'color' );
+            my $vertex_color = $self->get_vertex_color($neighbor);
+            $gv->add_node( $neighbor, fillcolor => $vertex_color );
+            $gv->add_edge(
+                $vertex, $neighbor,
+                label => $edge_weight,
+                color => $edge_color
+            ) unless $seen{ $vertex . $neighbor };
             $seen{ $neighbor . $vertex }++;
             $seen{ $vertex . $neighbor }++;
         }
