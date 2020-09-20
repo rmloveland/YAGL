@@ -4,14 +4,14 @@ use strict;
 use warnings;
 use feature qw/ say /;
 use lib '../lib';
-require YAGL;
+use YAGL;
+use Data::Dumper;
 
 sub main {
     my $g = YAGL->new;
     my @path;
 
-    $g->generate_random_vertices(
-        { n => 124, p => 0.001, max_weight => 1000 } );
+    $g->generate_random_vertices( { n => 17, p => 0.001, max_weight => 1000 } );
 
     # Uncomment this if you want to re-run using the last graph.
     # This can be useful for testing.
@@ -35,7 +35,14 @@ sub main {
     system $g_cmd;
 
     if ($mst) {
-        say qq[Found an MST];
+        my @edges = $mst->get_edges;
+        my $weight;
+        for my $edge (@edges) {
+            $weight += $edge->[2]->{weight};
+        }
+        say qq[Found an MST of weight $weight];
+        say Dumper \@edges;
+
         my $mst_viz = $mst->to_graphviz;
         open my $mst_fh, '>', 'mst.dot' or die $!;
         say $mst_fh $mst_viz;
