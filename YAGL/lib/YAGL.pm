@@ -2,12 +2,14 @@ package YAGL;
 
 use strict;
 use warnings;
-use feature qw/ say /;
+use feature qw/ say state /;
 use Smart::Match;
 use Text::CSV;
 use GraphViz;
 use Hash::PriorityQueue;
 use Storable;
+
+use constant DEBUG => undef;
 
 our $VERSION = '0.1';
 no warnings 'experimental';    # For Smart::Match
