@@ -21,3 +21,21 @@ graphs/t/02-serialize-graph-to-csv.csv
 *.scn
 *.tex
 *.toc
+
+# YAGL generated files, etc.
+
+YAGL/Build*
+YAGL/Makefile*
+YAGL/*.tar.gz
+YAGL/MYMETA*
+YAGL/blib
+YAGL/pm_to_blib
+YAGL/_build
+YAGL/examples/*.csv
+YAGL/examples/*.svg
+YAGL/lib/*.html
+YAGL/lib/*.pod
+YAGL/lib/*.tmp
+YAGL/lib/*.patch
+
+
