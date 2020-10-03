@@ -422,9 +422,9 @@ C<YAGL::color_vertices> method.
 
 sub is_colored {
     ## -> Number
-    my ($self) = @_;
+    my ($self)   = @_;
     my @vertices = $self->get_vertices;
-    my @colors = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -1159,15 +1159,35 @@ sub mst {
     return;
 }
 
-sub dfs {
-    ## String String -> Array
-    my ( $self, $start, $sub ) = @_;
+=pod
+
+The F<_visit> method below visiting the vertices of the graph using
+the following procedure: to process some vertex I<V>, visit vertex
+I<V>; then visit each child of I<V>, applying this visiting procedure
+recursively, and returning to I<V> afterward.
+
+The behavior above is described on p.630 of Sedgewick's I<Algorithms>,
+2nd ed., as part of an algorithm for finding solutions to the
+Travelling Salesman Problem: given an MST, produce a tour by visiting
+the nodes of the tree using the procedure this method implements
+(described above).  We use this to find open and closed Hamiltonian
+walks (also known as paths and cycles) in the C<hamiltonian_walk>
+method.
+
+=cut
+
+sub _visit {
+    my ( $self, $start, $sub, $path ) = @_;
+
+    state $calls = 0;
+    $calls++;
+
+    say qq[_visit: $calls calls] if DEBUG;
 
     return () unless defined $start;
 
-    my @path;     # Path so far
-    my @queue;    # Vertices still to visit.
-    my %seen;     # Vertices already seen.
+    my @queue;      # Vertices still to visit.
+    state %seen;    # Vertices already seen.
 
     push @queue, $start;
     $seen{$start}++;
@@ -1175,15 +1195,113 @@ sub dfs {
     while (@queue) {
         my $v = pop @queue;
         $sub->($v);
+        push @$path, $v;
 
         my $neighbors = $self->get_neighbors($v);
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
             next if $seen{$neighbor};
             push @queue, $neighbor;
+            $self->_visit( $neighbor, $sub, $path );
             $seen{$neighbor}++;
         }
     }
+    return @$path;
+}
+
+sub hamiltonian_walk {
+    ## Array -> Array State!
+    my ( $self, @args ) = @_;
+
+    my %args = @args;    # $self->hamiltonian_walk(closed => 1);
+
+    my $closed_walk = $args{closed};
+
+    # We can easily disqualify a graph as not having a closed Hamiltonian
+    # walk if it has any vertex with a degree of less than two (that
+    # is, if it has any leaves or entirely disconnected vertices).
+
+    if ($closed_walk) {
+        for my $v ( $self->get_vertices ) {
+            return if $self->get_degree($v) < 2;
+        }
+    }
+
+    my $mst = $self->mst;
+
+    unless ($mst) {
+        say STDERR qq[Couldn't find an MST, exiting ...];
+        return;
+    }
+
+    # Find the leaves of the MST so we can use one of them as a
+    # starting point below.
+    my @leaves;
+    for my $v ( $mst->get_vertices ) {
+        push @leaves, $v if $mst->get_degree($v) == 1;
+    }
+
+    my @path = $mst->_visit(
+        $leaves[0],
+        sub {
+            state %seen;
+            say $_[0] unless $seen{ $_[0] };
+            $seen{ $_[0] }++;
+        },
+        []
+    );
+
+    # Example subroutine: print out the vertices as we walk them.
+    # sub { state %seen; say $_[0] unless $seen{ $_[0] }; $seen{ $_[0] }++ }
+
+    # Final step: remove duplicates from the path.  What remains will
+    # be a Hamiltonian path.
+    my %uniq;
+    my @uniq;
+
+    for my $p (@path) {
+        push @uniq, $p unless $uniq{$p};
+        $uniq{$p}++;
+    }
+
+    # Mark the visited edges in red so we can see the Hamiltonian
+    # path.
+    my $prev;
+    my $count = @uniq;
+    for my $u (@uniq) {
+        say qq[looking at '$u' in (@uniq)] if DEBUG;
+        if ( $count == 1 && $closed_walk ) {    # Last vertex in path/cycle
+
+            # Final check: Does the last vertex in the path have an edge
+            # to the first?  In other words, is this a true Hamiltonian
+            # path?
+            if ( $self->edge_between( $u, $uniq[0] ) ) {
+                $self->set_edge_attribute( $u, $uniq[0], { color => 'red' } );
+            }
+            else {
+                say qq[No edge found between '$u' and '$uniq[0]'] if DEBUG;
+                return ();
+            }
+            say
+qq[Found edge between last vertex '$u' and first vertex '$uniq[0]']
+              if DEBUG;
+        }
+        if ( $self->edge_between( $prev, $u ) ) {
+            say qq[Found edge between '$prev' and '$u'] if DEBUG;
+            $self->set_edge_attribute( $prev, $u, { color => 'red' } );
+        }
+        else {
+            if ( defined $prev && defined $u ) {
+                warn
+qq[no edge found between '$prev' and '$u' in candidate path (@uniq), bailing ...]
+                  if DEBUG;
+                return ();
+            }
+        }
+        $prev = $u;
+        $count--;
+    }
+    return @uniq;
 }
 
 sub is_planar {
