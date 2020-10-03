@@ -296,12 +296,14 @@ sub to_graphviz {
               $self->get_edge_attribute( $vertex, $neighbor, 'weight' );
             my $edge_color =
               $self->get_edge_attribute( $vertex, $neighbor, 'color' );
+            my $penwidth     = $edge_color ? "5" : "";
             my $vertex_color = $self->get_vertex_color($neighbor);
             $gv->add_node( $neighbor, fillcolor => $vertex_color );
             $gv->add_edge(
                 $vertex, $neighbor,
-                label => $edge_weight,
-                color => $edge_color
+                label    => $edge_weight,
+                color    => $edge_color,
+                penwidth => $penwidth,
             ) unless $seen{ $vertex . $neighbor };
             $seen{ $neighbor . $vertex }++;
             $seen{ $vertex . $neighbor }++;
