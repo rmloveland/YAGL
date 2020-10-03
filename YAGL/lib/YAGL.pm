@@ -1097,6 +1097,11 @@ sub mst {
 
     my @vertices = $self->get_vertices;
     my @edges    = $self->get_edges;
+
+    # TODO(rml): This method should throw an error if the edge does
+    # not have a weight attribute.  Or perhaps it should assume a
+    # weight of 0 if none is found?  Since that's what our CSV format
+    # does.
     @edges = sort { $a->[2]->{weight} <=> $b->[2]->{weight} } @edges;
     my $start = $edges[0]->[1];
 
