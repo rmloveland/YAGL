@@ -2,15 +2,14 @@
 
 use strict;
 use warnings;
-use autodie;
-use experimentals;
-use Data::Dumper;
+use feature qw/ say /;
 use SVG::Plot;
+use Data::Dumper;
 
 use constant X => 0;
 use constant Y => 1;
 
-use constant DEBUG => undef;
+use constant DEBUG => 1;
 
 sub make_point {
     my ( $x, $y ) = @_;
@@ -112,14 +111,28 @@ sub clockwise {
       ( $p2->[X] - $p1->[X] ) * ( $p3->[Y] - $p1->[Y] );
 }
 
+=item convex_hull
+
+Given an ordered list of points that make up a simple polygon, this
+function outputs the ordered list of points that makes up the convex
+hull.
+
+=cut
+
 sub convex_hull {
     ## Array -> Array
     my @polygon = @_;
     my @hull;
 
-    # Input: The ordered list of points that make up the simple polygon.
-    #
-    # Output: The ordered list of points that makes up the convex hull;
+=pod
+
+We begin by finding the "leftmost" point.  This is a point that is
+also guaranteed to be on the hull.
+
+The use of the constant for C<min_x> is pretty hacktastic, and may be
+changed.
+
+=cut
 
     my $min_x = 1_000_000_000;
     my $leftmost;
@@ -136,6 +149,8 @@ sub convex_hull {
     my $leftmost_index = 0;
     my $max_theta      = 0;
   LOOP: for ( my $i = 1 ; $i < @polygon ; $i++ ) {
+        say qq[Looking at: ], Dumper $polygon[$i] if DEBUG;
+
         my $theta = theta( $hull[$#hull], $polygon[$i] );
 
         say qq[THETA: $theta] if DEBUG;
@@ -196,15 +211,32 @@ sub plot_points {
 }
 
 sub main {
-    my @points = (
-        [ 3,  9 ],  [ 11, 1 ],  [ 6,  8 ],  [ 4,  3 ],
-        [ 5,  15 ], [ 8,  11 ], [ 1,  6 ],  [ 7,  4 ],
-        [ 9,  7 ],  [ 14, 5 ],  [ 10, 13 ], [ 16, 14 ],
-        [ 15, 2 ],  [ 13, 16 ], [ 3,  12 ], [ 12, 10 ],
+    my %points = (
+        A => [ 3,  9 ],
+        B => [ 11, 1 ],
+        C => [ 6,  8 ],
+        D => [ 4,  3 ],
+        E => [ 5,  15 ],
+        F => [ 8,  11 ],
+        G => [ 1,  6 ],
+        H => [ 7,  4 ],
+        I => [ 9,  7 ],
+        J => [ 14, 5 ],
+        K => [ 10, 13 ],
+        L => [ 16, 14 ],
+        M => [ 15, 2 ],
+        N => [ 13, 16 ],
+        O => [ 3,  12 ],
+        P => [ 12, 10 ],
     );
 
+    my %points_reversed =
+      map { join( ' ', @{ $points{$_} } ) => $_ } keys %points;
+
+    say qq[POINTS_REVERSED: ], Dumper \%points_reversed if DEBUG;
+
     # Scale the point sizes so they are appropriate in a 600x600 SVG image.
-    my @scaled = map { [ $_->[X] * 40, $_->[Y] * 40 ] } @points;
+    my @scaled = map { [ $_->[X] * 40, $_->[Y] * 40 ] } values %points;
 
     my @path = simple_closed_path(@scaled);
 
@@ -225,7 +257,7 @@ sub main {
     # D: [4,   3]
 
     open my $fh2, '>', 'convex-hull.svg';
-    say $fh2 plot_points(@hull);
+    say $fh2 plot_points(@path);
     close $fh2;
 }
 
