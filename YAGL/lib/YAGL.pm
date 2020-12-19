@@ -1193,7 +1193,18 @@ sub dfs {
     return () unless defined $start;
 
     state %seen;    # Vertices already seen.
+    state $count = 0;
+
+    if ($count == scalar $self->get_vertices) {
+
+        # This is necessary because multiple calls to 'dfs()' will
+        # return incorrect results, since the results of the first run
+        # are cached in this state variable.
+        %seen = ();
+    }
+
     $seen{$start}++;
+    $count++;
     $sub->($start);
 
     my $neighbors = $self->get_neighbors($start);
