@@ -390,6 +390,9 @@ between A and every other vertex in the graph.
 sub is_connected {
     my ($self) = @_;
 
+    die qq[YAGL::is_connected() - not implemented for directed graphs]
+      if $self->is_directed;
+
     my @vertices = $self->get_vertices;
 
     my $start = pop @vertices;
