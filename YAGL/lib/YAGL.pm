@@ -95,8 +95,6 @@ GraphBase> by Donald E. Knuth.
 
 Note that this library is still in development.
 
-=cut
-
 =head1 GRAPH INITIALIZATION AND RANDOMIZATION
 
 =over
@@ -110,7 +108,7 @@ To make it directed, pass 'is_directed => 1' as an argument.
 =cut
 
 sub new {
-    my ( $self, @args ) = @_;
+    my ($self, @args) = @_;
     my $graph = {};
 
     my %args = @args;
@@ -147,11 +145,13 @@ generated up to this number.
 
 =back
 
+=back
+
 =cut
 
 sub generate_random_vertices {
     ## HashRef -> State!
-    my ( $self, $args ) = @_;
+    my ($self, $args) = @_;
 
     my $n = $args->{n};
 
@@ -164,7 +164,7 @@ sub generate_random_vertices {
 
     my %seen;
 
-    for my $node ( 1 .. $n ) {
+    for my $node (1 .. $n) {
         my $name = $self->_make_vertex_name;
         redo if $seen{$name};
         $seen{$name}++;
@@ -175,26 +175,23 @@ sub generate_random_vertices {
     my @pairs;
 
     for my $node (@nodes) {
-        my $maybe_neighbor = $nodes[ rand $#nodes ];
+        my $maybe_neighbor = $nodes[rand $#nodes];
         next if $maybe_neighbor eq $node;
         my $connection_prob = rand 1;
         my $dist            = int rand $max_weight;
-        if ( $connection_prob > $p ) {
-            push @pairs, [ $node, $maybe_neighbor, $dist ];
-            unless ( $self->is_directed ) {
-                push @pairs, [ $maybe_neighbor, $node, $dist ];
+        if ($connection_prob > $p) {
+            push @pairs, [$node, $maybe_neighbor, $dist];
+            unless ($self->is_directed) {
+                push @pairs, [$maybe_neighbor, $node, $dist];
             }
         }
-        redo
-          if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
+        redo if rand 1 > 0.8;    # Sometimes, add more neighbors to this node.
     }
 
     for my $pair (@pairs) {
-        $self->add_edge( $pair->[0], $pair->[1], { weight => $pair->[2] } );
+        $self->add_edge($pair->[0], $pair->[1], {weight => $pair->[2]});
     }
 }
-
-=back
 
 =head1 GRAPH SERIALIZATION
 
@@ -208,7 +205,7 @@ Write a CSV representation of this graph out to a (named) file.
 
 sub write_csv {
     ## Filename -> State! IO!
-    my ( $self, $f ) = @_;
+    my ($self, $f) = @_;
 
     open my $fh, '>:encoding(utf8)', $f or die "Can't open file '$f': $!\n";
 
@@ -220,9 +217,9 @@ sub write_csv {
         my $neighbors = $self->get_neighbors($vertex);
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
-            my $weight =
-              $self->get_edge_attribute( $vertex, $neighbor, 'weight' ) || 0;
-            my @cols = ( $vertex, $neighbor, $weight );
+            my $weight
+              = $self->get_edge_attribute($vertex, $neighbor, 'weight') || 0;
+            my @cols = ($vertex, $neighbor, $weight);
             $self->is_directed ? push @cols, '1' : push @cols, '0';
             my $line = join ',', @cols;
             say $fh $line;
@@ -239,14 +236,14 @@ Read in a CSV file that represents a graph.
 
 sub read_csv {
     ## Filename -> State! IO!
-    my ( $self, $f ) = @_;
+    my ($self, $f) = @_;
 
-    my $csv = Text::CSV->new( { binary => 1 } );
+    my $csv = Text::CSV->new({binary => 1});
 
     open my $fh, "<:encoding(utf8)", $f or die "Can't open file '$f': $!\n";
 
     my %seen;
-  LINE: while ( my $line = $csv->getline($fh) ) {
+  LINE: while (my $line = $csv->getline($fh)) {
         my @cols        = @$line;
         my $vertex      = $cols[0];
         my $neighbor    = $cols[1];
@@ -254,21 +251,21 @@ sub read_csv {
         my $is_directed = $cols[3];
 
         next LINE if $vertex eq 'node';
-        if ( $self->is_directed ) {
-            if ( $seen{ $neighbor . $vertex } ) {
+        if ($self->is_directed) {
+            if ($seen{$neighbor . $vertex}) {
                 next LINE;
             }
         }
 
         die
-qq[Directed graph cannot read in serialized copy of undirected graph\n]
-          if ( $self->is_directed && !$is_directed );
+          qq[Directed graph cannot read in serialized copy of undirected graph\n]
+          if ($self->is_directed && !$is_directed);
 
         die
-qq[Undirected graph cannot read in serialized copy of directed graph\n]
-          if ( !$self->is_directed && $is_directed );
-        $self->add_edge( $vertex, $neighbor, { weight => $weight } );
-        $seen{ $neighbor . $vertex }++;
+          qq[Undirected graph cannot read in serialized copy of directed graph\n]
+          if (!$self->is_directed && $is_directed);
+        $self->add_edge($vertex, $neighbor, {weight => $weight});
+        $seen{$neighbor . $vertex}++;
     }
 }
 
@@ -284,29 +281,29 @@ sub to_graphviz {
 
     my %seen;
 
-    my $gv = GraphViz->new( directed => $self->is_directed, style => 'filled' );
+    my $gv = GraphViz->new(directed => $self->is_directed, style => 'filled');
 
-    for my $vertex ( $self->get_vertices ) {
+    for my $vertex ($self->get_vertices) {
         my $vertex_color = $self->get_vertex_color($vertex);
-        $gv->add_node( $vertex, style => 'filled', fillcolor => $vertex_color );
+        $gv->add_node($vertex, style => 'filled', fillcolor => $vertex_color);
         my $neighbors = $self->get_neighbors($vertex);
 
         for my $neighbor (@$neighbors) {
-            my $edge_weight =
-              $self->get_edge_attribute( $vertex, $neighbor, 'weight' );
-            my $edge_color =
-              $self->get_edge_attribute( $vertex, $neighbor, 'color' );
-            my $penwidth     = $edge_color ? "5" : "";
+            my $edge_weight
+              = $self->get_edge_attribute($vertex, $neighbor, 'weight');
+            my $edge_color
+              = $self->get_edge_attribute($vertex, $neighbor, 'color');
+            my $penwidth = $edge_color ? "5" : "";
             my $vertex_color = $self->get_vertex_color($neighbor);
-            $gv->add_node( $neighbor, fillcolor => $vertex_color );
+            $gv->add_node($neighbor, fillcolor => $vertex_color);
             $gv->add_edge(
                 $vertex, $neighbor,
                 label    => $edge_weight,
                 color    => $edge_color,
                 penwidth => $penwidth,
-            ) unless $seen{ $vertex . $neighbor };
-            $seen{ $neighbor . $vertex }++;
-            $seen{ $vertex . $neighbor }++;
+            ) unless $seen{$vertex . $neighbor};
+            $seen{$neighbor . $vertex}++;
+            $seen{$vertex . $neighbor}++;
         }
     }
 
@@ -330,7 +327,7 @@ sub is_empty {
     my $self     = shift;
     my @vertices = $self->get_vertices;
 
-    if ( scalar @vertices >= 1 ) {
+    if (scalar @vertices >= 1) {
         return;
     }
     else {
@@ -353,8 +350,8 @@ sub is_complete {
 
     my $neighbors = $self->get_neighbors($v);
 
-    @vertices = sort { ( $a || '' ) cmp( $b || '' ) } @vertices;
-    my @neighbors = sort { ( $a || '' ) cmp( $b || '' ) } @$neighbors;
+    @vertices = sort { ($a || '') cmp($b || '') } @vertices;
+    my @neighbors = sort { ($a || '') cmp($b || '') } @$neighbors;
 
     return 1 if @vertices ~~ @neighbors;
 
@@ -398,7 +395,7 @@ sub is_connected {
     my $start = pop @vertices;
 
     for my $v (@vertices) {
-        return unless $self->find_path_between( $start, $v );
+        return unless $self->find_path_between($start, $v);
     }
     return 1;
 }
@@ -424,9 +421,9 @@ C<YAGL::color_vertices> method.
 
 sub is_colored {
     ## -> Number
-    my ($self)   = @_;
+    my ($self) = @_;
     my @vertices = $self->get_vertices;
-    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -434,8 +431,10 @@ sub is_colored {
 =item is_directed
 
 Return true if this is a directed graph.  Graphs can only be marked as
-directed during object initialization, by passing C<is_directed=>1> as
-an argument to C<YAGL::new>.
+directed during object initialization, by setting the C<is_directed>
+argument to C<new>.
+
+=back
 
 =cut
 
@@ -443,8 +442,6 @@ sub is_directed {
     my ($self) = @_;
     return $self->{_INTERNAL}->{is_directed};
 }
-
-=back
 
 =head1 METHODS ON VERTICES
 
@@ -461,7 +458,7 @@ C<undef> if V already exists.
 
 sub add_vertex {
     ## String -> State!
-    my ( $self, $vertex ) = @_;
+    my ($self, $vertex) = @_;
     return if $self->has_vertex($vertex);
     $self->{$vertex} = [];
 }
@@ -476,7 +473,7 @@ Add multiple vertices to this graph.  Takes an array as its argument.
 =cut
 
 sub add_vertices {
-    my ( $self, @vertices ) = @_;
+    my ($self, @vertices) = @_;
     $self->add_vertex($_) for @vertices;
 }
 
@@ -491,9 +488,9 @@ vertices to which it is connected.
 
 sub get_neighbors {
     ## String -> ArrayRef
-    my ( $self, $vertex ) = @_;
+    my ($self, $vertex) = @_;
 
-    if ( exists $self->{$vertex} ) {
+    if (exists $self->{$vertex}) {
         return $self->{$vertex} if defined $self->{$vertex};
     }
     else {
@@ -511,8 +508,8 @@ Return true if the vertex in question is a part of the graph.
 
 sub has_vertex {
     ## String -> Boolean
-    my ( $self, $vertex ) = @_;
-    if ( exists $self->{$vertex} && defined $self->{$vertex} ) {
+    my ($self, $vertex) = @_;
+    if (exists $self->{$vertex} && defined $self->{$vertex}) {
         return 1;
     }
     return;
@@ -531,7 +528,7 @@ attributes) between the given vertex and its former neighbors.
 
 sub remove_vertex {
     ## String -> State!
-    my ( $self, $vertex ) = @_;
+    my ($self, $vertex) = @_;
 
     my $neighbors = $self->get_neighbors($vertex);
 
@@ -548,13 +545,13 @@ sub remove_vertex {
     # - Then, we delete any edge attributes that exist between the two
     # vertices (since there is no edge there anymore).
     for my $neighbor (@$neighbors) {
-        $self->_remove_neighbor( $neighbor, $vertex );
-        $self->delete_edge_attributes( $vertex, $neighbor );
+        $self->_remove_neighbor($neighbor, $vertex);
+        $self->delete_edge_attributes($vertex, $neighbor);
     }
 
     # Then, we delete the "root" reference to the vertex by setting it
     # to undef.
-    if ( exists $self->{$vertex} ) {
+    if (exists $self->{$vertex}) {
         delete $self->{$vertex};
     }
 }
@@ -571,7 +568,7 @@ sub get_vertices {
     ## -> Array
     my $self = shift;
     my @vertices;
-    for my $vertex ( keys %$self ) {
+    for my $vertex (keys %$self) {
         next unless defined $vertex;
         next if $vertex eq '_INTERNAL';
         push @vertices, $vertex;
@@ -603,8 +600,8 @@ number of edges between V and other vertices (its neighbors).
 =cut
 
 sub get_degree {
-    my ( $self, $vertex ) = @_;
-    if ( $self->has_vertex($vertex) ) {
+    my ($self, $vertex) = @_;
+    if ($self->has_vertex($vertex)) {
         my $neighbors = $self->get_neighbors($vertex);
         return scalar @$neighbors;
     }
@@ -619,12 +616,12 @@ Given a vertex V, store a hashref of attributes about that vertex.
 
 sub set_vertex_attribute {
     ## String HashRef -> State!
-    my ( $self, $vertex, $new_attrs ) = @_;
+    my ($self, $vertex, $new_attrs) = @_;
     return unless $self->has_vertex($vertex);
 
     # Attributes hashref already exists, so we add to it.  NOTE:
     # this is a hash so the update is destructive.
-    for ( my ( $k, $v ) = each %$new_attrs ) {
+    for (my ($k, $v) = each %$new_attrs) {
         next unless defined $k;
         next if $k eq '';
         $self->{_INTERNAL}->{vertex_attrs}->{$vertex}->{$k} = $v;
@@ -642,7 +639,7 @@ Given a vertex V and an attribute string, retrieve the value of that attribute.
 
 sub get_vertex_attribute {
     ## String String -> Value OR undef
-    my ( $self, $vertex, $attribute ) = @_;
+    my ($self, $vertex, $attribute) = @_;
     return $self->{_INTERNAL}->{vertex_attrs}->{$vertex}->{$attribute};
 }
 
@@ -658,7 +655,7 @@ values could be anything.
 
 sub get_vertex_attributes {
     ## String -> HashRef OR undef
-    my ( $self, $vertex ) = @_;
+    my ($self, $vertex) = @_;
     return unless $self->has_vertex($vertex);
     return $self->{_INTERNAL}->{vertex_attrs}->{$vertex};
 }
@@ -673,7 +670,7 @@ Given a vertex V, delete all of its attributes (if any).
 
 sub delete_vertex_attributes {
     ## String -> Undefined OR State!
-    my ( $self, $vertex ) = @_;
+    my ($self, $vertex) = @_;
     return unless $self->has_vertex($vertex);
     delete $self->{_INTERNAL}->{vertex_attrs}->{$vertex};
 }
@@ -689,8 +686,8 @@ V. Shorthand for using C<set_vertex_attribute>.
 
 sub set_vertex_color {
     ## String String -> Undefined OR State!
-    my ( $self, $vertex, $color ) = @_;
-    $self->set_vertex_attribute( $vertex, { color => $color } );
+    my ($self, $vertex, $color) = @_;
+    $self->set_vertex_attribute($vertex, {color => $color});
 }
 
 =item get_vertex_color
@@ -706,8 +703,8 @@ C<get_vertex_attribute>.
 
 sub get_vertex_color {
     ## String -> String OR Undefined
-    my ( $self, $vertex ) = @_;
-    $self->get_vertex_attribute( $vertex, 'color' );
+    my ($self, $vertex) = @_;
+    $self->get_vertex_attribute($vertex, 'color');
 }
 
 =head1 METHODS ON EDGES
@@ -727,13 +724,13 @@ attributes.
 
 sub get_edge {
     ## String String -> ArrayRef
-    my ( $self, $a, $b ) = @_;
+    my ($self, $a, $b) = @_;
 
-    return unless $self->edge_between( $a, $b );
+    return unless $self->edge_between($a, $b);
 
-    my $attrs = $self->get_edge_attributes( $a, $b );
+    my $attrs = $self->get_edge_attributes($a, $b);
 
-    return [ $a, $b, $attrs ];
+    return [$a, $b, $attrs];
 }
 
 =item get_edges
@@ -759,10 +756,10 @@ sub get_edges {
 
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
-            next if $seen{ $vertex . $neighbor };
-            push @answer, $self->get_edge( $vertex, $neighbor );
-            $seen{ $vertex . $neighbor }++;
-            $seen{ $neighbor . $vertex }++;
+            next if $seen{$vertex . $neighbor};
+            push @answer, $self->get_edge($vertex, $neighbor);
+            $seen{$vertex . $neighbor}++;
+            $seen{$neighbor . $vertex}++;
         }
     }
 
@@ -783,13 +780,13 @@ edge between A and B.  Otherwise, return C<undef>.
 
 sub edge_between {
     ## String String -> Boolean
-    my ( $self, $a, $b ) = @_;
+    my ($self, $a, $b) = @_;
 
-    return unless ( defined $a && defined $b );
+    return unless (defined $a && defined $b);
     return 1 if $a eq $b;
 
     my $neighbors = $self->get_neighbors($a);
-    if ( $b ~~ @$neighbors ) {
+    if ($b ~~ @$neighbors) {
         return 1;
     }
     else { return; }
@@ -806,7 +803,7 @@ reference.
 
 sub get_edge_attributes {
     ## String String -> HashRef OR undef
-    my ( $self, $start, $end ) = @_;
+    my ($self, $start, $end) = @_;
 
     my $pairkey = $start . $end;
     return $self->{_INTERNAL}->{edge_attrs}->{$pairkey};
@@ -824,7 +821,7 @@ with T for that edge.  For example, a (numeric) weight.
 
 sub get_edge_attribute {
     ## String String String -> Value OR undef
-    my ( $self, $start, $end, $attribute ) = @_;
+    my ($self, $start, $end, $attribute) = @_;
 
     my $pairkey = $start . $end;
     return $self->{_INTERNAL}->{edge_attrs}->{$pairkey}->{$attribute};
@@ -840,9 +837,9 @@ Shortcut for the following call to C<get_edge_attribute()>.
 
 sub get_edge_weight {
     ## String String -> Value OR undef
-    my ( $self, $start, $end, $attribute ) = @_;
+    my ($self, $start, $end, $attribute) = @_;
 
-    return $self->get_edge_attribute( $start, $end, 'weight' );
+    return $self->get_edge_attribute($start, $end, 'weight');
 }
 
 =item set_edge_attribute
@@ -858,14 +855,14 @@ associate with that edge.
 sub set_edge_attribute {
     ## String String HashRef -> State!
     # set_edge_attribute('s', 'a', { weight => 12 });
-    my ( $self, $start, $end, $new_attrs ) = @_;
+    my ($self, $start, $end, $new_attrs) = @_;
 
     my $pairkey1 = $start . $end;
     my $pairkey2 = $end . $start;
 
     # Attributes hashref already exists, so we add to it.  NOTE:
     # this is a hash so the update is destructive.
-    for ( my ( $k, $v ) = each %$new_attrs ) {
+    for (my ($k, $v) = each %$new_attrs) {
         next unless defined $k;
         next if $k eq '';
         $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}->{$k} = $v;
@@ -884,14 +881,14 @@ of the attributes (weight, color, etc.) associated with that edge.
 
 sub delete_edge_attributes {
     ## String String -> Undefined OR State!
-    my ( $self, $start, $end ) = @_;
+    my ($self, $start, $end) = @_;
     return unless defined $start && defined $end;
 
     my $pairkey1 = $start . $end;
     my $pairkey2 = $end . $start;
     return
-      unless ( exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}
-        && exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey2} );
+      unless (exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey1}
+        && exists $self->{_INTERNAL}->{edge_attrs}->{$pairkey2});
     delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey1};
     delete $self->{_INTERNAL}->{edge_attrs}->{$pairkey2};
 }
@@ -909,9 +906,9 @@ they will be created.
 
 sub add_edge {
     ## String String -> State!
-    my ( $self, $v1, $v2, $attrs ) = @_;
-    $self->_add_neighbor( $v1, [$v2], $attrs );
-    $self->_add_neighbor( $v2, [$v1], $attrs ) unless $self->is_directed;
+    my ($self, $v1, $v2, $attrs) = @_;
+    $self->_add_neighbor($v1, [$v2], $attrs);
+    $self->_add_neighbor($v2, [$v1], $attrs) unless $self->is_directed;
 }
 
 =item add_edges
@@ -929,12 +926,12 @@ yet exist, they will be created.
 =cut
 
 sub add_edges {
-    my ( $self, @edges ) = @_;
+    my ($self, @edges) = @_;
 
     for my $elem (@edges) {
         ## ['a', 'b', { weight => 123 }]
-        my ( $a, $b, $attrs ) = @$elem;
-        $self->add_edge( $a, $b, $attrs );
+        my ($a, $b, $attrs) = @$elem;
+        $self->add_edge($a, $b, $attrs);
     }
 }
 
@@ -951,28 +948,36 @@ well as any associated attributes.
 
 sub remove_edge {
     ## String String -> Boolean State! OR Undef
-    my ( $self, $a, $b ) = @_;
+    my ($self, $a, $b) = @_;
 
-    return unless $self->edge_between( $a, $b );
+    return unless $self->edge_between($a, $b);
 
     # We delete A from B's list of neighbors, and delete B from A's
     # list of neighbors.  Then, we delete any edge attributes, since
     # said edge no longer exists.
 
-    $self->_remove_neighbor( $a, $b );
-    $self->_remove_neighbor( $b, $a );
-    $self->delete_edge_attributes( $a, $b );
+    $self->_remove_neighbor($a, $b);
+    $self->_remove_neighbor($b, $a);
+    $self->delete_edge_attributes($a, $b);
 
     return 1;
 }
 
 =head1 PATH SEARCH METHODS
 
+=over
+
+=item dijkstra
+
+Given two vertices START and END on a graph with weighted edges, find the shortest path between them using Dijkstra's algorithm.
+
+    $g->dijkstra($a, $b);
+
 =cut
 
 sub dijkstra {
     ## String String -> Array
-    my ( $self, $start, $end ) = @_;
+    my ($self, $start, $end) = @_;
 
     return () unless defined $start && defined $end;
 
@@ -985,15 +990,15 @@ sub dijkstra {
     $st->{$start}->{distance} = 0;
     $st->{$start}->{prev}     = undef;
 
-    for my $vertex ( $self->get_vertices ) {
+    for my $vertex ($self->get_vertices) {
         next if $vertex eq $start;
         $st->{$vertex}->{distance} = 1_000_000;
         $st->{$vertex}->{prev}     = undef;
     }
 
-    $heap->insert( $start, $st->{$start}->{distance} );
+    $heap->insert($start, $st->{$start}->{distance});
 
-    while ( my $v = $heap->pop() ) {
+    while (my $v = $heap->pop()) {
         my $neighbors = $self->get_neighbors($v);
 
         for my $neighbor (@$neighbors) {
@@ -1005,27 +1010,27 @@ sub dijkstra {
             # shortest path (by distance)?"
             my $distance_to_self         = $st->{$v}->{distance};
             my $old_distance_to_neighbor = $st->{$neighbor}->{distance};
-            my $neighbor_edge_weight =
-              $self->get_edge_attribute( $v, $neighbor, 'weight' );
-            my $new_distance_to_neighbor =
-              $distance_to_self + $neighbor_edge_weight;
+            my $neighbor_edge_weight
+              = $self->get_edge_attribute($v, $neighbor, 'weight');
+            my $new_distance_to_neighbor
+              = $distance_to_self + $neighbor_edge_weight;
 
             # This is the core of Dijkstra's algorithm: Have we
             # discovered a path whose distance to the neighbor is
             # shorter than the previously discovered path's distance?
             # If yes, we update the spanning tree with this new path
             # information.
-            if ( $new_distance_to_neighbor < $old_distance_to_neighbor ) {
+            if ($new_distance_to_neighbor < $old_distance_to_neighbor) {
                 $st->{$neighbor}->{distance} = $new_distance_to_neighbor;
                 $st->{$neighbor}->{prev}     = $v;
             }
 
-            if ( $neighbor eq $end ) {
-                @path = $self->_st_walk( $st, $start, $end );
+            if ($neighbor eq $end) {
+                @path = $self->_st_walk($st, $start, $end);
                 return @path;
             }
             else {
-                $heap->insert( $neighbor, $st->{$neighbor}->{distance} );
+                $heap->insert($neighbor, $st->{$neighbor}->{distance});
             }
         }
 
@@ -1034,9 +1039,15 @@ sub dijkstra {
     return ();
 }
 
+=item find_path_between
+
+Given two vertices START and END in an unweighted graph, find the shortest path between them using breadth-first search.
+
+=cut
+
 sub find_path_between {
     ## String String -> Array
-    my ( $self, $start, $end ) = @_;
+    my ($self, $start, $end) = @_;
 
     return () unless defined $start && defined $end;
 
@@ -1046,7 +1057,7 @@ sub find_path_between {
     my $found;    # Whether we have found the wanted vertex.
     my $st = {};  # Spanning tree, used to find paths.
 
-    if ( $start eq $end ) {
+    if ($start eq $end) {
         push @path, $start;
         return @path;
     }
@@ -1064,9 +1075,9 @@ sub find_path_between {
             next unless defined $neighbor;
             next if $seen{$neighbor};
             $st->{$neighbor}->{prev} = $v;
-            if ( $neighbor eq $end ) {
+            if ($neighbor eq $end) {
                 $found++;
-                @path = $self->_st_walk( $st, $start, $end );
+                @path = $self->_st_walk($st, $start, $end);
                 return @path;
             }
             else {
@@ -1078,7 +1089,7 @@ sub find_path_between {
     return $found ? @path : ();
 }
 
-=pod
+=item mst
 
 The F<mst> method finds the minimum spanning tree of the current graph
 object.  As such, it takes no arguments; instead, it searches for the
@@ -1110,17 +1121,17 @@ sub mst {
     my $mst = YAGL->new;
 
     $mst->add_vertex($start);
-    $mst->set_vertex_attribute( $start, { distance => 0 } );
+    $mst->set_vertex_attribute($start, {distance => 0});
 
     for my $vertex (@vertices) {
         next if $vertex eq $start;
         $mst->add_vertex($vertex);
-        $mst->set_vertex_attribute( $vertex, { distance => 1_000_000 } );
+        $mst->set_vertex_attribute($vertex, {distance => 1_000_000});
     }
 
-    $heap->insert( $start, $mst->get_vertex_attribute( $start, 'distance' ) );
+    $heap->insert($start, $mst->get_vertex_attribute($start, 'distance'));
 
-    while ( my $v = $heap->pop() ) {
+    while (my $v = $heap->pop()) {
         my $neighbors = $self->get_neighbors($v);
 
         for my $neighbor (@$neighbors) {
@@ -1130,35 +1141,35 @@ sub mst {
             # In this block, we are setting up the information we will
             # need to answer the question "Have we found a new
             # shortest path (by distance)?"
-            my $distance_to_self = $mst->get_vertex_attribute( $v, 'distance' );
-            my $old_distance_to_neighbor =
-              $mst->get_vertex_attribute( $neighbor, 'distance' );
-            my $neighbor_edge_weight =
-              $self->get_edge_attribute( $v, $neighbor, 'weight' );
-            my $new_distance_to_neighbor =
-              $distance_to_self + $neighbor_edge_weight;
+            my $distance_to_self = $mst->get_vertex_attribute($v, 'distance');
+            my $old_distance_to_neighbor
+              = $mst->get_vertex_attribute($neighbor, 'distance');
+            my $neighbor_edge_weight
+              = $self->get_edge_attribute($v, $neighbor, 'weight');
+            my $new_distance_to_neighbor
+              = $distance_to_self + $neighbor_edge_weight;
 
             # This is the core of Jarnik-Prim (as well as Dijkstra's)
             # algorithm: Have we discovered a path whose distance to
             # the neighbor is shorter than the previously discovered
             # path's distance?  If yes, we update the spanning tree
             # with this new path information.
-            if ( $new_distance_to_neighbor < $old_distance_to_neighbor ) {
-                $mst->set_vertex_attribute( $neighbor,
-                    { distance => $new_distance_to_neighbor } );
-                $mst->add_edge( $v, $neighbor,
-                    { weight => $neighbor_edge_weight } );
+            if ($new_distance_to_neighbor < $old_distance_to_neighbor) {
+                $mst->set_vertex_attribute($neighbor,
+                    {distance => $new_distance_to_neighbor});
+                $mst->add_edge($v, $neighbor,
+                    {weight => $neighbor_edge_weight});
             }
 
             if (   $mst->is_connected
                 && scalar $mst->get_vertices == scalar @vertices
-                && $mst->is_tree )
+                && $mst->is_tree)
             {
                 return $mst;
             }
             else {
-                $heap->insert( $neighbor,
-                    $mst->get_vertex_attribute( $neighbor, 'distance' ) );
+                $heap->insert($neighbor,
+                    $mst->get_vertex_attribute($neighbor, 'distance'));
             }
         }
         $seen{$v}++;
@@ -1166,7 +1177,87 @@ sub mst {
     return;
 }
 
-=pod
+=item dfs
+
+The F<dfs> method performs depth-first-search on the graph beginning at the vertex START; for each vertex visited by the search, invoke C<$sub>.
+
+=cut
+
+sub dfs {
+    ## String Function -> Array State!
+    my ($self, $start, $sub) = @_;
+
+    return () unless defined $start;
+
+    state %seen;    # Vertices already seen.
+    $seen{$start}++;
+    $sub->($start);
+
+    my $neighbors = $self->get_neighbors($start);
+
+    # @$neighbors = sort { $a cmp $b } @$neighbors;
+
+    # sorted returns:   a b c e g h i k j l m d f
+    # unsorted returns: a b c e g h i k j m l d f
+
+    # Doesn't seem worth paying the cost of a sort here.
+
+    for my $neighbor (@$neighbors) {
+        next unless defined $neighbor;
+        unless ($seen{$neighbor}) {
+            $self->set_edge_attribute($start, $neighbor, {color => 'red'});
+            $self->dfs($neighbor, $sub);
+        }
+    }
+}
+
+=item exhaustive_search
+
+The F<exhaustive_search> method performs an exhaustive search of all
+trees in the graph.  The way this works is very close to the algorithm
+for depth-first-search; it is described on p.623 of Sedgewick's
+I<Algorithms>, 2nd ed.
+
+=cut
+
+sub exhaustive_search {
+    my ($self, $start, $sub) = @_;
+
+    state $calls = 0;
+    $calls++;
+
+    say qq[visit: $calls calls] if DEBUG;
+
+    return () unless defined $start;
+
+    state %seen;    # Vertices already seen.
+    state $last;
+    $seen{$start}++;
+
+    $sub->($start);
+
+    say qq[exh: Looking at start '$start'] if DEBUG;
+
+    my $neighbors = $self->get_neighbors($start);
+
+    # @$neighbors = sort { $a cmp $b } @$neighbors;
+
+    # sorted returns:   a b c e g h i k j l m d f
+    # unsorted returns: a b c e g h i k j m l d f
+
+    # Doesn't seem worth paying the cost of a sort here.
+
+    for my $neighbor (@$neighbors) {
+        next unless defined $neighbor;
+        unless ($seen{$neighbor}) {
+            $self->set_edge_attribute($start, $neighbor, {color => 'red'});
+            $self->exhaustive_search($neighbor, $sub);
+            $seen{$neighbor} = undef;
+        }
+    }
+}
+
+=item _visit
 
 The F<_visit> method below visiting the vertices of the graph using
 the following procedure: to process some vertex I<V>, visit vertex
@@ -1184,7 +1275,7 @@ method.
 =cut
 
 sub _visit {
-    my ( $self, $start, $sub, $path ) = @_;
+    my ($self, $start, $sub, $path) = @_;
 
     state $calls = 0;
     $calls++;
@@ -1209,16 +1300,22 @@ sub _visit {
             next unless defined $neighbor;
             next if $seen{$neighbor};
             push @queue, $neighbor;
-            $self->_visit( $neighbor, $sub, $path );
+            $self->_visit($neighbor, $sub, $path);
             $seen{$neighbor}++;
         }
     }
     return @$path;
 }
 
+=item hamiltonian_walk
+
+The C<hamiltonian_walk> method finds an open or closed Hamiltonian walk on the graph, if one exists.  It takes one argument, C<closed>, to determine which to find.
+
+=cut
+
 sub hamiltonian_walk {
     ## Array -> Array State!
-    my ( $self, @args ) = @_;
+    my ($self, @args) = @_;
 
     my %args = @args;    # $self->hamiltonian_walk(closed => 1);
 
@@ -1229,7 +1326,7 @@ sub hamiltonian_walk {
     # is, if it has any leaves or entirely disconnected vertices).
 
     if ($closed_walk) {
-        for my $v ( $self->get_vertices ) {
+        for my $v ($self->get_vertices) {
             return if $self->get_degree($v) < 2;
         }
     }
@@ -1244,7 +1341,7 @@ sub hamiltonian_walk {
     # Find the leaves of the MST so we can use one of them as a
     # starting point below.
     my @leaves;
-    for my $v ( $mst->get_vertices ) {
+    for my $v ($mst->get_vertices) {
         push @leaves, $v if $mst->get_degree($v) == 1;
     }
 
@@ -1252,8 +1349,8 @@ sub hamiltonian_walk {
         $leaves[0],
         sub {
             state %seen;
-            say $_[0] unless $seen{ $_[0] };
-            $seen{ $_[0] }++;
+            say $_[0] unless $seen{$_[0]};
+            $seen{$_[0]}++;
         },
         []
     );
@@ -1277,30 +1374,30 @@ sub hamiltonian_walk {
     my $count = @uniq;
     for my $u (@uniq) {
         say qq[looking at '$u' in (@uniq)] if DEBUG;
-        if ( $count == 1 && $closed_walk ) {    # Last vertex in path/cycle
+        if ($count == 1 && $closed_walk) {    # Last vertex in path/cycle
 
             # Final check: Does the last vertex in the path have an edge
             # to the first?  In other words, is this a true Hamiltonian
             # path?
-            if ( $self->edge_between( $u, $uniq[0] ) ) {
-                $self->set_edge_attribute( $u, $uniq[0], { color => 'red' } );
+            if ($self->edge_between($u, $uniq[0])) {
+                $self->set_edge_attribute($u, $uniq[0], {color => 'red'});
             }
             else {
                 say qq[No edge found between '$u' and '$uniq[0]'] if DEBUG;
                 return ();
             }
             say
-qq[Found edge between last vertex '$u' and first vertex '$uniq[0]']
+              qq[Found edge between last vertex '$u' and first vertex '$uniq[0]']
               if DEBUG;
         }
-        if ( $self->edge_between( $prev, $u ) ) {
+        if ($self->edge_between($prev, $u)) {
             say qq[Found edge between '$prev' and '$u'] if DEBUG;
-            $self->set_edge_attribute( $prev, $u, { color => 'red' } );
+            $self->set_edge_attribute($prev, $u, {color => 'red'});
         }
         else {
-            if ( defined $prev && defined $u ) {
+            if (defined $prev && defined $u) {
                 warn
-qq[no edge found between '$prev' and '$u' in candidate path (@uniq), bailing ...]
+                  qq[no edge found between '$prev' and '$u' in candidate path (@uniq), bailing ...]
                   if DEBUG;
                 return ();
             }
@@ -1311,18 +1408,36 @@ qq[no edge found between '$prev' and '$u' in candidate path (@uniq), bailing ...
     return @uniq;
 }
 
+=item is_planar
+
+The C<is_planar> method tests whether a graph is planar.
+
+TODO(rml): Add a citation for this algorithm, I think it might be from I<Graph Algorithms> by S. Even.
+
+=back
+
+=cut
+
 sub is_planar {
     my ($self) = @_;
 
     my $edge_count   = $self->get_edges;
     my $vertex_count = $self->get_vertices;
 
-    if ( $edge_count > ( 3 * $vertex_count ) ) {
+    if ($edge_count > (3 * $vertex_count)) {
         return;
     }
 }
 
 =head1 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
+
+=over
+
+=cut
+
+=item clone
+
+Given a graph object, the C<clone> method makes a fresh copy of that object.
 
 =cut
 
@@ -1332,12 +1447,20 @@ sub clone {
     return $copy;
 }
 
-sub equals {
-    my ( $self, $other ) = @_;
+=item equals
 
-    return
-      unless $self->isa('YAGL')
-      && $other->isa('YAGL');
+Given two graphs I<A> and I<B>, The C<equals> method checks to see whether they are identical.  It checks the edges, vertices, and edge attributes to do so.
+
+TODO(rml): This should also check vertex attributes.
+
+=back
+
+=cut
+
+sub equals {
+    my ($self, $other) = @_;
+
+    return unless $self->isa('YAGL') && $other->isa('YAGL');
 
     my @xs = $self->get_vertices;
     my @ys = $other->get_vertices;
@@ -1359,14 +1482,20 @@ sub equals {
 
 =head1 INTERNAL HELPER METHODS
 
+=over
+
+=item _add_neighbor
+
+The C<_add_neighbor> method is the internal helper used to add an edge (and any edge attributes) between two vertices.
+
 =cut
 
 sub _add_neighbor {
     ## String ArrayRef HashRef -> State!
-    my ( $self, $vertex, $new_neighbor, $edge_attrs ) = @_;
+    my ($self, $vertex, $new_neighbor, $edge_attrs) = @_;
 
-    unless ( ref($new_neighbor) eq 'ARRAY' ) {
-        my ( $package, $filename, $line ) = caller();
+    unless (ref($new_neighbor) eq 'ARRAY') {
+        my ($package, $filename, $line) = caller();
         die <<"EOF";
 on line $line of file $filename:
   $package\:\:_add_neighbor('$vertex', '$new_neighbor', '$edge_attrs'):
@@ -1374,7 +1503,7 @@ on line $line of file $filename:
 EOF
     }
 
-    if ( $self->has_vertex($vertex) ) {
+    if ($self->has_vertex($vertex)) {
         my $neighbors = $self->get_neighbors($vertex);
         for my $value (@$new_neighbor) {
             push @$neighbors, $value unless $value ~~ @$neighbors;
@@ -1384,26 +1513,32 @@ EOF
     else {
         $self->{$vertex} = $new_neighbor;
     }
-    $self->set_edge_attribute( $vertex, $new_neighbor->[0], $edge_attrs );
+    $self->set_edge_attribute($vertex, $new_neighbor->[0], $edge_attrs);
 }
+
+=item _remove_neighbor
+
+The C<_remove_neighbor> method is an internal helper used for deleting an edge between two vertices.
+
+=cut
 
 sub _remove_neighbor {
     ## String String -> State! OR Undef
-    my ( $self, $vertex, $neighbor ) = @_;
+    my ($self, $vertex, $neighbor) = @_;
 
-    return unless $self->edge_between( $vertex, $neighbor );
+    return unless $self->edge_between($vertex, $neighbor);
 
-    # Graphs are represented as an array of arrays that look like the
+    # Graphs are represented as a hash of arrays that look like the
     # following:
     #
-    # my $example = [
-    #     [ 's', [ 'a', 'd' ] ],
-    #     [ 'a', [ 's', 'b', 'd' ] ],
-    #     [ 'b', [ 'a', 'c', 'e' ] ],
-    #     [ 'c', ['b'] ],
-    #     [ 'd', [ 's', 'a', 'e' ] ],
-    #     [ 'e', [ 'b', 'd', 'f' ] ]
-    # ];
+    # my $example = {
+    #      's' => [ 'a', 'd' ],
+    #      'a' => [ 's', 'b', 'd' ],
+    #      'b' => [ 'a', 'c', 'e' ],
+    #      'c' => [ 'b' ],
+    #      'd' => [ 's', 'a', 'e' ],
+    #      'e' => [ 'b', 'd', 'f' ],
+    # };
     #
     # To delete a specific neighbor, we have to walk this vertex's
     # list of neighbors (skipping any already deleted neighbors) and
@@ -1412,34 +1547,40 @@ sub _remove_neighbor {
     return unless $self->has_vertex($vertex);
     my $neighbors = $self->get_neighbors($vertex);
 
-    for ( my $i = 0 ; $i <= @$neighbors ; $i++ ) {
+    for (my $i = 0; $i <= @$neighbors; $i++) {
         my $this = $self->{$vertex}->[$i];
         next unless defined $this;
-        if ( $this eq $neighbor ) {
+        if ($this eq $neighbor) {
             $self->{$vertex}->[$i] = undef;
         }
     }
 }
 
+=item _st_walk
+
+The C<_st_walk> method is used internally for building walks (paths) along spanning trees, such as are built inside C<find_path_between> and C<dijkstra>.
+
+=cut
+
 sub _st_walk {
     ## String String HashRef -> Array
-    my ( $self, $st, $start, $end ) = @_;
+    my ($self, $st, $start, $end) = @_;
 
     my @path;
 
-    if ( exists $st->{$start}->{distance} ) {
-        push @path, { vertex => $end, distance => $st->{$end}->{distance} };
+    if (exists $st->{$start}->{distance}) {
+        push @path, {vertex => $end, distance => $st->{$end}->{distance}};
         my $prev = $st->{$end}->{prev};
 
         while (1) {
-            if ( $prev eq $start ) {
+            if ($prev eq $start) {
 
                 push @path,
-                  { vertex => $prev, distance => $st->{$prev}->{distance} };
+                  {vertex => $prev, distance => $st->{$prev}->{distance}};
                 last;
             }
             push @path,
-              { vertex => $prev, distance => $st->{$prev}->{distance} };
+              {vertex => $prev, distance => $st->{$prev}->{distance}};
             $prev = $st->{$prev}->{prev};
             next;
         }
@@ -1448,7 +1589,7 @@ sub _st_walk {
         push @path, $end;
         my $prev = $st->{$end}->{prev};
         while (1) {
-            if ( $prev eq $start ) {
+            if ($prev eq $start) {
                 push @path, $start;
                 last;
             }
@@ -1460,15 +1601,35 @@ sub _st_walk {
     return reverse @path;
 }
 
+=item _edge_attrs
+
+The C<_edge_attrs> method is an internal helper that returns all of the graph's edge attributes.
+
+=cut
+
 sub _edge_attrs {
     my ($self) = @_;
     return $self->{_INTERNAL}->{edge_attrs};
 }
 
+=item _vertex_attrs
+
+The C<_vertex_attrs> method is an internal helper that returns all of the graph's vertex attributes.
+
+=cut
+
 sub _vertex_attrs {
     my ($self) = @_;
     return $self->{_INTERNAL}->{vertex_attrs};
 }
+
+=item _make_vertex_name
+
+The C<_make_vertex_name> method is used to generate random vertex names, such as when generating random graphs.
+
+=back
+
+=cut
 
 sub _make_vertex_name {
     ## -> String
@@ -1478,18 +1639,24 @@ sub _make_vertex_name {
 
     my $i  = rand scalar @chars;
     my $c1 = $chars[$i];
-    my $c2 = $chars[ rand scalar @chars ];
+    my $c2 = $chars[rand scalar @chars];
 
     return qq[$c1$c2$n];
 }
 
 =head1 GRAPH COLORING METHODS
 
+=over
+
+=item get_color_degree
+
+The C<get_color_degree> method returns the "color degree" of a vertex: that is, how many colors its neighbors have.
+
 =cut
 
 sub get_color_degree {
     ## String -> Integer
-    my ( $self, $vertex ) = @_;
+    my ($self, $vertex) = @_;
     my $count = 0;
     my @colors;
     my $neighbors = $self->get_neighbors($vertex);
@@ -1500,15 +1667,31 @@ sub get_color_degree {
             push @colors, $color;
         }
     }
-    return ( $count, @colors );
+    return ($count, @colors);
 }
+
+=item color_vertices
+
+The C<color_vertices> method colors the vertices of the graph using the algorithm due to Brelaz, as described in Skiena, I<Implementing Discrete Mathematics>.  Specifically:
+
+=over
+
+=item 1. Number the colors from 1 to k.
+
+=item 2. Color the vertex of largest degree with color 1.
+
+=item 3. Then repeatedly select the vertex with highest I<color degree>, where the color degree is the number of adjacent vertices which have already been colored, and color it with the smallest possible color.
+
+=back
+
+=cut
 
 sub color_vertices {
     ## -> State!
     my ($self) = @_;
 
-    if ( $self->is_directed ) {
-        my ( $package, $filename, $line ) = caller();
+    if ($self->is_directed) {
+        my ($package, $filename, $line) = caller();
         die <<"EOF";
 on line $line of file $filename:
   $package\:\:_color_vertices():
@@ -1516,60 +1699,67 @@ on line $line of file $filename:
 EOF
     }
 
-    # This algorithm is due to Brelaz, as described in Skiena,
-    # _Implementing Discrete Mathematics_.
-    #
-    # 1. Number the colors from 1 to k.
-    #
-    # 2. Color the vertex of largest degree with color 1.
-    #
-    # 3. Then repeatedly select the vertex with highest _color
-    # degree_, where the color degree is the number of adjacent
-    # vertices which have already been colored, and color it with the
-    # smallest possible color.
-
-    my @colors =
-      qw/ violet indigo orange yellow blue green red/;    # Ordered by indices
-    my @vertices_by_degree =
-      sort { $self->get_degree($a) > $self->get_degree($b) }
+    my @colors
+      = qw/ violet indigo orange yellow blue green red/;  # Ordered by indices
+    my @vertices_by_degree
+      = sort { $self->get_degree($a) > $self->get_degree($b) }
       $self->get_vertices;
 
     my $v = pop @vertices_by_degree;
-    $self->set_vertex_color( $v, $colors[0] );
+    $self->set_vertex_color($v, $colors[0]);
 
-    my @vertices_by_color_degree =
-      sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
+    my @vertices_by_color_degree
+      = sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
       $self->get_vertices;
 
-    while ( my $v = pop @vertices_by_color_degree ) {
-        my ( $count, @adjacent_colors ) = $self->get_color_degree($v);
+    while (my $v = pop @vertices_by_color_degree) {
+        my ($count, @adjacent_colors) = $self->get_color_degree($v);
         for my $color (@colors) {
-            $self->set_vertex_color( $v, $color )
+            $self->set_vertex_color($v, $color)
               unless $color ~~ @adjacent_colors;
         }
-        @vertices_by_color_degree =
-          sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
+        @vertices_by_color_degree
+          = sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
           @vertices_by_color_degree;
     }
 }
 
+=item uncolor_vertices
+
+The C<uncolor_vertices> method "uncolors" every vertex in the graph by setting its color attribute to C<undef>.
+
+=cut
+
 sub uncolor_vertices {
     my ($self) = @_;
-    for my $vertex ( $self->get_vertices ) {
-        $self->set_vertex_color( $vertex, undef );
+    for my $vertex ($self->get_vertices) {
+        $self->set_vertex_color($vertex, undef);
     }
 }
+
+=item vertex_colors
+
+The C<vertex_colors> method returns a list containing each vertex and its color.
+
+=cut
 
 sub vertex_colors {
     ## -> Array[Hashref]
     my ($self) = @_;
     my @colors;
-    for my $vertex ( $self->get_vertices ) {
-        push @colors,
-          [ $vertex, { color => $self->get_vertex_color($vertex) } ];
+    for my $vertex ($self->get_vertices) {
+        push @colors, [$vertex, {color => $self->get_vertex_color($vertex)}];
     }
     return @colors;
 }
+
+=item chromatic_number
+
+The C<chromatic_number> method does not actually return the chromatic number.  It returns the number of colors that were used to color the vertices of the graph using the C<color_vertices> method.
+
+=back
+
+=cut
 
 sub chromatic_number {
     ## -> Integer OR Undef
@@ -1591,8 +1781,6 @@ sub chromatic_number {
 }
 
 1;
-
-__END__
 
 =pod
 
