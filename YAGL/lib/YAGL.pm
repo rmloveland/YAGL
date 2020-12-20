@@ -1195,12 +1195,12 @@ sub dfs {
     state %seen;    # Vertices already seen.
     state $count = 0;
 
-    if ($count == scalar $self->get_vertices) {
-
-        # This is necessary because multiple calls to 'dfs()' will
-        # return incorrect results, since the results of the first run
-        # are cached in this state variable.
-        %seen = ();
+    # This is necessary because otherwise multiple calls to 'dfs()'
+    # will return incorrect results, since the results of the first
+    # run are cached in this state variable.
+    if ($count >= scalar $self->get_vertices) {
+        %seen  = ();
+        $count = 0;
     }
 
     $seen{$start}++;
@@ -1240,7 +1240,7 @@ sub exhaustive_search {
     state $calls = 0;
     $calls++;
 
-    say qq[visit: $calls calls] if DEBUG;
+    say qq[exhaustive_search(): $calls calls] if DEBUG;
 
     return () unless defined $start;
 
