@@ -2,7 +2,7 @@ package YAGL;
 
 use strict;
 use warnings;
-use feature qw/ say state /;
+use feature qw/ say state current_sub /;
 use Smart::Match;
 use Text::CSV;
 use GraphViz;
@@ -1189,40 +1189,25 @@ The F<dfs> method performs depth-first-search on the graph beginning at the vert
 sub dfs {
     ## String Function -> Array State!
     my ($self, $start, $sub) = @_;
-
     return () unless defined $start;
 
-    state %seen;    # Vertices already seen.
-    state $count = 0;
+    my $dfs = sub {
+        my ($self, $start, $sub, $seen) = @_;
 
-    # This is necessary because otherwise multiple calls to 'dfs()'
-    # will return incorrect results, since the results of the first
-    # run are cached in this state variable.
-    if ($count >= scalar $self->get_vertices) {
-        %seen  = ();
-        $count = 0;
-    }
-
-    $seen{$start}++;
-    $count++;
-    $sub->($start);
-
-    my $neighbors = $self->get_neighbors($start);
-
-    # @$neighbors = sort { $a cmp $b } @$neighbors;
-
-    # sorted returns:   a b c e g h i k j l m d f
-    # unsorted returns: a b c e g h i k j m l d f
-
-    # Doesn't seem worth paying the cost of a sort here.
-
-    for my $neighbor (@$neighbors) {
-        next unless defined $neighbor;
-        unless ($seen{$neighbor}) {
-            $self->set_edge_attribute($start, $neighbor, {color => 'red'});
-            $self->dfs($neighbor, $sub);
+        $seen->{$start}++;
+        $sub->($start);
+        my $neighbors = $self->get_neighbors($start);
+        for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
+            unless ($seen->{$neighbor}) {
+                $self->set_edge_attribute($start, $neighbor,
+                    {color => 'red'});
+                __SUB__->($self, $neighbor, $sub, $seen);
+            }
         }
-    }
+    };
+    my $seen = {};
+    $dfs->($self, $start, $sub, $seen);
 }
 
 =item exhaustive_search
