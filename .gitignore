@@ -31,7 +31,6 @@ YAGL/MYMETA*
 YAGL/blib
 YAGL/pm_to_blib
 YAGL/_build
-YAGL/examples/*.csv
 YAGL/examples/*.svg
 YAGL/lib/*.html
 YAGL/lib/*.pod
