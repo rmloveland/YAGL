@@ -1214,46 +1214,57 @@ sub dfs {
 
 The F<exhaustive_search> method performs an exhaustive search of all
 trees in the graph.  The way this works is very close to the algorithm
-for depth-first-search; it is described on p.623 of Sedgewick's
-I<Algorithms>, 2nd ed.
+for depth-first-search, except that F<exhaustive_search> unmarks the
+vertices it has visited after the recursive self-call; this is
+described in more detail on p.623 of Sedgewick's I<Algorithms>, 2nd
+ed.
 
 =cut
 
 sub exhaustive_search {
     my ($self, $start, $sub) = @_;
 
-    state $calls = 0;
-    $calls++;
-
-    say qq[exhaustive_search(): $calls calls] if DEBUG;
-
     return () unless defined $start;
 
-    state %seen;    # Vertices already seen.
-    state $last;
-    $seen{$start}++;
+    my $search = sub {
+        my ($self, $start, $sub, $seen, $path) = @_;
+        $seen->{$start}++;
+        state $backtracked;
 
-    $sub->($start);
+        do {
+            my $len = @$path - 1;
+            my $last;
+            $last = $path->[$len] if $path->[$len];
 
-    say qq[exh: Looking at start '$start'] if DEBUG;
+            say
+              qq[YAGL::exhaustive_search(): choice point is '$last', adding '$start']
+              if $last && $backtracked;
+            say qq[YAGL::exhaustive_search(): adding '$start']
+              unless $backtracked;
+            push @$path, $start;
+            $backtracked = undef;
+            say qq[YAGL::exhaustive_search(): PATH -> @$path];
+        } if DEBUG;
 
-    my $neighbors = $self->get_neighbors($start);
-
-    # @$neighbors = sort { $a cmp $b } @$neighbors;
-
-    # sorted returns:   a b c e g h i k j l m d f
-    # unsorted returns: a b c e g h i k j m l d f
-
-    # Doesn't seem worth paying the cost of a sort here.
-
-    for my $neighbor (@$neighbors) {
-        next unless defined $neighbor;
-        unless ($seen{$neighbor}) {
-            $self->set_edge_attribute($start, $neighbor, {color => 'red'});
-            $self->exhaustive_search($neighbor, $sub);
-            $seen{$neighbor} = undef;
+        $sub->($start);
+        my $neighbors = $self->get_neighbors($start);
+        for my $neighbor (@$neighbors) {
+            next unless defined $neighbor;
+            unless ($seen->{$neighbor}) {
+                __SUB__->($self, $neighbor, $sub, $seen, $path);
+                if (DEBUG) {
+                    say
+                      qq[YAGL::exhaustive_search(): backtracking from '$neighbor'];
+                }
+                delete $seen->{$neighbor};
+                pop @$path;
+                $backtracked = 1 if DEBUG;
+            }
         }
-    }
+    };
+    my $seen = {};
+    my $path = [];
+    $search->($self, $start, $sub, $seen, $path);
 }
 
 =item _visit
