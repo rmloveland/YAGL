@@ -2,27 +2,63 @@
 #+author: Rich Loveland
 #+email: r@rmloveland.com
 
-* Reference
-
-  Adding links to books, web stuff, etc. so I don't have to keep
-  linking them from issues.
-
-  - [[~/Dropbox/Documents/conway-perl-best-practices.chm][Conway, Perl Best Practices]]
-
-  - [[https://books.google.com/books/about/Graph_Algorithms.html?id=m3QTSMYm5rkC][Even, Graph Algorithms]]
-
 * Current
 
-* Staging
+** TODO Add more tests to =hamiltonian_walk= method to exercise state mgmt
 
-** TODO Implement vertex merging
+   I have found a number of bugs when using a =state= variable, where
+   it wasn't getting cleared between calls to the method.
 
-   This is a prerequisite for graph coloring (at least one method,
-   that is).
+   E.g., see the way =exhaustive_search= was rewritten to use an
+   internal helper subroutine that does recursive self-calls.
 
-** TODO Minimum spanning tree
+   So the tasks are:
+
+   - [ ] Adding more tests that exercise state, esp. via multiple
+     method calls on different graphs
+   - [ ] Probably rewriting =_visit=, as mentioned in the subtask
+     below.
+
+*** TODO Rewrite =_visit= to avoid keeping internal state across method calls
+
+    See the rewritten =exhaustive_search= for details of how to do
+    this.
+
+** DOING Write documentation
+
+   In particular, this file should have:
+
+   - [ ] An overview section that orients the reader
+   - [ ] Lots of explicit references to the books, etc., that were
+     used in the making of
+
+*** TODO Add links to references in documentation
+** DOING Allow for directed graphs option
+
+   This will require:
+
+   - Passing an is_directed flag or similar
+   - Some changes to the internal representation
+   - Probably many other things
+
+*** TODO Review all methods to see which work on directed and/or undirected graphs
+
+    Each method should do at least one of the following:
+
+    - [ ] Work on directed *and* undirected graphs
+    - [ ] Work on directed graphs and warn/error on undirected graphs
+    - [ ] Warn/error on directed graphs and work on undirected graphs
+
+      
+    The work here is to review each existing method and verify that
+    they meet the above criteria.  If not, create specific TODO items
+    here for each method that needs updating.
+
+** DOING Minimum spanning tree
 
    ... for weighted, undirected graphs
+
+* Staging
 
 * Someday/Maybe
 
@@ -34,7 +70,7 @@
 
 ** TODO csv: unweighted graphs should have -1 in the weight column
    
-** TODO get_edge(s) should *only* return a list of edges (not edge attributes)
+** TODO Should =get_edge(s)= *only* return a list of edges (not edge attributes)?
 
 ** TODO Implement =is_isomorphic()= method
 
@@ -57,19 +93,7 @@
    High-level goal: pass serialized graph representation via CSV to
    graph library implementations in other languages.
 
-** TODO Allow for directed graphs option
-
-   This will require:
-
-   - Passing an is_directed flag or similar
-   - Some changes to the internal representation
-   - Probably many other things
-
 ** TODO Write example applications that use graph algorithms
-
-** TODO Write documentation
-
-** TODO Add links to references in documentation
 
 ** TODO Create and release a YAGL distribution
 
@@ -129,16 +153,57 @@
 
    - the # of possible paths between them.  This could also be called
      =$self->connectivity('A', 'B')=
+
 ** TODO Replace ad hoc internal spanning tree implementation with a proper Graph object
 
    In order for this to work, a graph needs to know whether it is a tree, which means it needs:
 
    - [ ] g->is_tree method
-     - [ ] g->is_connected
+   - [ ] g->is_connected
 
    Further, you will need a way to walk the tree, which requires:
 
-   - [ ] g->vertex->prev method
-     - This will replaces the current =$st->{$vertex}->{prev}=
-       ad-hoc-ness
+  - [ ] g->vertex->prev method
+    - This will replaces the current =$st->{$vertex}->{prev}=
+      ad-hoc-ness
 
+** TODO Implement vertex merging
+
+   This is a prerequisite for graph coloring (at least one method,
+   that is).
+
+* To File
+
+** TODO Add =k_cliques= method ?
+
+   Perhaps this should use the regular expression hack described in
+   http://home.hiwaay.net/~gbacon/perl/clique.html ?
+
+** TODO Can =hamiltonian_walk= be repurposed to do TSP approximation?
+
+   According to what I'm reading in Vazirani, the answer seems to be
+   yes.
+
+   However, we will need to test this hypothesis.  Estimated work
+   would be something like:
+
+   - [ ] Get some kind of known TSP data to test with (TSPLIB?)
+   - [ ] Write tests, see how good the approximation is (or if it even
+     works at all)
+   - [ ] Bonus: read in/convert TSPLIB files?
+
+** TODO Update CSV reader to update header format, handle comments better
+
+   I would like to update the CSV reader/writer to:
+
+   - Skip commented out lines
+   - Write out headers as commented out lines (e.g., =# node,weight,directed=)
+   - Read in headers with commented out lines
+   - No longer use the current hack where it skips lines with the
+     string 'node' (IIRC)
+   - =write_csv= method should take a 'description' argument that
+     becomes the commented-out header line, e.g.,
+     
+     #+BEGIN_SRC perl
+       $g->write_csv(description => qq[This is the graph from figure 44-1 in Sedgewick 2e]);
+     #+END_SRC
