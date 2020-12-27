@@ -44,11 +44,11 @@ adjacent, while "plane" and "plows" are not.
     my %words;
     for my $word (@words) {
         my @word = split //, $word;
-        for ( my $i = 0 ; $i < @word ; $i++ ) {
+        for (my $i = 0; $i < @word; $i++) {
             my $c = $word[$i];
             $word[$i] = '_';
             my $variant = join '', @word;
-            push @{ $words{$variant} }, $word;
+            push @{$words{$variant}}, $word;
             $word[$i] = $c;
         }
     }
@@ -67,19 +67,19 @@ because the data structure looks something like:
 
 =cut
 
-    for my $k ( keys %words ) {
+    for my $k (keys %words) {
         my $vertices = $words{$k};
 
         # Each of these vertices needs to have an edge between them.
-        for ( my $i = 0 ; $i < @$vertices ; $i++ ) {
-            for ( my $j = 0 ; $j < $i ; $j++ ) {
+        for (my $i = 0; $i < @$vertices; $i++) {
+            for (my $j = 0; $j < $i; $j++) {
                 my $u     = $vertices->[$i];
                 my $v     = $vertices->[$j];
                 my $v_sum = $chksum{$v};
                 my $u_sum = $chksum{$u};
-                my $weight =
-                  $v_sum > $u_sum ? $v_sum - $u_sum : $u_sum - $v_sum;
-                $g->add_edge( $u, $v, { weight => $weight } );
+                my $weight
+                  = $v_sum > $u_sum ? $v_sum - $u_sum : $u_sum - $v_sum;
+                $g->add_edge($u, $v, {weight => $weight});
             }
         }
     }
@@ -120,7 +120,7 @@ code.)
     my $start = 'words';
     my $end   = 'graph';
 
-    my @path = $g->dijkstra( $start, $end );
+    my @path = $g->dijkstra($start, $end);
 
     say qq[PATH: ];
     say $_->{vertex} for @path;
@@ -129,7 +129,7 @@ code.)
     do {
         for my $p (@path) {
             my $vertex = $p->{vertex};
-            $g->set_vertex_color( $vertex, 'red' );
+            $g->set_vertex_color($vertex, 'red');
         }
 
         my $viz = $g->to_graphviz;
@@ -145,7 +145,7 @@ sub chksum {
     ## String -> Integer
     my $word = shift;
     my $sum  = 0;
-    for my $c ( split //, $word ) {
+    for my $c (split //, $word) {
         $sum += ord($c);
     }
     return $sum;
@@ -168,3 +168,7 @@ Finally, we run the program.
 =cut
 
 main();
+
+# Local Variables:
+# compile-command: "perl ladders.pl"
+# End:

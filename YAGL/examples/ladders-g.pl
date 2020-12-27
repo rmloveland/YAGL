@@ -11,15 +11,8 @@ sub main {
 =pod
 
 In this version, we use the C<Graph> module from CPAN.  It has a lot
-of functionality but is quite slow compared to C<YAGL>.  Whereas the
-version that uses YAGL finishes in about 2 seconds, this program takes
-roughly 24 seconds to run.  In other words, using C<Graph> is
-approximately 10x (or 1000%) slower.
-
-Looking at the profile, this program spends about 6.5 seconds just
-making calls to the C<add_weighted_edge()> method.  Even more
-surprisingly, the call to C<SP_Dijkstra()> takes 16 seconds!  It's
-just very, very slow.
+of functionality but, at least in this case, is a good deal slower
+than C<YAGL>.
 
 =cut
 
@@ -60,11 +53,11 @@ adjacent, while "plane" and "plows" are not.
     for my $word (@words) {
         $g->add_vertex($word);
         my @word = split //, $word;
-        for ( my $i = 0 ; $i < @word ; $i++ ) {
+        for (my $i = 0; $i < @word; $i++) {
             my $c = $word[$i];
             $word[$i] = '_';
             my $variant = join '', @word;
-            push @{ $words{$variant} }, $word;
+            push @{$words{$variant}}, $word;
             $word[$i] = $c;
         }
     }
@@ -84,17 +77,17 @@ because the data structure looks something like:
 =cut
 
     my $edge_count = 0;
-    for my $k ( keys %words ) {
+    for my $k (keys %words) {
         my $vertices = $words{$k};
-        for ( my $i = 0 ; $i < @$vertices ; $i++ ) {
-            for ( my $j = 0 ; $j < $i ; $j++ ) {
+        for (my $i = 0; $i < @$vertices; $i++) {
+            for (my $j = 0; $j < $i; $j++) {
                 my $u     = $vertices->[$i];
                 my $v     = $vertices->[$j];
                 my $v_sum = $chksum{$v};
                 my $u_sum = $chksum{$u};
-                my $weight =
-                  $v_sum > $u_sum ? $v_sum - $u_sum : $u_sum - $v_sum;
-                $g->add_weighted_edge( $u, $v, $weight );
+                my $weight
+                  = $v_sum > $u_sum ? $v_sum - $u_sum : $u_sum - $v_sum;
+                $g->add_weighted_edge($u, $v, $weight);
                 $edge_count++;
             }
         }
@@ -121,7 +114,7 @@ calculate our own "checksum" for each word as mentioned previously.
     my $end   = 'graph';
 
     say qq[Looking for a path between '$start' and '$end'];
-    my @path = $g->SP_Dijkstra( $start, $end );
+    my @path = $g->SP_Dijkstra($start, $end);
 
     say qq[PATH: ];
     say for @path;
@@ -131,7 +124,7 @@ sub chksum {
     ## String -> Integer
     my $word = shift;
     my $sum  = 0;
-    for my $c ( split //, $word ) {
+    for my $c (split //, $word) {
         $sum += ord($c);
     }
     return $sum;
@@ -154,3 +147,7 @@ Finally, we run the program.
 =cut
 
 main();
+
+# Local Variables:
+# compile-command: "perl ladders-g.pl"
+# End:
