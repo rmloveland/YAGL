@@ -174,6 +174,18 @@
 
 * To File
 
+** TODO Add benchmarks to testing
+
+** TODO Add network flow algorithms
+
+** TODO Methods should have checks to bail/error as soon as possible
+
+   This includes:
+
+   - Early false returns of the form =return () unless ...= for
+     preconditions, including validity checks as well as mathematical
+     preconditions, such as for planarity or Hamiltonian walks
+   
 ** TODO Add =k_cliques= method ?
 
    Perhaps this should use the regular expression hack described in
