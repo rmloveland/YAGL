@@ -1219,6 +1219,11 @@ vertices it has visited after the recursive self-call; this is
 described in more detail on p.623 of Sedgewick's I<Algorithms>, 2nd
 ed.
 
+It takes two arguments: the name of the starting vertex, and an
+optional subroutine argument.
+
+    $g->exhaustive_search('a', sub { say $_[0] });
+
 =cut
 
 # TODO(rml): Write tests for this method.  You should use the same
@@ -1235,22 +1240,34 @@ sub exhaustive_search {
         $seen->{$start}++;
         state $backtracked;
 
-        do {
-            my $len = @$path - 1;
-            my $last;
-            $last = $path->[$len] if $path->[$len];
+        my $len = @$path - 1;
+        my $last;
+        $last = $path->[$len] if $path->[$len];
 
+        if (DEBUG) {
             say
               qq[YAGL::exhaustive_search(): choice point is '$last', adding '$start']
               if $last && $backtracked;
             say qq[YAGL::exhaustive_search(): adding '$start']
               unless $backtracked;
-            push @$path, $start;
-            $backtracked = undef;
-            say qq[YAGL::exhaustive_search(): PATH -> @$path];
-        } if DEBUG;
+        }
+        push @$path, $start;
 
-        $sub->($start);
+        say qq[YAGL::exhaustive_search(): PATH -> @$path] if DEBUG;
+
+        # The subroutine operates on the current vertex $start *as
+        # well as* looking at the "path so far".  That way, the
+        # subroutine can be used as a predicate to determine a search
+        # cutoff property as described on p.28 of Knuth's v04f05.
+
+        # TODO(rml): The behavior described above doesn't work yet,
+        # however.  In order for this to work, there needs to be some
+        # way for the subroutine to "signal into" this method that it
+        # wants to cutoff/prune the current branch of the search tree
+        # and try something else.
+
+        $sub->($start, $path) if $sub;
+
         my $neighbors = $self->get_neighbors($start);
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
