@@ -310,6 +310,31 @@ sub to_graphviz {
     return $gv->as_canon;
 }
 
+=item draw
+
+Given a file name, dumps a representation of the graph (as GraphViz) and uses C<dot> to build an image of the graph.  All of this happens in C<$TMPDIR>.
+
+    $g->draw('24-ham-00');
+    # To view the file, open $TMPDIR/24-ham-00.svg
+
+=cut
+
+sub draw {
+    ## String -> State! IO!
+    my ($self, $basename) = @_;
+
+    die qq[YAGL::draw() must be passed a filename argument!] unless $basename;
+
+    my $filename = qq[$ENV{TMPDIR}/$basename.dot];
+    my $viz      = $self->to_graphviz;
+    open my $fh, '>', $filename or die $!;
+    say $fh $viz;
+    close $fh;
+    my $cmd = qq[dot -Tsvg -O $filename];
+    say qq[Running '$cmd'] if DEBUG;
+    system $cmd;
+}
+
 =back
 
 =head1 BOOLEAN METHODS
