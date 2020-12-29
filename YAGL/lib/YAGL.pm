@@ -1395,105 +1395,72 @@ sub _visit {
     return @$path;
 }
 
-=item hamiltonian_walk
+=item hamiltonian_walks
 
-The C<hamiltonian_walk> method finds an open or closed Hamiltonian walk on the graph, if one exists.  It takes one argument, C<closed>, to determine which to find.
+The C<hamiltonian_walks> method does an exhaustive search to find all of the open or closed Hamiltonian walks on the graph, if they exist.  It takes an optional  C<closed> argument to determine which type to look for.
+
+    $g->hamiltonian_walks(closed => 1);
+    $g->hamiltonian_walks;      # Finds open walks by default.
 
 =cut
 
-sub hamiltonian_walk {
+sub hamiltonian_walks {
     ## Array -> Array State!
     my ($self, @args) = @_;
 
-    my %args = @args;    # $self->hamiltonian_walk(closed => 1);
-
-    my $closed_walk = $args{closed};
+    my %args   = @args;
+    my $closed = $args{closed};
 
     # We can easily disqualify a graph as not having a closed Hamiltonian
     # walk if it has any vertex with a degree of less than two (that
     # is, if it has any leaves or entirely disconnected vertices).
-
-    if ($closed_walk) {
+    if ($closed) {
         for my $v ($self->get_vertices) {
             return if $self->get_degree($v) < 2;
         }
     }
 
-    my $mst = $self->mst;
+    my @vertices   = $self->get_vertices;
+    my $n_vertices = @vertices;
+    my $start;
 
-    unless ($mst) {
-        say STDERR qq[Couldn't find an MST, exiting ...];
-        return;
-    }
+    # If the graph is a tree, we need to select a leaf node.
+    my $is_tree = $self->is_tree;
+    return if $is_tree && $closed;
 
-    # Find the leaves of the MST so we can use one of them as a
-    # starting point below.
-    my @leaves;
-    for my $v ($mst->get_vertices) {
-        push @leaves, $v if $mst->get_degree($v) == 1;
-    }
-
-    my @path = $mst->_visit(
-        $leaves[0],
-        sub {
-            state %seen;
-            say $_[0] unless $seen{$_[0]};
-            $seen{$_[0]}++;
-        },
-        []
-    );
-
-    # Example subroutine: print out the vertices as we walk them.
-    # sub { state %seen; say $_[0] unless $seen{ $_[0] }; $seen{ $_[0] }++ }
-
-    # Final step: remove duplicates from the path.  What remains will
-    # be a Hamiltonian path.
-    my %uniq;
-    my @uniq;
-
-    for my $p (@path) {
-        push @uniq, $p unless $uniq{$p};
-        $uniq{$p}++;
-    }
-
-    # Mark the visited edges in red so we can see the Hamiltonian
-    # path.
-    my $prev;
-    my $count = @uniq;
-    for my $u (@uniq) {
-        say qq[looking at '$u' in (@uniq)] if DEBUG;
-        if ($count == 1 && $closed_walk) {    # Last vertex in path/cycle
-
-            # Final check: Does the last vertex in the path have an edge
-            # to the first?  In other words, is this a true Hamiltonian
-            # path?
-            if ($self->edge_between($u, $uniq[0])) {
-                $self->set_edge_attribute($u, $uniq[0], {color => 'red'});
+    if ($is_tree) {
+      LOOP: for my $v (@vertices) {
+            if ($self->get_degree($v) == 1) {
+                $start = $v;
+                last LOOP;
             }
-            else {
-                say qq[No edge found between '$u' and '$uniq[0]'] if DEBUG;
-                return ();
-            }
-            say
-              qq[Found edge between last vertex '$u' and first vertex '$uniq[0]']
-              if DEBUG;
         }
-        if ($self->edge_between($prev, $u)) {
-            say qq[Found edge between '$prev' and '$u'] if DEBUG;
-            $self->set_edge_attribute($prev, $u, {color => 'red'});
-        }
-        else {
-            if (defined $prev && defined $u) {
-                warn
-                  qq[no edge found between '$prev' and '$u' in candidate path (@uniq), bailing ...]
+    }
+    else {
+        $start = $vertices[0];
+    }
+
+    my @hams;
+
+    my $lambda = sub {
+        ## String : ArrayRef : ArrayRef -> ???
+        my ($start, $path, $answers) = @_;
+
+        state $calls = 0;
+        $calls++;
+        say qq[YAGL::hamiltonian_walks(): calls -> $calls] if DEBUG;
+
+        if (@$path == $n_vertices) {
+            if ($self->has_walk($path, {closed => $closed})) {
+                say qq[YAGL::hamiltonian_paths(): found a path -> @$path]
                   if DEBUG;
-                return ();
+                push @hams, [@$path];
             }
         }
-        $prev = $u;
-        $count--;
-    }
-    return @uniq;
+    };
+
+    $self->exhaustive_search($start, $lambda);
+    return @hams;
 }
 
 =item is_planar
