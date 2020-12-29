@@ -1067,6 +1067,38 @@ sub dijkstra {
     return ();
 }
 
+=item has_walk
+
+Given a list of vertices, determine whether they constitute a walk.  Given an optional argument, will determine if it is a closed walk.
+
+    $walk = qw/a f d b c e l m j k i h g/;
+    $g->has_walk($walk, {closed => 1});
+
+=cut
+
+sub has_walk {
+    ## ArrayRef : HashRef -> Boolean
+    my ($self, $walk, $args) = @_;
+
+    my $len = @$walk - 1;
+
+    my $closed;
+    $closed = $args->{closed} if $args;
+
+    # Short-circuit on whether it's a closed walk.
+    if ($closed) {
+        return unless $self->edge_between($walk->[0], $walk->[$len]);
+    }
+
+    for (my $i = 0; $i <= $len; $i++) {
+        my $j = $i + 1;
+        last if $j > $len;
+        return unless $self->edge_between($walk->[$i], $walk->[$i + 1]);
+    }
+
+    return 1;
+}
+
 =item find_path_between
 
 Given two vertices START and END in an unweighted graph, find the shortest path between them using breadth-first search.
