@@ -1443,8 +1443,8 @@ sub hamiltonian_walks {
     my @hams;
 
     my $lambda = sub {
-        ## String : ArrayRef : ArrayRef -> ???
-        my ($start, $path, $answers) = @_;
+        ## String : ArrayRef -> State!
+        my ($start, $path) = @_;
 
         state $calls = 0;
         $calls++;
