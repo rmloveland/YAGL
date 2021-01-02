@@ -61,7 +61,7 @@ my $g3 = YAGL->new;
 $g3->read_csv("$cwd/t/24-ham-01.csv");
 
 my $expected_3 = [];
-my @got_3 = $g3->hamiltonian_walks(closed => 1);
+my @got_3      = $g3->hamiltonian_walks(closed => 1);
 
 is_deeply(\@got_3, $expected_3,
     "Did _not_ find any closed Hamiltonian walks on a tree, as expected.");
@@ -100,7 +100,6 @@ is_deeply(\@got_5, $expected_5,
     "Found five open Hamiltonian walks on the graph from fig. 44-1 in Sedgewick 2e, as expected."
 );
 
-
 # Local Variables:
-# compile-file: "cd .. && perl 24-ham.t"
+# compile-command: "cd .. && perl t/24-ham.t"
 # End:
