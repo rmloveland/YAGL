@@ -71,17 +71,21 @@ version 0.1
 
 =head1 DESCRIPTION
 
-This module implements a number of algorithms on directed and undirected graphs.  Features include:
+This module implements a number of algorithms on directed and
+undirected graphs.  Features include:
 
 =over
 
-=item * Breadth-first search of unweighted graphs to find the shortest path in terms of number of nodes.
+=item * Breadth-first search of unweighted graphs to find the shortest
+path in terms of number of nodes.
 
-=item * Dijkstra's algorithm for finding the shortest path through a weighted (directed or undirected) graph.
+=item * Dijkstra's algorithm for finding the shortest path through a
+weighted (directed or undirected) graph.
 
 =item * Graph coloring for undirected graphs.
 
-=item * Serializing graphs to and from CSV files.  This is very useful for testing.
+=item * Serializing graphs to and from CSV files.  This is very useful
+for testing.
 
 =item * Generating random graphs.
 
@@ -257,12 +261,10 @@ sub read_csv {
             }
         }
 
-        die
-          qq[Directed graph cannot read in serialized copy of undirected graph\n]
+        die qq[Directed graph cannot read in serialized undirected graph\n]
           if ($self->is_directed && !$is_directed);
 
-        die
-          qq[Undirected graph cannot read in serialized copy of directed graph\n]
+        die qq[Undirected graph cannot read in serialized directed graph\n]
           if (!$self->is_directed && $is_directed);
         $self->add_edge($vertex, $neighbor, {weight => $weight});
         $seen{$neighbor . $vertex}++;
@@ -293,7 +295,7 @@ sub to_graphviz {
               = $self->get_edge_attribute($vertex, $neighbor, 'weight');
             my $edge_color
               = $self->get_edge_attribute($vertex, $neighbor, 'color');
-            my $penwidth = $edge_color ? "5" : "";
+            my $penwidth     = $edge_color ? "5" : "";
             my $vertex_color = $self->get_vertex_color($neighbor);
             $gv->add_node($neighbor, fillcolor => $vertex_color);
             $gv->add_edge(
@@ -312,7 +314,9 @@ sub to_graphviz {
 
 =item draw
 
-Given a file name, dumps a representation of the graph (as GraphViz) and uses C<dot> to build an image of the graph.  All of this happens in C<$TMPDIR>.
+Given a file name, dumps a representation of the graph (as GraphViz)
+and uses C<dot> to build an image of the graph.  All of this happens
+in C<$TMPDIR>.
 
     $g->draw('24-ham-00');
     # To view the file, open $TMPDIR/24-ham-00.svg
@@ -323,7 +327,7 @@ sub draw {
     ## String -> State! IO!
     my ($self, $basename) = @_;
 
-    die qq[YAGL::draw() must be passed a filename argument!] unless $basename;
+    die qq[draw() must be passed a filename argument!] unless $basename;
 
     my $filename = qq[$ENV{TMPDIR}/$basename.dot];
     my $viz      = $self->to_graphviz;
@@ -415,7 +419,7 @@ between A and every other vertex in the graph.
 sub is_connected {
     my ($self) = @_;
 
-    die qq[YAGL::is_connected() - not implemented for directed graphs]
+    die qq[is_connected() - not implemented for directed graphs]
       if $self->is_directed;
 
     my @vertices = $self->get_vertices;
@@ -443,15 +447,15 @@ sub has_cycle {
 =item is_colored
 
 Return true if this graph has already been colored using the
-C<YAGL::color_vertices> method.
+C<color_vertices> method.
 
 =cut
 
 sub is_colored {
     ## -> Number
-    my ($self) = @_;
+    my ($self)   = @_;
     my @vertices = $self->get_vertices;
-    my @colors = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -997,7 +1001,8 @@ sub remove_edge {
 
 =item dijkstra
 
-Given two vertices START and END on a graph with weighted edges, find the shortest path between them using Dijkstra's algorithm.
+Given two vertices START and END on a graph with weighted edges, find
+the shortest path between them using Dijkstra's algorithm.
 
     $g->dijkstra($a, $b);
 
@@ -1069,7 +1074,8 @@ sub dijkstra {
 
 =item has_walk
 
-Given a list of vertices, determine whether they constitute a walk.  Given an optional argument, will determine if it is a closed walk.
+Given a list of vertices, determine whether they constitute a walk.
+Given an optional argument, will determine if it is a closed walk.
 
     $walk = qw/a f d b c e l m j k i h g/;
     $g->has_walk($walk, {closed => 1});
@@ -1101,7 +1107,8 @@ sub has_walk {
 
 =item find_path_between
 
-Given two vertices START and END in an unweighted graph, find the shortest path between them using breadth-first search.
+Given two vertices START and END in an unweighted graph, find the
+shortest path between them using breadth-first search.
 
 =cut
 
@@ -1239,7 +1246,9 @@ sub mst {
 
 =item dfs
 
-The F<dfs> method performs depth-first-search on the graph beginning at the vertex START; for each vertex visited by the search, invoke C<$sub>.
+The F<dfs> method performs depth-first-search on the graph beginning
+at the vertex START; for each vertex visited by the search, invoke
+C<$sub>.
 
 =cut
 
@@ -1303,14 +1312,13 @@ sub exhaustive_search {
 
         if (DEBUG) {
             say
-              qq[YAGL::exhaustive_search(): choice point is '$last', adding '$start']
+              qq[exhaustive_search(): choice point is '$last', adding '$start']
               if $last && $backtracked;
-            say qq[YAGL::exhaustive_search(): adding '$start']
-              unless $backtracked;
+            say qq[exhaustive_search(): adding '$start'] unless $backtracked;
         }
         push @$path, $start;
 
-        say qq[YAGL::exhaustive_search(): PATH -> @$path] if DEBUG;
+        say qq[exhaustive_search(): PATH -> @$path] if DEBUG;
 
         # The subroutine operates on the current vertex $start *as
         # well as* looking at the "path so far".  That way, the
@@ -1332,7 +1340,7 @@ sub exhaustive_search {
                 __SUB__->($self, $neighbor, $sub, $seen, $path);
                 if (DEBUG) {
                     say
-                      qq[YAGL::exhaustive_search(): backtracking from '$neighbor'];
+                      qq[exhaustive_search(): backtracking from '$neighbor'];
                 }
                 delete $seen->{$neighbor};
                 pop @$path;
@@ -1397,7 +1405,10 @@ sub _visit {
 
 =item hamiltonian_walks
 
-The C<hamiltonian_walks> method does an exhaustive search to find all of the open or closed Hamiltonian walks on the graph, if they exist.  It takes an optional  C<closed> argument to determine which type to look for.
+The C<hamiltonian_walks> method does an exhaustive search to find all
+of the open or closed Hamiltonian walks on the graph, if they exist.
+It takes an optional C<closed> argument to determine which type to
+look for.
 
     $g->hamiltonian_walks(closed => 1);
     $g->hamiltonian_walks;      # Finds open walks by default.
@@ -1448,12 +1459,11 @@ sub hamiltonian_walks {
 
         state $calls = 0;
         $calls++;
-        say qq[YAGL::hamiltonian_walks(): calls -> $calls] if DEBUG;
+        say qq[hamiltonian_walks(): calls -> $calls] if DEBUG;
 
         if (@$path == $n_vertices) {
             if ($self->has_walk($path, {closed => $closed})) {
-                say qq[YAGL::hamiltonian_paths(): found a path -> @$path]
-                  if DEBUG;
+                say qq[hamiltonian_paths(): found a path -> @$path] if DEBUG;
                 push @hams, [@$path];
             }
         }
@@ -1467,7 +1477,8 @@ sub hamiltonian_walks {
 
 The C<is_planar> method tests whether a graph is planar.
 
-TODO(rml): Add a citation for this algorithm, I think it might be from I<Graph Algorithms> by S. Even.
+TODO(rml): Add a citation for this algorithm, I think it might be from
+I<Graph Algorithms> by S. Even.
 
 =back
 
@@ -1504,7 +1515,9 @@ sub clone {
 
 =item equals
 
-Given two graphs I<A> and I<B>, The C<equals> method checks to see whether they are identical.  It checks the edges, vertices, and edge attributes to do so.
+Given two graphs I<A> and I<B>, The C<equals> method checks to see
+whether they are identical.  It checks the edges, vertices, and edge
+attributes to do so.
 
 TODO(rml): This should also check vertex attributes.
 
@@ -1541,7 +1554,8 @@ sub equals {
 
 =item _add_neighbor
 
-The C<_add_neighbor> method is the internal helper used to add an edge (and any edge attributes) between two vertices.
+The C<_add_neighbor> method is the internal helper used to add an edge
+(and any edge attributes) between two vertices.
 
 =cut
 
@@ -1573,7 +1587,8 @@ EOF
 
 =item _remove_neighbor
 
-The C<_remove_neighbor> method is an internal helper used for deleting an edge between two vertices.
+The C<_remove_neighbor> method is an internal helper used for deleting
+an edge between two vertices.
 
 =cut
 
@@ -1613,7 +1628,9 @@ sub _remove_neighbor {
 
 =item _st_walk
 
-The C<_st_walk> method is used internally for building walks (paths) along spanning trees, such as are built inside C<find_path_between> and C<dijkstra>.
+The C<_st_walk> method is used internally for building walks (paths)
+along spanning trees, such as are built inside C<find_path_between>
+and C<dijkstra>.
 
 =cut
 
@@ -1658,7 +1675,8 @@ sub _st_walk {
 
 =item _edge_attrs
 
-The C<_edge_attrs> method is an internal helper that returns all of the graph's edge attributes.
+The C<_edge_attrs> method is an internal helper that returns all of
+the graph's edge attributes.
 
 =cut
 
@@ -1669,7 +1687,8 @@ sub _edge_attrs {
 
 =item _vertex_attrs
 
-The C<_vertex_attrs> method is an internal helper that returns all of the graph's vertex attributes.
+The C<_vertex_attrs> method is an internal helper that returns all of
+the graph's vertex attributes.
 
 =cut
 
@@ -1680,7 +1699,8 @@ sub _vertex_attrs {
 
 =item _make_vertex_name
 
-The C<_make_vertex_name> method is used to generate random vertex names, such as when generating random graphs.
+The C<_make_vertex_name> method is used to generate random vertex
+names, such as when generating random graphs.
 
 =back
 
@@ -1705,7 +1725,8 @@ sub _make_vertex_name {
 
 =item get_color_degree
 
-The C<get_color_degree> method returns the "color degree" of a vertex: that is, how many colors its neighbors have.
+The C<get_color_degree> method returns the "color degree" of a vertex:
+that is, how many colors its neighbors have.
 
 =cut
 
@@ -1727,7 +1748,9 @@ sub get_color_degree {
 
 =item color_vertices
 
-The C<color_vertices> method colors the vertices of the graph using the algorithm due to Brelaz, as described in Skiena, I<Implementing Discrete Mathematics>.  Specifically:
+The C<color_vertices> method colors the vertices of the graph using
+the algorithm due to Brelaz, as described in Skiena, I<Implementing
+Discrete Mathematics>.  Specifically:
 
 =over
 
@@ -1735,7 +1758,10 @@ The C<color_vertices> method colors the vertices of the graph using the algorith
 
 =item 2. Color the vertex of largest degree with color 1.
 
-=item 3. Then repeatedly select the vertex with highest I<color degree>, where the color degree is the number of adjacent vertices which have already been colored, and color it with the smallest possible color.
+=item 3. Then repeatedly select the vertex with highest I<color
+degree>, where the color degree is the number of adjacent vertices
+which have already been colored, and color it with the smallest
+possible color.
 
 =back
 
@@ -1781,7 +1807,8 @@ EOF
 
 =item uncolor_vertices
 
-The C<uncolor_vertices> method "uncolors" every vertex in the graph by setting its color attribute to C<undef>.
+The C<uncolor_vertices> method "uncolors" every vertex in the graph by
+setting its color attribute to C<undef>.
 
 =cut
 
@@ -1810,7 +1837,9 @@ sub vertex_colors {
 
 =item chromatic_number
 
-The C<chromatic_number> method does not actually return the chromatic number.  It returns the number of colors that were used to color the vertices of the graph using the C<color_vertices> method.
+The C<chromatic_number> method does not actually return the chromatic
+number.  It returns the number of colors that were used to color the
+vertices of the graph using the C<color_vertices> method.
 
 =back
 
