@@ -1302,8 +1302,8 @@ sub exhaustive_search {
     return () unless defined $start;
 
     my $search = sub {
-        my ($self, $start, $sub, $seen, $path) = @_;
-        $seen->{$start}++;
+        my ($self, $current, $sub, $seen, $path) = @_;
+        $seen->{$current}++;
         state $backtracked;
 
         my $len = @$path - 1;
@@ -1312,15 +1312,16 @@ sub exhaustive_search {
 
         if (DEBUG) {
             say
-              qq[exhaustive_search(): choice point is '$last', adding '$start']
+              qq[exhaustive_search(): choice point is '$last', adding '$current']
               if $last && $backtracked;
-            say qq[exhaustive_search(): adding '$start'] unless $backtracked;
+            say qq[exhaustive_search(): adding '$current']
+              unless $backtracked;
         }
-        push @$path, $start;
+        push @$path, $current;
 
         say qq[exhaustive_search(): PATH -> @$path] if DEBUG;
 
-        # The subroutine operates on the current vertex $start *as
+        # The subroutine operates on the current vertex $current *as
         # well as* looking at the "path so far".  That way, the
         # subroutine can be used as a predicate to determine a search
         # cutoff property as described on p.28 of Knuth's v04f05.
@@ -1331,9 +1332,9 @@ sub exhaustive_search {
         # wants to cutoff/prune the current branch of the search tree
         # and try something else.
 
-        $sub->($start, $path) if $sub;
+        $sub->($current, $path) if $sub;
 
-        my $neighbors = $self->get_neighbors($start);
+        my $neighbors = $self->get_neighbors($current);
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
             unless ($seen->{$neighbor}) {
@@ -1455,7 +1456,7 @@ sub hamiltonian_walks {
 
     my $lambda = sub {
         ## String : ArrayRef -> State!
-        my ($start, $path) = @_;
+        my ($current, $path) = @_;
 
         state $calls = 0;
         $calls++;
