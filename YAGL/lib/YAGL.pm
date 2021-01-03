@@ -1275,6 +1275,14 @@ sub dfs {
     };
     my $seen = {};
     $dfs->($self, $start, $sub, $seen);
+
+    # Deal with any unconnected vertices.
+    my @unseen = grep { !exists $seen->{$_} } $self->get_vertices;
+
+    for my $u (@unseen) {
+        next if $seen->{$u};
+        $dfs->($self, $u, $sub, $seen);
+    }
 }
 
 =item exhaustive_search

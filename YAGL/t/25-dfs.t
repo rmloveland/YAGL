@@ -2,8 +2,9 @@
 
 use strict;
 use warnings;
+use feature qw/ say /;
 use lib 'lib';
-use Test::More tests => 3;
+use Test::More tests => 5;
 use Cwd;
 use YAGL;
 
@@ -13,11 +14,12 @@ my $cwd = getcwd;
 
 my $g = YAGL->new(is_directed => 1);
 $g->read_csv("$cwd/t/25-dfs-00.csv");
+
 my @expected = qw/a b f e d g c j k l m/;
 my @got;
 $g->dfs('a', sub { push @got, $_[0] });
 
-is_deeply(\@got, \@expected, "DFS on a directed graph works as expected.");
+is_deeply(\@got, \@expected, "DFS on a connected, directed graph");
 
 # Test 2 - DFS on an undirected graph (that also has a Hamiltonian path, btw)
 
@@ -28,8 +30,7 @@ my @expected2 = qw/a b c d e f g h i j k/;
 my @got2;
 $h->dfs('a', sub { push @got2, $_[0] });
 
-is_deeply(\@got2, \@expected2,
-    "DFS on an undirected graph works as expected");
+is_deeply(\@got2, \@expected2, "DFS on a connected, undirected graph");
 
 # Test 3 - DFS on the graph in Fig. 44-1 from Sedgewick, 2nd ed.
 
@@ -41,8 +42,35 @@ my @got3;
 $gg->dfs('a', sub { push @got3, $_[0] });
 
 is_deeply(\@got3, \@expected3,
-    "DFS on the graph from Fig. 44-1 in Sedgewick, 2nd ed. works as expected"
-);
+    "DFS on the graph from Fig. 44-1 in Sedgewick, 2e");
+
+# Test 4 - DFS on the same graph as Test 1, except that it is no
+# longer connected (it has 2 connected components).
+
+my $g4 = YAGL->new(is_directed => 1);
+
+$g4->read_csv("$cwd/t/25-dfs-03.csv");
+$g4->draw('25-dfs-03');
+
+my @expected4 = qw/a b f e d g c j k l m/;
+my @got4;
+$g4->dfs('a', sub { push @got4, $_[0] });
+
+is_deeply(\@got4, \@expected4, "DFS on an unconnected, directed graph");
+
+# Test 5 - DFS on the same graph as Test 4, except that it is
+# undirected.
+
+my $g5 = YAGL->new;
+
+$g5->read_csv("$cwd/t/25-dfs-04.csv");
+$g5->draw('25-dfs-04');
+
+my @expected5 = qw/a b f e d g c j k l m/;
+my @got5;
+$g5->dfs('a', sub { push @got5, $_[0] });
+
+is_deeply(\@got5, \@expected5, "DFS on an unconnected, undirected graph");
 
 # Local Variables:
 # compile-command: "cd .. && perl t/25-dfs.t"
