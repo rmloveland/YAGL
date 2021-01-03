@@ -329,7 +329,8 @@ sub draw {
 
     die qq[draw() must be passed a filename argument!] unless $basename;
 
-    my $filename = qq[$ENV{TMPDIR}/$basename.dot];
+    my $tmpdir   = $ENV{TMPDIR} || '/tmp';
+    my $filename = qq[$tmpdir/$basename.dot];
     my $viz      = $self->to_graphviz;
     open my $fh, '>', $filename or die $!;
     say $fh $viz;
