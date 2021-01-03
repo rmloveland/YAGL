@@ -1259,15 +1259,15 @@ sub dfs {
     return () unless defined $start;
 
     my $dfs = sub {
-        my ($self, $start, $sub, $seen) = @_;
+        my ($self, $current, $sub, $seen) = @_;
 
-        $seen->{$start}++;
-        $sub->($start);
-        my $neighbors = $self->get_neighbors($start);
+        $seen->{$current}++;
+        $sub->($current);
+        my $neighbors = $self->get_neighbors($current);
         for my $neighbor (@$neighbors) {
             next unless defined $neighbor;
             unless ($seen->{$neighbor}) {
-                $self->set_edge_attribute($start, $neighbor,
+                $self->set_edge_attribute($current, $neighbor,
                     {color => 'red'});
                 __SUB__->($self, $neighbor, $sub, $seen);
             }
