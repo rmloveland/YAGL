@@ -1285,6 +1285,62 @@ sub dfs {
     }
 }
 
+=item connected_components
+
+The F<connected_components> method returns the connected components of
+the graph, as a list of lists.
+
+If there are no connected components, it will return an empty list:
+
+    []
+
+If there is only one connected component, it will return a list with
+one element: a list of the vertices of the connected component:
+
+    [['a', 'b', 'c', 'd']]
+
+If there are I<n> connected components, it will return a list with
+I<n> elements:
+
+    [['a', 'b'], ['c', 'd'], ['e', 'f', 'g']]
+
+=cut
+
+# TODO(rml): Design a better output format.  This should probably be
+# returning YAGL objects so the caller can do graph operations on them
+# if they want to.
+
+sub connected_components {
+    my ($self) = @_;
+
+    my @components;
+
+    my $lambda = sub {
+        my ($current) = @_;
+
+        my $delim = 'XXX';
+        push @components, $delim unless @components;
+        if ($components[$#components] eq $delim) {
+            push @components, $current;
+        }
+        elsif ($self->find_path_between($current, $components[$#components]))
+        {
+            push @components, $current;
+        }
+        else {
+            push @components, $delim;
+            push @components, $current;
+        }
+    };
+
+    my @vertices = sort { $self->get_degree($a) <=> $self->get_degree($b) }
+      $self->get_vertices;
+    my $start = $vertices[0];
+    $self->dfs($start, $lambda);
+
+    return @components;
+}
+
 =item exhaustive_search
 
 The F<exhaustive_search> method performs an exhaustive search of all
