@@ -1,26 +1,5 @@
 *~
-.precomp
 TAGS
-*.bak
-nytprof*
-*.jpg
-*.dot
-graphs/*.csv
-graphs/t/02-serialize-graph-to-csv.csv
-* conflicted copy *
-.picasa.ini
-.DS_Store*
-
-# CWEB things
-
-*.c
-*.exe
-*.idx
-*.log
-*.pdf
-*.scn
-*.tex
-*.toc
 
 # YAGL generated files, etc.
 
@@ -36,5 +15,3 @@ YAGL/lib/*.html
 YAGL/lib/*.pod
 YAGL/lib/*.tmp
 YAGL/lib/*.patch
-
-

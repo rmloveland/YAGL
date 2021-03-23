@@ -1,0 +1,410 @@
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+YAGL - Yet Another Graph Library
+
+=head1 VERSION
+
+version 0.1
+
+=head1 SYNOPSIS
+
+    use YAGL;
+
+    my $g = YAGL->new;
+
+    # Populate the graph with 124 vertices, with randomly allocated
+    # weighted edges between some of the vertices.
+    $g->generate_random_vertices(
+        { n => 124, p => 0.1, max_weight => 100_000 } );
+
+    # Add vertices and edges to the graph.
+    $g->add_vertex('abc123');
+    $g->add_vertex('xyz789');
+    $g->add_edge( 'abc123', 'xyz789', { weight => 1_000_000 } );
+
+    $g->add_vertex('I_AM_A_TEST');
+    $g->add_edge( 'I_AM_A_TEST', 'abc123', { weight => 12345 } );
+
+    # Write the graph out to a CSV file.  This file can be read back
+    # in later with the 'read_csv' method.
+    $g->write_csv('foo.csv');
+
+    # Pick a start and end vertex at random from the graph.
+    my @vertices = $g->get_vertices;
+
+    my $i     = int rand @vertices;
+    my $j     = int rand @vertices;
+    my $start = $vertices[$i];
+    my $end   = $vertices[$j];
+
+    say qq[Looking for a path from '$start' to '$end' ...];
+
+    # Using breadth-first search, find a path between the start and
+    # end vertices, if any such path exists.  Otherwise, this method
+    # returns undef.
+    my @path;
+    @path = $g->find_path_between( $start, $end );
+
+    # Get a string representation of the graph in the graphviz
+    # language for passing to graphviz tools like `dot`.
+    my $viz = $g->to_graphviz;
+
+=head1 DESCRIPTION
+
+This module implements a number of algorithms on directed and undirected graphs.  Features include:
+
+=over
+
+=item * Breadth-first search of unweighted graphs to find the shortest path in terms of number of nodes.
+
+=item * Dijkstra's algorithm for finding the shortest path through a weighted (directed or undirected) graph.
+
+=item * Graph coloring for undirected graphs.
+
+=item * Serializing graphs to and from CSV files.  This is very useful for testing.
+
+=item * Generating random graphs.
+
+=item * Automated tests for all features.
+
+=back
+
+For an interesting example, see the file C<examples/ladders.pl>, which
+is a "port" to Perl of the C<LADDERS> program from the book I<The Stanford
+GraphBase> by Donald E. Knuth.
+
+Note that this library is still in development.
+
+=head2 GRAPH INITIALIZATION AND RANDOMIZATION
+
+=over
+
+=item new
+
+Initialize a new graph.
+
+To make it directed, pass 'is_directed => 1' as an argument.
+
+=item generate_random_vertices
+
+Generate a bunch of vertices with random names, and distribute edges
+randomly among them.
+
+Arguments:
+
+=over
+
+=item n
+
+Number of vertices.
+
+=item p
+
+Probability that any given node will B<not> be connected to another node.
+
+=item max_weight
+
+The maximum weight of any vertex.  Vertex weights are randomly
+generated up to this number.
+
+=back
+
+=back
+
+=head2 GRAPH SERIALIZATION
+
+=over
+
+=item write_csv
+
+Write a CSV representation of this graph out to a (named) file.
+
+=item read_csv
+
+Read in a CSV file that represents a graph.
+
+=item to_graphviz
+
+Generate a Graphviz representation of this graph (really, a string).
+
+=back
+
+=head2 BOOLEAN METHODS
+
+=over
+
+=item is_empty
+
+Returns true if the graph is empty - that is, if it has no vertices.
+
+=item is_complete
+
+Return true if this is a complete graph.  A complete graph is one
+wherein each vertex is connected to every other vertex.
+
+=item is_tree
+
+Return true if this graph is a tree.  A graph is a tree if its number
+of edges is one fewer than its number of vertices.  This definition is
+taken from Even's book I<Graph Algorithms>.
+
+=item is_connected
+
+Return true if for each vertex A in this graph, there is a path
+between A and every other vertex in the graph.
+
+=item has_cycle
+
+Return true if there is a cycle in this graph; in other words, if this
+graph is not a tree.
+
+=item is_colored
+
+Return true if this graph has already been colored using the
+C<YAGL::color_vertices> method.
+
+=item is_directed
+
+Return true if this is a directed graph.  Graphs can only be marked as
+directed during object initialization, by passing C<is_directed=>1> as
+an argument to C<YAGL::new>.
+
+=back
+
+=head2 METHODS ON VERTICES
+
+=over
+
+=item add_vertex
+
+Add a vertex V to this graph, if it does not already exist.  Return
+C<undef> if V already exists.
+
+    $g->add_vertex('s');
+
+=item add_vertices
+
+Add multiple vertices to this graph.  Takes an array as its argument.
+
+    my @to_add = qw/a b c d e f/;
+    $g->add_vertices(@to_add);
+
+=item get_neighbors
+
+Given a vertex in the graph, get its neighbors - that is, the other
+vertices to which it is connected.
+
+    $g->get_neighbors('s');
+
+=item has_vertex
+
+Return true if the vertex in question is a part of the graph.
+
+    $g->has_vertex('a');
+
+=item remove_vertex
+
+Remove the named vertex from the graph, if it exists.
+
+    $g->remove_vertex('s');
+
+Note that removing a vertex will also delete all edges (and edge
+attributes) between the given vertex and its former neighbors.
+
+=item get_vertices
+
+Return a list of the vertices in the graph.
+
+    my @v = $g->get_vertices;
+
+=pod
+
+TODO: Remove this call to C<sort>.  It has a large performance cost
+for large graphs.  On a recent "word ladder" run with the 5757-vertex
+WORDS graph from the Stanford Graphbase, of 522s of runtime, this call
+to C<sort> cost 30s (30/522 = ~6%).
+
+AFAICT there is no good reason for the sorting; it was done to get
+some tests to pass -- likely the graph cloning equality tests, if
+memory serves.  Therefore the action item is to remove this call to
+C<sort>, see what breaks in the tests, and fix it.
+
+=item get_degree
+
+Given a vertex V, return the degree of that vertex -- that is, the
+number of edges between V and other vertices (its neighbors).
+
+=item set_vertex_attribute
+
+Given a vertex V, store a hashref of attributes about that vertex.
+
+=item get_vertex_attribute
+
+Given a vertex V and an attribute string, retrieve the value of that attribute.
+
+    my $weight = $g->get_vertex_attribute('s', 'weight');
+    # 123
+
+=item get_vertex_attributes
+
+Given a vertex V, return all of the vertex's attributes, whatever they
+are.  Reads from the object's internal hashref, so beware: these
+values could be anything.
+
+    my $attrs = $g->get_vertex_attributes('s');
+
+=item delete_vertex_attributes
+
+Given a vertex V, delete all of its attributes (if any).
+
+    $g->delete_vertex_attributes('s');
+
+=item set_vertex_color
+
+Given a vertex V and some color C, sets a 'color' attribute on
+V. Shorthand for using C<set_vertex_attribute>.
+
+    $g->set_vertex_color('s', 'red');
+
+=item get_vertex_color
+
+Given a vertex V, get its color (if any).  Shorthand for calling
+C<get_vertex_attribute>.
+
+    $g->get_vertex_color('s');
+
+=back
+
+=head2 METHODS ON EDGES
+
+=over
+
+=item get_edge
+
+Get the edge between two vertices, A and B.  Return C<undef> if no
+such edge exists.  If the edge does exist, return an array reference
+containing A, B, and a (possibly empty) hash reference of edge
+attributes.
+
+    my $edge = $g->get_edge('s', 'a');
+
+=item get_edges
+
+Get a list containing all of the edges in the graph.  Specifically,
+this will be a list of array references, with the contents of each
+array reference as described in the documentation for C<get_edge()>.
+
+    my @edges = $g->get_edges;
+
+=item edge_between
+
+Given two vertices A and B, return something truthy if there exists an
+edge between A and B.  Otherwise, return C<undef>.
+
+    if ($g->edge_between('s', 'a')) {
+      say 'Yes';
+    }
+
+=item get_edge_attributes
+
+Given two vertices A and B that have an edge between them, return
+whatever attributes are stored for that edge.  Note that this can be
+any arbitrary Perl data structure that could be stored in a hash
+reference.
+
+=item get_edge_attribute
+
+Given two vertices A and B that have an edge between them, and a
+specific (text) attribute T, return whatever values are associated
+with T for that edge.  For example, a (numeric) weight.
+
+    my $edge_weight = $g->get_edge_attribute('s', 'a', 'weight');
+
+=item get_edge_weight
+
+Shortcut for the following call to C<get_edge_attribute()>.
+
+    my $edge_weight = $g->get_edge_attribute('s', 'a', 'weight');
+
+=item set_edge_attribute
+
+Given two vertices A and B that have an edge between them, store a
+specific attribute key-value pair (a hash reference) that you want to
+associate with that edge.
+
+    my $edge_weight = $g->set_edge_attribute('s', 'a', { weight => 123 });
+
+=item delete_edge_attributes
+
+Given two vertices A and B that have an edge between them, delete all
+of the attributes (weight, color, etc.) associated with that edge.
+
+    $g->delete_edge_attributes('s', 'a');
+
+=item add_edge
+
+Given two vertices A and B, add an edge between them, as well as a
+hash reference containing any attributes that should be associated
+with that edge.  Note that if either of the vertices do not yet exist,
+they will be created.
+
+    $g->add_edge('s', 'a', { name => 'my great edge'});
+
+=item add_edges
+
+Given a list of array references that describe vertices in the format
+
+    [['a', 'b', { weight => 123 }], ... ]
+
+add all of the edges listed, as well as the attributes that should be
+associated with each edge.  Note that if either of the vertices do not
+yet exist, they will be created.
+
+    $g->add_edge('s', 'a', { name => 'my great edge'});
+
+=item remove_edge
+
+Given two vertices A and B, remove the edge (if any) between them, as
+well as any associated attributes.
+
+    $g->remove_edge('s', 'a');
+
+=back
+
+=head2 PATH SEARCH METHODS
+
+=head2 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
+
+=head2 INTERNAL HELPER METHODS
+
+=head2 GRAPH COLORING METHODS
+
+=pod
+
+=head1 SEE ALSO
+
+=over
+
+=item * L<Graph>, by Jarkko Hietaniemi
+
+=item * L<Graph::Fast> by Lars Stoltenow
+
+=item * L<Boost::Graph> by David Burdick
+
+=back
+
+=head1 AUTHOR
+
+Richard Loveland <r@rmloveland.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2019, 2020 by Rich Loveland
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
