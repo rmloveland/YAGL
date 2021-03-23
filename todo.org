@@ -4,6 +4,17 @@
 
 * Current
 
+** TODO Release to github and CPAN
+
+*** DOING Write documentation
+
+    In particular, this file should have:
+
+    - [ ] An overview section that orients the reader
+    - [ ] Lots of explicit references to the books, etc., that were
+      used in the making of
+
+**** TODO Add links to references in documentation
 ** TODO Add more tests to =hamiltonian_walk= method to exercise state mgmt
 
    I have found a number of bugs when using a =state= variable, where
@@ -24,15 +35,6 @@
     See the rewritten =exhaustive_search= for details of how to do
     this.
 
-** DOING Write documentation
-
-   In particular, this file should have:
-
-   - [ ] An overview section that orients the reader
-   - [ ] Lots of explicit references to the books, etc., that were
-     used in the making of
-
-*** TODO Add links to references in documentation
 ** DOING Allow for directed graphs option
 
    This will require:
@@ -53,6 +55,8 @@
     The work here is to review each existing method and verify that
     they meet the above criteria.  If not, create specific TODO items
     here for each method that needs updating.
+
+*** TODO Add tests that exercise the "directedness" properties
 
 ** DOING Minimum spanning tree
 
