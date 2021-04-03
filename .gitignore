@@ -15,3 +15,4 @@ YAGL/lib/*.html
 YAGL/lib/*.pod
 YAGL/lib/*.tmp
 YAGL/lib/*.patch
+*.lst.csv

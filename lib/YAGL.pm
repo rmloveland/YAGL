@@ -238,6 +238,40 @@ sub write_csv {
     close $fh;
 }
 
+=item read_lst
+
+Read in a *.lst file that represents a graph (from L<https://hog.grinvin.org>).
+
+=cut
+
+sub read_lst {
+    my ($self, $lst_file) = @_;
+
+    my $csv_file = qq[$lst_file.csv];
+    open my $output_fh, '>', $csv_file;
+
+    open my $input_fh, '<', $lst_file or die "Can't open file '$lst_file': $!\n";
+
+    say $output_fh qq[node,neighbor,weight,is_directed];
+    while (my $line = <$input_fh>) {
+        next unless $line =~ /[0-9]: [0-9]+/;    # Skip empty lines.
+        my ($node, $neighbors) = split /:/, $line;
+        chomp($node)      if defined $node;
+        chomp($neighbors) if defined $neighbors;
+        my @neighbors = grep { $_ ne '' } split / /, $neighbors;
+
+        # say Dumper { node => $node, neighbors => \@neighbors};
+
+        for my $n (@neighbors) {
+            say $output_fh qq["$node","$n",0,0];
+        }
+    }
+    close $input_fh;
+    close $output_fh;
+
+    $self->read_csv($csv_file);
+}
+
 =item read_csv
 
 Read in a CSV file that represents a graph.
