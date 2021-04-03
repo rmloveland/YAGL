@@ -50,7 +50,6 @@ is_deeply(\@got3, \@expected3,
 my $g4 = YAGL->new(is_directed => 1);
 
 $g4->read_csv("$cwd/t/25-dfs-03.csv");
-$g4->draw('25-dfs-03');
 
 my @expected4 = qw/a b f e d g c j k l m/;
 my @got4;
@@ -64,7 +63,6 @@ is_deeply(\@got4, \@expected4, "DFS on an unconnected, directed graph");
 my $g5 = YAGL->new;
 
 $g5->read_csv("$cwd/t/25-dfs-04.csv");
-$g5->draw('25-dfs-04');
 
 my @expected5 = qw/a b f e d g c j k l m/;
 my @got5;
