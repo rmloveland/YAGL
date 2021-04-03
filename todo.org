@@ -4,6 +4,14 @@
 
 * Current
 
+** TODO Fix bug in Hamiltonian path code that treats reversed cycles as unique :bugs:
+
+   See test #7 in [[file:t/24-ham.t]], which should return *1* cycle, per
+   https://mathoverflow.net/questions/255784/what-is-the-smallest-uniquely-hamiltonian-graph-with-minimum-degree-at-least-3/
+
+   In fact, the 2 cycles returned are just mirrors of each other.
+   There should really just be 1.
+
 ** TODO Release to github and CPAN
 
 *** DOING Write documentation

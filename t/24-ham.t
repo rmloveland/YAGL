@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use feature qw/ say /;
 use lib 'lib';
-use Test::More tests => 6;
+use Test::More tests => 7;
 use Cwd;
 use YAGL;
 
@@ -40,7 +40,7 @@ my @got_2 = $g2->hamiltonian_walks(closed => undef);
 is_deeply(\@got_2, $expected_2,
     "Found an open Hamiltonian walk on a linear tree, as expected.");
 
-# As mentioned above, we should not find any Hamiltonian walks on a
+# Test 3 - As mentioned above, we should not find any Hamiltonian walks on a
 # non-linear tree, that is, a tree with any vertices with degree
 # higher than 1.  To test this, we add another leaf to the tree from
 # the previous test to make the tree non-linear.
@@ -54,7 +54,7 @@ is_deeply(\@got_2, $expected_2,
     "Did _not_ find an open Hamiltonian walk on a (non-linear) tree, as expected."
 );
 
-# Test 3 - Find all closed Hamiltonian walks on a tree (that is, none).
+# Test 4 - Find all closed Hamiltonian walks on a tree (that is, none).
 
 my $g3 = YAGL->new;
 
@@ -66,7 +66,7 @@ my @got_3      = $g3->hamiltonian_walks(closed => 1);
 is_deeply(\@got_3, $expected_3,
     "Did _not_ find any closed Hamiltonian walks on a tree, as expected.");
 
-# Test 4 - Find the closed Hamiltonian walks on a known graph from fig. 44-1 in Sedgewick 2e.  (There should be 2.)
+# Test 5 - Find the closed Hamiltonian walks on a known graph from fig. 44-1 in Sedgewick 2e.  (There should be 2.)
 
 my $g4 = YAGL->new;
 $g4->read_csv(qq[$cwd/t/24-ham-02.csv]);
@@ -81,7 +81,7 @@ is_deeply(\@got_4, $expected_4,
     "Found two closed Hamiltonian walks on the graph from fig. 44-1 in Sedgewick 2e, as expected."
 );
 
-# Test 5 - Find the open Hamiltonian walks on a known graph from fig. 44-1 in Sedgewick 2e.  (There should be 5.)
+# Test 6 - Find the open Hamiltonian walks on a known graph from fig. 44-1 in Sedgewick 2e.  (There should be 5.)
 
 my $g5 = YAGL->new;
 $g5->read_csv(qq[$cwd/t/24-ham-02.csv]);
@@ -98,6 +98,63 @@ my @got_5 = $g5->hamiltonian_walks;
 
 is_deeply(\@got_5, $expected_5,
     "Found five open Hamiltonian walks on the graph from fig. 44-1 in Sedgewick 2e, as expected."
+);
+
+# Test 7 - Smallest uniquely hamiltonian graph with minimum degree at least 3
+# In other words, it has exactly 1 Hamiltonian walk.
+# https://mathoverflow.net/questions/255784/what-is-the-smallest-uniquely-hamiltonian-graph-with-minimum-degree-at-least-3/
+
+my $g6 = YAGL->new;
+$g6->read_lst(qq[$cwd/t/24-ham-03.lst]);
+$g6->draw('24-ham-03');
+
+my $expected_6 = [
+          [
+            '0',
+            '7',
+            '15',
+            '6',
+            '11',
+            '14',
+            '1',
+            '8',
+            '17',
+            '5',
+            '12',
+            '9',
+            '3',
+            '13',
+            '4',
+            '10',
+            '2',
+            '16'
+          ],
+          [
+            '0',
+            '16',
+            '2',
+            '10',
+            '4',
+            '13',
+            '3',
+            '9',
+            '12',
+            '5',
+            '17',
+            '8',
+            '1',
+            '14',
+            '11',
+            '6',
+            '15',
+            '7'
+          ]
+        ];
+
+my @got_6 = $g6->hamiltonian_walks(closed => 1);
+
+is_deeply(\@got_6, $expected_6,
+    "Found two (2) closed Hamiltonian walks on the smallest uniquely Hamiltonian graph with minimum degree at least 3."
 );
 
 # Local Variables:
