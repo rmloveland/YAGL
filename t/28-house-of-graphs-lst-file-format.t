@@ -41,7 +41,7 @@ my $expected = [
           ]
         ];
 
-my @got = $g->hamiltonian_walks(closed => 1);
+my @got = $g->hamiltonian_walks(closed => 1, allow_reversals => 1);
 
 is_deeply(\@got, $expected,
           "Found two (2) Hamiltonian walks in graph 520 (7 vertex ring graph) from House of Graphs, as expected.");
@@ -85,7 +85,7 @@ my $expected_2 = [
     ['1', '5', '4', '3', '2']
 ];
 
-my @got_2 = $g2->hamiltonian_walks(closed => 1);
+my @got_2 = $g2->hamiltonian_walks(closed => 1, allow_reversals => 1);
 
 # say Dumper \@got_2;
 
@@ -102,7 +102,7 @@ my $g3 = YAGL->new;
 $g3->read_lst("$cwd/t/28-graph_21093.lst");
 $g3->draw('28-graph_21093');
 
-my @got_3 = $g3->hamiltonian_walks(closed => 1);
+my @got_3 = $g3->hamiltonian_walks(closed => 1, allow_reversals => 1);
 
 my $expected_3 = [
     ['1', '2', '6', '3', '4', '5'],
@@ -124,7 +124,7 @@ my $g4 = YAGL->new;
 $g4->read_lst("$cwd/t/28-graph_19203.lst");
 $g4->draw('28-graph_19203');
 
-my @got_4 = $g4->hamiltonian_walks(closed => 1);
+my @got_4 = $g4->hamiltonian_walks(closed => 1, allow_reversals => 1);
 
 my $expected_4 = [
     ['1', '2',  '9',  '7',  '5',  '4',  '6',  '8',  '10', '3',  '11'],

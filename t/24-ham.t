@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use feature qw/ say /;
 use lib 'lib';
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Cwd;
 use YAGL;
 
@@ -18,7 +18,6 @@ $g->read_csv("$cwd/t/24-ham-00.csv");
 
 my $expected_1 = [
     ['a', 'g', 'h', 'i', 'k', 'j', 'm', 'l', 'e', 'c', 'b', 'd', 'f'],
-    ['a', 'f', 'd', 'b', 'c', 'e', 'l', 'm', 'j', 'k', 'i', 'h', 'g']
 ];
 my @got_1 = $g->hamiltonian_walks(closed => 1);
 
@@ -73,12 +72,11 @@ $g4->read_csv(qq[$cwd/t/24-ham-02.csv]);
 
 my $expected_4 = [
     ['a', 'f', 'd', 'b', 'c', 'e', 'l', 'm', 'j', 'k', 'i', 'h', 'g'],
-    ['a', 'g', 'h', 'i', 'k', 'j', 'm', 'l', 'e', 'c', 'b', 'd', 'f']
 ];
 my @got_4 = $g4->hamiltonian_walks(closed => 1);
 
 is_deeply(\@got_4, $expected_4,
-    "Found two closed Hamiltonian walks on the graph from fig. 44-1 in Sedgewick 2e, as expected."
+    "Found one (1) closed Hamiltonian walk on the graph from fig. 44-1 in Sedgewick 2e, as expected."
 );
 
 # Test 6 - Find the open Hamiltonian walks on a known graph from fig. 44-1 in Sedgewick 2e.  (There should be 5.)
@@ -90,14 +88,13 @@ my $expected_5 = [
     ['a', 'f', 'd', 'b', 'c', 'e', 'g', 'h', 'i', 'k', 'j', 'l', 'm'],
     ['a', 'f', 'd', 'b', 'c', 'e', 'g', 'h', 'i', 'k', 'j', 'm', 'l'],
     ['a', 'f', 'd', 'b', 'c', 'e', 'l', 'm', 'j', 'k', 'i', 'h', 'g'],
-    ['a', 'g', 'h', 'i', 'k', 'j', 'm', 'l', 'e', 'c', 'b', 'd', 'f'],
     ['a', 'g', 'h', 'i', 'k', 'j', 'm', 'l', 'e', 'f', 'd', 'b', 'c']
 ];
 
 my @got_5 = $g5->hamiltonian_walks;
 
 is_deeply(\@got_5, $expected_5,
-    "Found five open Hamiltonian walks on the graph from fig. 44-1 in Sedgewick 2e, as expected."
+    "Found four (4) open Hamiltonian walks on the graph from fig. 44-1 in Sedgewick 2e, as expected."
 );
 
 # Test 7 - Smallest uniquely hamiltonian graph with minimum degree at least 3
@@ -129,32 +126,36 @@ my $expected_6 = [
             '2',
             '16'
           ],
-          [
-            '0',
-            '16',
-            '2',
-            '10',
-            '4',
-            '13',
-            '3',
-            '9',
-            '12',
-            '5',
-            '17',
-            '8',
-            '1',
-            '14',
-            '11',
-            '6',
-            '15',
-            '7'
-          ]
         ];
 
 my @got_6 = $g6->hamiltonian_walks(closed => 1);
 
 is_deeply(\@got_6, $expected_6,
-    "Found two (2) closed Hamiltonian walks on the smallest uniquely Hamiltonian graph with minimum degree at least 3."
+    "Found one (1) closed Hamiltonian walk on the smallest uniquely Hamiltonian graph with minimum degree at least 3."
+);
+
+# Test 7 - Smallest uniquely hamiltonian graph with minimum degree at least 3
+# In other words, it has exactly 1 Hamiltonian walk.
+# https://mathoverflow.net/questions/255784/what-is-the-smallest-uniquely-hamiltonian-graph-with-minimum-degree-at-least-3/
+
+my $g7 = YAGL->new;
+$g7->read_lst(qq[$cwd/t/24-ham-03.lst]);
+
+my $expected_7 = [
+    [
+        '0',  '7', '15', '6',  '11', '14', '1', '8', '17', '5',
+        '12', '9', '3',  '13', '4',  '10', '2', '16',
+    ],
+    [
+        '0',  '16', '2', '10', '4',  '13', '3', '9',  '12', '5',
+        '17', '8',  '1', '14', '11', '6',  '15', '7'
+    ],
+];
+
+my @got_7 = $g7->hamiltonian_walks(closed => 1, allow_reversals => 1);
+
+is_deeply(\@got_7, $expected_7,
+    "Found two (2) closed Hamiltonian walks (when reverse walks allowed) on the smallest uniquely Hamiltonian graph with minimum degree at least 3."
 );
 
 # Local Variables:

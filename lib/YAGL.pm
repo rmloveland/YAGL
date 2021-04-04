@@ -1528,6 +1528,8 @@ sub hamiltonian_walks {
     my %args   = @args;
     my $closed = $args{closed};
 
+    my $allow_reversals = $args{allow_reversals};
+
     my @vertices   = $self->get_vertices;
     my $n_vertices = @vertices;
     my $start;
@@ -1567,13 +1569,26 @@ sub hamiltonian_walks {
         my ($current, $path) = @_;
 
         state $calls = 0;
+        state %seen;
         $calls++;
         say qq[hamiltonian_walks(): calls -> $calls] if DEBUG;
 
         if (@$path == $n_vertices) {
             if ($self->has_walk($path, {closed => $closed})) {
                 say qq[hamiltonian_paths(): found a path -> @$path] if DEBUG;
-                push @hams, [@$path];
+                if ($allow_reversals) {
+                    push @hams, [@$path];
+                }
+                else {
+                    my @p  = @$path;
+                    my $p1 = join '-', @p[1 .. $#p];
+                    my $p2 = join '-', reverse @p[1 .. $#p];
+                    unless (exists $seen{$p1} || exists $seen{$p2}) {
+                        push @hams, [@$path];
+                    }
+                    $seen{$p1}++;
+                    $seen{$p2}++;
+                }
             }
         }
     };
