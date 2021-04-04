@@ -1397,10 +1397,6 @@ optional subroutine argument.
 
 =cut
 
-# TODO(rml): Write tests for this method.  You should use the same
-# graph as 25-dfs-02.csv, since it's the one from Sedgewick 2e that
-# you checked against manually while writing this.
-
 sub exhaustive_search {
     my ($self, $start, $sub) = @_;
 
