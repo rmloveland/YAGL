@@ -281,3 +281,63 @@ Archived entries from file c:/Users/rml/Dropbox/Code/personal/essential-algorith
 
   - This was fixed in [[orgit-rev:~/Dropbox/Code/personal/essential-algorithms/::e3e34b8][e3e34b8: Add graph coloring methods and tests]]
 
+
+* DONE Fix bug in Hamiltonian path code that treats reversed cycles as unique :bugs:
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2021-04-04 Sun 14:47
+  :ARCHIVE_FILE: ~/Dropbox/Code/personal/YAGL/todo.org
+  :ARCHIVE_OLPATH: Current
+  :ARCHIVE_CATEGORY: todo
+  :ARCHIVE_TODO: DONE
+  :END:
+
+  See test #7 in [[file:t/24-ham.t]], which should return *1* cycle, per
+  https://mathoverflow.net/questions/255784/what-is-the-smallest-uniquely-hamiltonian-graph-with-minimum-degree-at-least-3/
+
+  In fact, the 2 cycles returned are just mirrors of each other.
+  There should really just be 1.
+
+
+* DONE Add more tests to =hamiltonian_walk= method to exercise state mgmt
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2021-04-04 Sun 14:47
+  :ARCHIVE_FILE: ~/Dropbox/Code/personal/YAGL/todo.org
+  :ARCHIVE_OLPATH: Current
+  :ARCHIVE_CATEGORY: todo
+  :ARCHIVE_TODO: DONE
+  :END:
+
+  I have found a number of bugs when using a =state= variable, where
+  it wasn't getting cleared between calls to the method.
+
+  E.g., see the way =exhaustive_search= was rewritten to use an
+  internal helper subroutine that does recursive self-calls.
+
+  So the tasks are:
+
+  - [ ] Adding more tests that exercise state, esp. via multiple
+    method calls on different graphs
+  - [ ] Probably rewriting =_visit=, as mentioned in the subtask
+    below.
+
+** TODO Rewrite =_visit= to avoid keeping internal state across method calls
+
+   See the rewritten =exhaustive_search= for details of how to do
+   this.
+
+
+* DONE Minimum spanning tree
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2021-04-04 Sun 14:48
+  :ARCHIVE_FILE: ~/Dropbox/Code/personal/YAGL/todo.org
+  :ARCHIVE_OLPATH: Current
+  :ARCHIVE_CATEGORY: todo
+  :ARCHIVE_TODO: DONE
+  :END:
+
+  ... for weighted, undirected graphs
+
+  Sunday, April 4, 2021:
+
+  - See [[./t/23-mst.t]]
+
