@@ -1543,6 +1543,9 @@ sub hamiltonian_walks {
 
     # If the graph is a tree, we need to select a leaf node.
     my $is_tree = $self->is_tree;
+
+    # However, if we're looking for a closed walk in a tree, none
+    # exists.
     return if $is_tree && $closed;
 
     if ($is_tree) {
