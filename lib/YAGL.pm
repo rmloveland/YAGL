@@ -1528,18 +1528,18 @@ sub hamiltonian_walks {
     my %args   = @args;
     my $closed = $args{closed};
 
+    my @vertices   = $self->get_vertices;
+    my $n_vertices = @vertices;
+    my $start;
+
     # We can easily disqualify a graph as not having a closed Hamiltonian
     # walk if it has any vertex with a degree of less than two (that
     # is, if it has any leaves or entirely disconnected vertices).
     if ($closed) {
-        for my $v ($self->get_vertices) {
+        for my $v (@vertices) {
             return if $self->get_degree($v) < 2;
         }
     }
-
-    my @vertices   = $self->get_vertices;
-    my $n_vertices = @vertices;
-    my $start;
 
     # If the graph is a tree, we need to select a leaf node.
     my $is_tree = $self->is_tree;
