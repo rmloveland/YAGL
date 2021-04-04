@@ -1422,18 +1422,29 @@ sub exhaustive_search {
 
         say qq[exhaustive_search(): PATH -> @$path] if DEBUG;
 
-        # The subroutine operates on the current vertex $current *as
-        # well as* looking at the "path so far".  That way, the
+        # The subroutine operates on the current vertex $current as
+        # well as looking at the "path so far".  That way, the
         # subroutine can be used as a predicate to determine a search
         # cutoff property as described on p.28 of Knuth's v04f05.
 
-        # TODO(rml): The behavior described above doesn't work yet,
-        # however.  In order for this to work, there needs to be some
-        # way for the subroutine to "signal into" this method that it
-        # wants to cutoff/prune the current branch of the search tree
-        # and try something else.
+        # TODO(rml): The behavior described above still doesn't quite
+        # work as expected yet.  The branch below shows how the
+        # subroutine can "signal into" this method that it wants to
+        # cutoff/prune the current branch of the search tree and try
+        # something else.  However, the subroutine is still getting
+        # called more than once (e.g. 15 times out of 8000), for
+        # reasons I don't understand.  Why 15 and not just 1?
 
-        $sub->($current, $path) if $sub;
+        if ($sub) {
+          my $rv = $sub->($current, $path);
+          if (defined $rv && $rv == -1) {
+            # This cutoff optimization brings the number of subroutine
+            # calls from ~8000 to ~16 in Test 5 of
+            # 28-house-of-graphs-lst-file-format.t, a savings of about
+            # 99.8 percent!
+            return;
+          }
+        }
 
         my $neighbors = $self->get_neighbors($current);
         for my $neighbor (@$neighbors) {
@@ -1526,6 +1537,13 @@ sub hamiltonian_walks {
 
     my $allow_reversals = $args{allow_reversals};
 
+    my $n_solutions;
+    if (exists $args{n_solutions}) {
+      $n_solutions = $args{n_solutions};
+    }                               # 1,..,_n_ OR undef
+    $n_solutions = 1_000_000
+      unless defined $n_solutions;         # undef = all solutions
+
     my @vertices   = $self->get_vertices;
     my $n_vertices = @vertices;
     my $start;
@@ -1568,6 +1586,16 @@ sub hamiltonian_walks {
         state %seen;
         $calls++;
         say qq[hamiltonian_walks(): calls -> $calls] if DEBUG;
+
+        # Bail out early if we've already found the desired number of
+        # solutions.
+
+        if (@hams == $n_solutions) {
+          if (DEBUG) {
+            say qq[hamiltonian_walks(): found $n_solutions solutions after $calls calls!];
+          }
+          return -1;
+        }
 
         if (@$path == $n_vertices) {
             if ($self->has_walk($path, {closed => $closed})) {

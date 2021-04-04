@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 'lib';
-use Test::More tests => 4;
+use Test::More tests => 6;
 use YAGL;
 use Cwd;
 
@@ -102,13 +102,13 @@ my $expected_3 = [
     ['1', '2', '6', '3', '4', '5'],
     ['1', '2', '6', '4', '3', '5'],
     ['1', '5', '3', '4', '6', '2'],
-    ['1', '5', '4', '3', '6', '2']
+    ['1', '5', '4', '3', '6', '2'],
 ];
 
 is_deeply(\@got_3, $expected_3,
           "Found Hamiltonian walks in graph 21093 (Beineke non-line G7) from House of Graphs, as expected.");
 
-=head2 Test 4. The unique triangulation with 11 vertices
+=head2 Test 4. The unique triangulation with 11 vertices (all 251 solutions including reverse walks)
 
 L<https://hog.grinvin.org/ViewGraphInfo.action?id=19203>
 
@@ -376,6 +376,49 @@ my $expected_4 = [
 
 is_deeply(\@got_4, $expected_4,
           "Found Hamiltonian walks in graph 19203 (by Gunnar Brinkmann) from House of Graphs, as expected.");
+
+=head2 Test 5. The unique triangulation with 11 vertices (one solution)
+
+L<https://hog.grinvin.org/ViewGraphInfo.action?id=19203>
+
+=cut
+
+my $g5 = YAGL->new;
+$g5->read_lst("$cwd/t/28-graph_19203.lst");
+
+my @got_5 = $g5->hamiltonian_walks(closed => 1, allow_reversals => 1, n_solutions => 1);
+
+my $expected_5 = [
+    ['1', '2',  '9',  '7',  '5',  '4',  '6',  '8',  '10', '3',  '11'],
+];
+
+is_deeply(\@got_5, $expected_5,
+          "Found one (1) Hamiltonian walk in graph 19203 (by Gunnar Brinkmann) from House of Graphs, as expected.");
+
+=head2 Test 6. Finding one (1) Hamiltonian cycle in a medium-sized cubic graph
+
+For this test, we find 1/192 total solutions.
+
+L<https://hog.grinvin.org/ViewGraphInfo.action?id=45412>
+
+=cut
+
+my $g6 = YAGL->new;
+$g6->read_lst("$cwd/t/28-graph_45412.lst");
+$g6->draw('28-graph_45412');
+
+my @got_6 = $g6->hamiltonian_walks(closed => 1, n_solutions => 1);
+
+my $expected_6 = [
+    [
+        '1',  '2',  '25', '3',  '26', '7',  '5',  '6',  '14', '12',
+        '15', '13', '11', '8',  '9',  '16', '10', '17', '20', '18',
+        '19', '21', '23', '22', '24', '4'
+    ]
+];
+
+is_deeply(\@got_6, $expected_6,
+          "Found one (1) Hamiltonian walk in a medium-sized graph from House of Graphs, as expected.");
 
 # Local Variables:
 # compile-command: "cd .. && perl t/28-house-of-graphs-lst-file-format.t"

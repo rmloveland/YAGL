@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 'lib';
-use Test::More tests => 8;
+use Test::More tests => 9;
 use Cwd;
 use YAGL;
 
@@ -155,6 +155,26 @@ my @got_7 = $g7->hamiltonian_walks(closed => 1, allow_reversals => 1);
 is_deeply(\@got_7, $expected_7,
     "Found two (2) closed Hamiltonian walks (when reverse walks allowed) on the smallest uniquely Hamiltonian graph with minimum degree at least 3."
 );
+
+=head2 Test 8. The K5 graph - restricting to one solution
+
+L<https://hog.grinvin.org/ViewGraphInfo.action?id=462>
+
+=cut
+
+my $g8 = YAGL->new;
+$g8->read_lst("$cwd/t/28-graph_462.lst");
+
+# Total (non-distinct) Hamiltonian circuits in complete graph Kn is (n−1)!
+# https://math.stackexchange.com/questions/249817/how-many-hamiltonian-cycles-are-there-in-a-complete-graph-k-n-n-geq-3-why
+my $expected_8 = [
+    ['1', '2', '3', '4', '5'],
+];
+
+my @got_8 = $g8->hamiltonian_walks(closed => 1, n_solutions => 1);
+
+is_deeply(\@got_8, $expected_8,
+          "Limited output to one (1) Hamiltonian walk in graph 462 (a.k.a. K5) from House of Graphs, as expected.");
 
 # Local Variables:
 # compile-command: "cd .. && perl t/24-ham.t"
