@@ -6,7 +6,6 @@ use lib 'lib';
 use Test::More tests => 1;
 use Cwd;
 use YAGL;
-use Data::Dumper;
 
 my $cwd = getcwd;
 my $g   = YAGL->new;

@@ -7,7 +7,6 @@ use lib 'lib';
 use Test::More tests => 3;
 use Cwd;
 use YAGL;
-use Data::Dumper;
 
 my $g = YAGL->new;
 
@@ -19,8 +18,6 @@ my @new = (
 );
 
 $g->add_edges(@new);
-
-say Dumper $g;
 
 my $degree = $g->get_degree('a');
 

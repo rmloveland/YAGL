@@ -2,7 +2,6 @@
 
 use strict;
 use warnings;
-use feature qw/ say /;
 use lib 'lib';
 use Test::More tests => 8;
 use Cwd;
@@ -103,7 +102,6 @@ is_deeply(\@got_5, $expected_5,
 
 my $g6 = YAGL->new;
 $g6->read_lst(qq[$cwd/t/24-ham-03.lst]);
-$g6->draw('24-ham-03');
 
 my $expected_6 = [
           [

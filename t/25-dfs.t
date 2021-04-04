@@ -2,7 +2,6 @@
 
 use strict;
 use warnings;
-use feature qw/ say /;
 use lib 'lib';
 use Test::More tests => 5;
 use Cwd;

@@ -2,12 +2,10 @@
 
 use strict;
 use warnings;
-use feature qw/ say /;
 use lib 'lib';
 use Test::More tests => 4;
 use YAGL;
 use Cwd;
-use Data::Dumper;
 
 my $cwd = getcwd;
 
@@ -54,7 +52,6 @@ L<https://hog.grinvin.org/ViewGraphInfo.action?id=462>
 
 my $g2 = YAGL->new;
 $g2->read_lst("$cwd/t/28-graph_462.lst");
-$g2->draw('28-graph_462');
 
 # Total (non-distinct) Hamiltonian circuits in complete graph Kn is (n−1)!
 # https://math.stackexchange.com/questions/249817/how-many-hamiltonian-cycles-are-there-in-a-complete-graph-k-n-n-geq-3-why
@@ -87,8 +84,6 @@ my $expected_2 = [
 
 my @got_2 = $g2->hamiltonian_walks(closed => 1, allow_reversals => 1);
 
-# say Dumper \@got_2;
-
 is_deeply(\@got_2, $expected_2,
           "Found Hamiltonian walks in graph 462 (a.k.a. K5) from House of Graphs, as expected.");
 
@@ -100,7 +95,6 @@ L<https://hog.grinvin.org/ViewGraphInfo.action?id=21093>
 
 my $g3 = YAGL->new;
 $g3->read_lst("$cwd/t/28-graph_21093.lst");
-$g3->draw('28-graph_21093');
 
 my @got_3 = $g3->hamiltonian_walks(closed => 1, allow_reversals => 1);
 
@@ -122,7 +116,6 @@ L<https://hog.grinvin.org/ViewGraphInfo.action?id=19203>
 
 my $g4 = YAGL->new;
 $g4->read_lst("$cwd/t/28-graph_19203.lst");
-$g4->draw('28-graph_19203');
 
 my @got_4 = $g4->hamiltonian_walks(closed => 1, allow_reversals => 1);
 
