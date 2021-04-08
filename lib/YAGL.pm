@@ -1378,7 +1378,14 @@ sub connected_components {
     my $start = $vertices[0];
     $self->dfs($start, $lambda);
 
-    return @components;
+    my @p1 = grep {$_ ne ''} split /XXX/, join ' ', @components;
+    my @answer;
+    for my $piece (@p1) {
+      my @parts = grep {$_ ne ''} split / +/, $piece;
+      push @answer, \@parts;
+    }
+
+    return @answer;
 }
 
 =item exhaustive_search
