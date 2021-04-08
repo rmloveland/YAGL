@@ -254,7 +254,7 @@ sub read_lst {
 
     say $output_fh qq[node,neighbor,weight,is_directed];
     while (my $line = <$input_fh>) {
-        next unless $line =~ /[0-9]: [0-9]+/;    # Skip empty lines.
+        next unless $line =~ /[A-Z0-9]: [A-Z0-9]+/;    # Skip empty lines.
         my ($node, $neighbors) = split /:/, $line;
         chomp($node)      if defined $node;
         chomp($neighbors) if defined $neighbors;
