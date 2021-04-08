@@ -349,7 +349,7 @@ sub to_graphviz {
         }
     }
 
-    return $gv->as_canon;
+    return $gv->as_png;
 }
 
 =item draw
@@ -370,14 +370,11 @@ sub draw {
     die qq[draw() must be passed a filename argument!] unless $basename;
 
     my $tmpdir   = $ENV{TMPDIR} || '/tmp';
-    my $filename = qq[$tmpdir/$basename.dot];
+    my $filename = qq[$tmpdir/$basename.png];
     my $viz      = $self->to_graphviz;
     open my $fh, '>', $filename or die $!;
     say $fh $viz;
     close $fh;
-    my $cmd = qq[dot -Tsvg -O $filename];
-    say qq[Running '$cmd'] if DEBUG;
-    system $cmd;
 }
 
 =back
