@@ -272,6 +272,32 @@ sub read_lst {
     $self->read_csv($csv_file);
 }
 
+=item read_hcp
+
+Read in a *.hcp file that represents a graph (from L<https://sites.flinders.edu.au/flinders-hamiltonian-cycle-project/fhcp-challenge-set>).
+
+=cut
+
+sub read_hcp {
+  my ($self, $hcp_file) = @_;
+
+  my $csv_file = qq[$hcp_file.csv];
+  open my $output_fh, '>', $csv_file;
+  open my $input_fh, '<', $hcp_file or die "Can't open file '$hcp_file': $!\n";
+  say $output_fh qq[node,neighbor,weight,is_directed];
+
+  LINE: while (my $line = <$input_fh>) {
+      next LINE unless $line =~ /^([0-9]+) ([0-9]+)/;
+      my ($e1, $e2) = ($1, $2);
+      say $output_fh qq["$e1","$e2",0,0];
+      say $output_fh qq["$e2","$e1",0,0];
+    }
+  close $input_fh;
+  close $output_fh;
+
+  $self->read_csv($csv_file);
+}
+
 =item read_csv
 
 Read in a CSV file that represents a graph.
