@@ -260,8 +260,6 @@ sub read_lst {
         chomp($neighbors) if defined $neighbors;
         my @neighbors = grep { $_ ne '' } split / /, $neighbors;
 
-        # say Dumper { node => $node, neighbors => \@neighbors};
-
         for my $n (@neighbors) {
             say $output_fh qq["$node","$n",0,0];
         }
@@ -950,7 +948,6 @@ associate with that edge.
 
 sub set_edge_attribute {
     ## String String HashRef -> State!
-    # set_edge_attribute('s', 'a', { weight => 12 });
     my ($self, $start, $end, $new_attrs) = @_;
 
     my $pairkey1 = $start . $end;
@@ -1025,7 +1022,6 @@ sub add_edges {
     my ($self, @edges) = @_;
 
     for my $elem (@edges) {
-        ## ['a', 'b', { weight => 123 }]
         my ($a, $b, $attrs) = @$elem;
         $self->add_edge($a, $b, $attrs);
     }
@@ -1147,7 +1143,7 @@ Given an optional argument, will determine if it is a closed walk.
 =cut
 
 sub has_walk {
-    ## ArrayRef : HashRef -> Boolean
+    ## ArrayRef HashRef -> Boolean
     my ($self, $walk, $args) = @_;
 
     my $len = @$walk - 1;
@@ -1609,7 +1605,7 @@ sub hamiltonian_walks {
     my @hams;
 
     my $lambda = sub {
-        ## String : ArrayRef -> State!
+        ## String ArrayRef -> State!
         my ($current, $path) = @_;
 
         state $calls = 0;
