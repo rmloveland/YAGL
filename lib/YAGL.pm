@@ -250,7 +250,8 @@ sub read_lst {
     my $csv_file = qq[$lst_file.csv];
     open my $output_fh, '>', $csv_file;
 
-    open my $input_fh, '<', $lst_file or die "Can't open file '$lst_file': $!\n";
+    open my $input_fh, '<', $lst_file
+      or die "Can't open file '$lst_file': $!\n";
 
     say $output_fh qq[node,neighbor,weight,is_directed];
     while (my $line = <$input_fh>) {
@@ -277,23 +278,24 @@ Read in a *.hcp file that represents a graph (from L<https://sites.flinders.edu.
 =cut
 
 sub read_hcp {
-  my ($self, $hcp_file) = @_;
+    my ($self, $hcp_file) = @_;
 
-  my $csv_file = qq[$hcp_file.csv];
-  open my $output_fh, '>', $csv_file;
-  open my $input_fh, '<', $hcp_file or die "Can't open file '$hcp_file': $!\n";
-  say $output_fh qq[node,neighbor,weight,is_directed];
+    my $csv_file = qq[$hcp_file.csv];
+    open my $output_fh, '>', $csv_file;
+    open my $input_fh,  '<', $hcp_file
+      or die "Can't open file '$hcp_file': $!\n";
+    say $output_fh qq[node,neighbor,weight,is_directed];
 
   LINE: while (my $line = <$input_fh>) {
-      next LINE unless $line =~ /^([0-9]+) ([0-9]+)/;
-      my ($e1, $e2) = ($1, $2);
-      say $output_fh qq["$e1","$e2",0,0];
-      say $output_fh qq["$e2","$e1",0,0];
+        next LINE unless $line =~ /^([0-9]+) ([0-9]+)/;
+        my ($e1, $e2) = ($1, $2);
+        say $output_fh qq["$e1","$e2",0,0];
+        say $output_fh qq["$e2","$e1",0,0];
     }
-  close $input_fh;
-  close $output_fh;
+    close $input_fh;
+    close $output_fh;
 
-  $self->read_csv($csv_file);
+    $self->read_csv($csv_file);
 }
 
 =item read_csv
@@ -1397,11 +1399,11 @@ sub connected_components {
     my $start = $vertices[0];
     $self->dfs($start, $lambda);
 
-    my @p1 = grep {$_ ne ''} split /XXX/, join ' ', @components;
+    my @p1 = grep { $_ ne '' } split /XXX/, join ' ', @components;
     my @answer;
     for my $piece (@p1) {
-      my @parts = grep {$_ ne ''} split / +/, $piece;
-      push @answer, \@parts;
+        my @parts = grep { $_ ne '' } split / +/, $piece;
+        push @answer, \@parts;
     }
 
     return @answer;
@@ -1462,14 +1464,15 @@ sub exhaustive_search {
         # reasons I don't understand.  Why 15 and not just 1?
 
         if ($sub) {
-          my $rv = $sub->($current, $path);
-          if (defined $rv && $rv == -1) {
-            # This cutoff optimization brings the number of subroutine
-            # calls from ~8000 to ~16 in Test 5 of
-            # 28-house-of-graphs-lst-file-format.t, a savings of about
-            # 99.8 percent!
-            return;
-          }
+            my $rv = $sub->($current, $path);
+            if (defined $rv && $rv == -1) {
+
+                # This cutoff optimization brings the number of subroutine
+                # calls from ~8000 to ~16 in Test 5 of
+                # 28-house-of-graphs-lst-file-format.t, a savings of about
+                # 99.8 percent!
+                return;
+            }
         }
 
         my $neighbors = $self->get_neighbors($current);
@@ -1565,10 +1568,10 @@ sub hamiltonian_walks {
 
     my $n_solutions;
     if (exists $args{n_solutions}) {
-      $n_solutions = $args{n_solutions};
-    }                               # 1,..,_n_ OR undef
+        $n_solutions = $args{n_solutions};
+    }    # 1,..,_n_ OR undef
     $n_solutions = 1_000_000
-      unless defined $n_solutions;         # undef = all solutions
+      unless defined $n_solutions;    # undef = all solutions
 
     my @vertices   = $self->get_vertices;
     my $n_vertices = @vertices;
@@ -1617,10 +1620,11 @@ sub hamiltonian_walks {
         # solutions.
 
         if (@hams == $n_solutions) {
-          if (DEBUG) {
-            say qq[hamiltonian_walks(): found $n_solutions solutions after $calls calls!];
-          }
-          return -1;
+            if (DEBUG) {
+                say
+                  qq[hamiltonian_walks(): found $n_solutions solutions after $calls calls!];
+            }
+            return -1;
         }
 
         if (@$path == $n_vertices) {
