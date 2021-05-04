@@ -272,7 +272,7 @@ sub read_lst {
 
     my $csv_file = qq[$lst_file.csv];
     open my $output_fh, '>', $csv_file
-       or die "Can't open file '$csv_file': $!\n";
+      or die "Can't open file '$csv_file': $!\n";
 
     open my $input_fh, '<', $lst_file
       or die "Can't open file '$lst_file': $!\n";
