@@ -33,25 +33,32 @@ version 0.1
     my $g = YAGL->new;
 
     # Populate the graph with 124 vertices, with randomly allocated
-    # weighted edges between some of the vertices.
+    # weighted edges between some of the vertices. The 'p' argument is
+    # the probability that any given node will *not* be connected to
+    # another node.
+
     $g->generate_random_vertices(
         { n => 124, p => 0.1, max_weight => 100_000 } );
 
-    # Add vertices and edges to the graph.
+    # Add vertices to the graph.
+
     $g->add_vertex('abc123');
     $g->add_vertex('xyz789');
-
-    # Store arbitrary attributes on edges in hashrefs.
-    $g->add_edge( 'abc123', 'xyz789', { weight => 1_000_000 } );
-
     $g->add_vertex('I_AM_A_TEST');
+
+    # Add edges to the graph.  You can store arbitrary attributes on
+    # edges in hashrefs.
+
+    $g->add_edge( 'abc123', 'xyz789', { weight => 1_000_000 } );
     $g->add_edge( 'I_AM_A_TEST', 'abc123', { weight => 12345 } );
 
     # Write the graph out to a CSV file.  This file can be read back
     # in later with the 'read_csv' method.
+
     $g->write_csv('foo.csv');
 
     # Pick a start and end vertex at random from the graph.
+
     my @vertices = $g->get_vertices;
 
     my $i     = int rand @vertices;
@@ -59,17 +66,17 @@ version 0.1
     my $start = $vertices[$i];
     my $end   = $vertices[$j];
 
-    say qq[Looking for a path from '$start' to '$end' ...];
-
     # Using breadth-first search, find a path between the start and
     # end vertices, if any such path exists.  Otherwise, this method
     # returns undef.
+
     my @path;
     @path = $g->find_path_between( $start, $end );
 
     # Get a string representation of the graph in the graphviz
-    # language for passing to graphviz tools like `dot`.
-    my $viz = $g->to_graphviz;
+    # language for passing along to graphviz tools like `dot`.
+
+    my $dot_string = $g->to_graphviz;
 
 =head1 DESCRIPTION
 
