@@ -1505,7 +1505,7 @@ recursively, and returning to I<V> afterward.
 
 The behavior above is described on p.630 of Sedgewick's I<Algorithms>,
 2nd ed., as part of an algorithm for finding solutions to the
-Travelling Salesman Problem: given an MST, produce a tour by visiting
+Traveling Salesman Problem: given an MST, produce a tour by visiting
 the nodes of the tree using the procedure this method implements
 (described above).  We use this to find open and closed Hamiltonian
 walks (also known as paths and cycles) in the C<hamiltonian_walk>
