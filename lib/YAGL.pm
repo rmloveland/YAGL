@@ -1517,56 +1517,6 @@ sub exhaustive_search {
     $search->($self, $start, $sub, $seen, $path);
 }
 
-=item _visit
-
-The F<_visit> method below visiting the vertices of the graph using
-the following procedure: to process some vertex I<V>, visit vertex
-I<V>; then visit each child of I<V>, applying this visiting procedure
-recursively, and returning to I<V> afterward.
-
-The behavior above is described on p.630 of Sedgewick's I<Algorithms>,
-2nd ed., as part of an algorithm for finding solutions to the
-Traveling Salesman Problem: given an MST, produce a tour by visiting
-the nodes of the tree using the procedure this method implements
-(described above).  We use this to find open and closed Hamiltonian
-walks (also known as paths and cycles) in the C<hamiltonian_walk>
-method.
-
-=cut
-
-sub _visit {
-    my ($self, $start, $sub, $path) = @_;
-
-    state $calls = 0;
-    $calls++;
-
-    say qq[_visit: $calls calls] if DEBUG;
-
-    return () unless defined $start;
-
-    my @queue;      # Vertices still to visit.
-    state %seen;    # Vertices already seen.
-
-    push @queue, $start;
-    $seen{$start}++;
-
-    while (@queue) {
-        my $v = pop @queue;
-        $sub->($v);
-        push @$path, $v;
-
-        my $neighbors = $self->get_neighbors($v);
-        for my $neighbor (@$neighbors) {
-            next unless defined $neighbor;
-            next if $seen{$neighbor};
-            push @queue, $neighbor;
-            $self->_visit($neighbor, $sub, $path);
-            $seen{$neighbor}++;
-        }
-    }
-    return @$path;
-}
-
 =item hamiltonian_walks
 
 The C<hamiltonian_walks> method does an exhaustive search to find all
