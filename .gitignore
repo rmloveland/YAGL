@@ -16,3 +16,8 @@ YAGL/lib/*.pod
 YAGL/lib/*.tmp
 YAGL/lib/*.patch
 *.lst.csv
+
+# Flymake
+
+lib/.#YAGL_flymake.pm
+lib/YAGL_flymake.pm
