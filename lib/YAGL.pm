@@ -80,33 +80,49 @@ version 0.1
 
 =head1 DESCRIPTION
 
-This module implements a number of algorithms on directed and
-undirected graphs.  Features include:
+This library implements a number of graph algorithms.  It can be used
+for both directed and undirected graphs.  Features include:
 
 =over
 
-=item * Breadth-first search of unweighted graphs to find the shortest
-path in terms of number of nodes.
+=item * Breadth-first search (BFS) to find the shortest path between
+two nodes.
+
+=item * Depth-first search (DFS).
+
+=item * Find minimum spanning trees of weighted graphs.
+
+=item * List the connected components.
 
 =item * Dijkstra's algorithm for finding the shortest path through a
-weighted (directed or undirected) graph.
+weighted graph.
 
-=item * Graph coloring for undirected graphs.
+=item * A method for general exhaustive search with backtracking.
 
-=item * Serializing graphs to and from CSV files.  This is very useful
-for testing.
+=item * Finding Hamiltonian walks (open and closed) using exhaustive
+search.
 
 =item * Generating random graphs.
 
-=item * Automated tests for all features.
+=item * Graph coloring.
+
+=item * Serializing graphs to and from CSV files with a simple format.
+
+=item * Vertices and edges can have arbitrary attributes associated
+with them (stored in hashrefs).
 
 =back
 
-For an interesting example, see the file C<examples/ladders.pl>, which
-is a "port" to Perl of the C<LADDERS> program from the book I<The Stanford
-GraphBase> by Donald E. Knuth.
+For a possibly interesting example, see the file
+C<examples/ladders.pl>, which is an approximate port to Perl of the
+C<LADDERS> program from the book I<The Stanford GraphBase> by Donald
+E. Knuth.
 
-Note that this library is still in development.
+Note that this library is still in development.  There are some
+important algorithms that are not yet implemented.  Also, some
+algorithms that are implemented for undirected graphs are not yet
+implemented for directed graphs.  Test coverage is OK but can still be
+improved.
 
 =head1 GRAPH INITIALIZATION AND RANDOMIZATION
 
