@@ -678,19 +678,16 @@ sub get_vertices {
         push @vertices, $vertex;
     }
 
-=pod
+    # TODO(rml): Remove this call to C<sort>.  It has a large
+    # performance cost for large graphs.  On a recent "word ladder"
+    # run with the 5757-vertex WORDS graph from the Stanford
+    # Graphbase, of 522s of runtime, this call to C<sort> cost 30s
+    # (30/522 = ~6%).
 
-TODO: Remove this call to C<sort>.  It has a large performance cost
-for large graphs.  On a recent "word ladder" run with the 5757-vertex
-WORDS graph from the Stanford Graphbase, of 522s of runtime, this call
-to C<sort> cost 30s (30/522 = ~6%).
-
-AFAICT there is no good reason for the sorting; it was done to get
-some tests to pass -- likely the graph cloning equality tests, if
-memory serves.  Therefore the action item is to remove this call to
-C<sort>, see what breaks in the tests, and fix it.
-
-=cut
+    # AFAICT there is no good reason for the sorting; it was done to
+    # get some tests to pass -- likely the graph cloning equality
+    # tests, if memory serves.  Therefore the action item is to remove
+    # this call to C<sort>, see what breaks in the tests, and fix it.
 
     @vertices = sort @vertices;
     return @vertices;
@@ -1252,6 +1249,7 @@ sub mst {
     # not have a weight attribute.  Or perhaps it should assume a
     # weight of 0 if none is found?  Since that's what our CSV format
     # does.
+
     @edges = sort { $a->[2]->{weight} <=> $b->[2]->{weight} } @edges;
     my $start = $edges[0]->[1];
 
@@ -1663,12 +1661,12 @@ sub hamiltonian_walks {
 
 The C<is_planar> method tests whether a graph is planar.
 
-TODO(rml): Add a citation for this algorithm, I think it might be from
-I<Graph Algorithms> by S. Even.
-
 =back
 
 =cut
+
+# TODO(rml): Add a citation for this algorithm, I think it might be
+# from I<Graph Algorithms> by S. Even.
 
 sub is_planar {
     my ($self) = @_;
@@ -1705,8 +1703,6 @@ Given two graphs I<A> and I<B>, The C<equals> method checks to see
 whether they are identical.  It checks the edges, vertices, and edge
 attributes to do so.
 
-TODO(rml): This should also check vertex attributes.
-
 =back
 
 =cut
@@ -1730,6 +1726,8 @@ sub equals {
     my $other_attrs = $other->_edge_attrs;
 
     return unless %$self_attrs ~~ %$other_attrs;
+
+    # TODO(rml): This method should also check vertex attributes.
 
     return 1;
 }
