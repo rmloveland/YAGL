@@ -1,5 +1,6 @@
 Build.PL
 Changes
+examples/synopsis.pl
 examples/ladders.pl
 examples/ladders-g.pl
 examples/Makefile
