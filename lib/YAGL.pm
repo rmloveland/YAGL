@@ -34,8 +34,8 @@ version 0.1
 
     # Populate the graph with 124 vertices, with randomly allocated
     # weighted edges between some of the vertices. The 'p' argument is
-    # the probability that any given node will *not* be connected to
-    # another node.
+    # the probability that a given node A will *not* be connected to
+    # another randomly selected node B.
 
     $g->generate_random_vertices(
         { n => 124, p => 0.1, max_weight => 100_000 } );
@@ -80,10 +80,19 @@ version 0.1
 
 =head1 DESCRIPTION
 
-This library implements a number of graph algorithms.  It can be used
-for both directed and undirected graphs.  Features include:
+This library implements a
+L<graph|https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)>
+data structure, and a number of common algorithms on graphs.  It can
+be used for both directed and undirected graphs.  Features include:
 
 =over
+
+=item * Generating random graphs.
+
+=item * Serializing graphs to and from CSV files.
+
+=item * Vertices and edges can have arbitrary attributes associated
+with them (stored in hashrefs).
 
 =item * Breadth-first search (BFS) to find the shortest path between
 two nodes.
@@ -97,46 +106,47 @@ two nodes.
 =item * Dijkstra's algorithm for finding the shortest path through a
 weighted graph.
 
-=item * A method for general exhaustive search with backtracking.
+=item * A general method for exhaustive search with backtracking.
 
 =item * Finding Hamiltonian walks (open and closed) using exhaustive
-search.
+search with backtracking.
 
-=item * Generating random graphs.
-
-=item * Graph coloring.
-
-=item * Serializing graphs to and from CSV files with a simple format.
-
-=item * Vertices and edges can have arbitrary attributes associated
-with them (stored in hashrefs).
+=item * Vertex coloring.
 
 =back
 
 For a possibly interesting example, see the file
 C<examples/ladders.pl>, which is an approximate port to Perl of the
 C<LADDERS> program from the book I<The Stanford GraphBase> by Donald
-E. Knuth.
+E. Knuth.  It uses Dijkstra's algorithm to build a "word ladder" of
+the form:
 
-Note that this library is still in development.  There are some
-important algorithms that are not yet implemented.  Also, some
+WORDS - WOODS - GOODS - GOADS - GRADS - GRADE - GRAPE - GRAPH
+
+Finally, note that this library is still in development.  There are
+some important algorithms that are not yet implemented.  Also, some
 algorithms that are implemented for undirected graphs are not yet
-implemented for directed graphs.  Test coverage is OK but can still be
-improved.
+implemented for directed graphs.  Test coverage is OK, but can still
+be improved.
 
-=head1 GRAPH INITIALIZATION AND RANDOMIZATION
+=head1 METHODS
+
+=head2 INITIALIZATION AND RANDOMIZATION
 
 =over
 
-=item new
+=item C<new>
 
-Initialize a new graph.
+Initialize a new undirected graph:
 
     my $g = YAGL->new;
 
-To make it directed, pass 'is_directed => 1' as an argument.
+To make a directed graph, set the C<is_directed> argument:
 
     my $g = YAGL->new(is_directed => 1);
+
+Note that a YAGL object must be set as directed or undirected when
+it's created, and it can't be changed later.
 
 =cut
 
@@ -154,27 +164,42 @@ sub new {
     return $graph;
 }
 
-=item generate_random_vertices
+=item C<generate_random_vertices>
 
-Generate a bunch of vertices with random names, and distribute edges
-randomly among them.
+Generate C<n> vertices with random names, and distribute edges
+randomly among them with a 1-C<p> probability of connection.  Further,
+assign random weights to each edge up to the value of C<max_weight>.
+
+Note that this needs to be called on a graph object that already
+exists.  Also, it is usually best to call this on a brand new, empty
+graph, since it will overwrite or update existing vertices and edges
+if the random vertex name generator comes up with a name that is
+already in use.  This is unlikely in practice since the random names
+are alphanumeric gibberish like "cu991".
+
+Example:
+
+    my $g = YAGL->new;
+    $g->generate_random_vertices({n => 48, p => 0.1, max_weight => 1000});
 
 Arguments:
 
 =over
 
-=item n
+=item C<n>
 
 Number of vertices.
 
-=item p
+=item C<p>
 
-Probability that any given node will B<not> be connected to another node.
+Probability that a given vertex I<A> will B<not> be connected to
+another randomly selected vertex I<B>.  In other words, the
+probability that I<A> will be connected to I<B> is 1-C<p>.
 
-=item max_weight
+=item C<max_weight>
 
-The maximum weight of any vertex.  Vertex weights are randomly
-generated up to this number.
+All edges are given a random integer weight less than or equal to this
+number.
 
 =back
 
@@ -226,7 +251,7 @@ sub generate_random_vertices {
     }
 }
 
-=head1 GRAPH SERIALIZATION
+=head2 SERIALIZATION
 
 =over
 
@@ -399,7 +424,7 @@ sub to_graphviz {
         }
     }
 
-    return $gv->as_png;
+    return $gv->as_svg;
 }
 
 =item draw
@@ -420,7 +445,7 @@ sub draw {
     die qq[draw() must be passed a filename argument!] unless $basename;
 
     my $tmpdir   = $ENV{TMPDIR} || '/tmp';
-    my $filename = qq[$tmpdir/$basename.png];
+    my $filename = qq[$tmpdir/$basename.svg];
     my $viz      = $self->to_graphviz;
     open my $fh, '>', $filename or die $!;
     say $fh $viz;
@@ -429,7 +454,7 @@ sub draw {
 
 =back
 
-=head1 BOOLEAN METHODS
+=head2 BOOLEAN METHODS
 
 =over
 
@@ -563,7 +588,7 @@ sub is_directed {
     return $self->{_INTERNAL}->{is_directed};
 }
 
-=head1 METHODS ON VERTICES
+=head2 METHODS ON VERTICES
 
 =over
 
@@ -824,7 +849,7 @@ sub get_vertex_color {
     $self->get_vertex_attribute($vertex, 'color');
 }
 
-=head1 METHODS ON EDGES
+=head2 METHODS ON EDGES
 
 =over
 
@@ -1078,7 +1103,7 @@ sub remove_edge {
     return 1;
 }
 
-=head1 PATH SEARCH METHODS
+=head2 SEARCH
 
 =over
 
@@ -1645,7 +1670,7 @@ sub is_planar {
     }
 }
 
-=head1 GRAPH CLONING (OBJECT COPYING) AND EQUALITY CHECKS
+=head2 CLONING (OBJECT COPYING) AND EQUALITY CHECKS
 
 =over
 
@@ -1698,7 +1723,7 @@ sub equals {
     return 1;
 }
 
-=head1 INTERNAL HELPER METHODS
+=head2 INTERNAL HELPER METHODS
 
 =over
 
@@ -1869,7 +1894,7 @@ sub _make_vertex_name {
     return qq[$c1$c2$n];
 }
 
-=head1 GRAPH COLORING METHODS
+=head2 COLORING
 
 =over
 
@@ -2032,7 +2057,7 @@ sub chromatic_number {
 
 =over
 
-=item * L<Graph>, by Jarkko Hietaniemi
+=item * L<Graph> by Jarkko Hietaniemi
 
 =item * L<Graph::Fast> by Lars Stoltenow
 
