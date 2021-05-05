@@ -1,7 +1,8 @@
 Build.PL
 Changes
 examples/ladders.pl
-examples/find-path.pl
+examples/ladders-g.pl
+examples/Makefile
 data/words.dat
 lib/YAGL.pm
 Makefile.PL
@@ -30,5 +31,11 @@ t/19-is-connected.t
 t/20-vertex-coloring.t
 t/21-has-cycle.t
 t/22-directed-dijkstra.t
+t/23-mst.t
+t/24-ham.t
+t/25-dfs.t
+t/26-exhaustive-search.t
+t/27-connected-components.t
+t/28-house-of-graphs-lst-file-format.t
 t/perlcritic.t
 t/pod.t
