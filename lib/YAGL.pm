@@ -579,13 +579,33 @@ Return true if this is a directed graph.  Graphs can only be marked as
 directed during object initialization, by setting the C<is_directed>
 argument to C<new>.
 
-=back
-
 =cut
 
 sub is_directed {
     my ($self) = @_;
     return $self->{_INTERNAL}->{is_directed};
+}
+
+=item C<is_bipartite>
+
+Returns true if the graph G is bipartite.  False otherwise.
+
+Note that this method operates on a copy of the graph, to avoid
+overwriting any existing vertex colorings.
+
+=back
+
+=cut
+
+sub is_bipartite {
+  ## -> Boolean State!
+  my ($self) = @_;
+  my $copy = $self->clone;
+  $copy->color_vertices;
+  my $n = $copy->chromatic_number;
+
+  return unless $n == 2;
+  return 1;
 }
 
 =head2 METHODS ON VERTICES
