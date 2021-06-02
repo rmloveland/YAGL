@@ -2,12 +2,14 @@ package YAGL;
 
 use strict;
 use warnings;
+no warnings 'recursion';
 use feature qw/ say state current_sub /;
 use Smart::Match;
 use Text::CSV;
 use GraphViz;
 use Hash::PriorityQueue;
 use Storable;
+use List::Util qw/ uniq /;
 
 use constant DEBUG => undef;
 
@@ -419,7 +421,7 @@ sub to_graphviz {
                 color    => $edge_color,
                 penwidth => $penwidth,
             ) unless $seen{$vertex . $neighbor};
-            $seen{$neighbor . $vertex}++;
+            $seen{$neighbor . $vertex}++ unless $self->is_directed;
             $seen{$vertex . $neighbor}++;
         }
     }
@@ -444,7 +446,7 @@ sub draw {
 
     die qq[draw() must be passed a filename argument!] unless $basename;
 
-    my $tmpdir   = $ENV{TMPDIR} || '/tmp';
+    my $tmpdir   = $ENV{Temp} || $ENV{TMPDIR} || '/tmp';
     my $filename = qq[$tmpdir/$basename.svg];
     my $viz      = $self->to_graphviz;
     open my $fh, '>', $filename or die $!;
@@ -598,14 +600,13 @@ overwriting any existing vertex colorings.
 =cut
 
 sub is_bipartite {
-  ## -> Boolean State!
-  my ($self) = @_;
-  my $copy = $self->clone;
-  $copy->color_vertices;
-  my $n = $copy->chromatic_number;
+    ## -> Boolean State!
+    my ($self) = @_;
+    $self->color_vertices;
+    my $n = $self->chromatic_number;
 
-  return unless $n == 2;
-  return 1;
+    return unless $n == 2;
+    return 1;
 }
 
 =head2 METHODS ON VERTICES
@@ -1532,12 +1533,15 @@ sub exhaustive_search {
 
         if ($sub) {
             my $rv = $sub->($current, $path);
-            if (defined $rv && $rv == -1) {
+            unless (defined $rv) {
 
                 # This cutoff optimization brings the number of subroutine
                 # calls from ~8000 to ~16 in Test 5 of
                 # 28-house-of-graphs-lst-file-format.t, a savings of about
                 # 99.8 percent!
+                say
+                  qq[exhaustive_search(): cutoff(@$path) -> FAIL, bailing...]
+                  if DEBUG;
                 return;
             }
         }
@@ -1639,9 +1643,9 @@ sub hamiltonian_walks {
         if (@hams == $n_solutions) {
             if (DEBUG) {
                 say
-                  qq[hamiltonian_walks(): found $n_solutions solutions after $calls calls!];
+                  qq[hamiltonian_walks(): found $n_solutions solutions after $calls calls];
             }
-            return -1;
+            return;
         }
 
         if (@$path == $n_vertices) {
@@ -1970,7 +1974,7 @@ sub color_vertices {
         my ($package, $filename, $line) = caller();
         die <<"EOF";
 on line $line of file $filename:
-  $package\:\:_color_vertices():
+    $package\:\:_color_vertices():
     is not implemented for directed graphs!
 EOF
     }
@@ -2058,6 +2062,255 @@ sub chromatic_number {
     }
     return $n;
 }
+
+=item set_cover
+
+=cut
+
+sub set_cover {
+    my ($self, @args) = @_;
+
+    my $is_bipartite = $self->is_bipartite;
+    die qq[set_cover: Graph is not bipartite!] unless $is_bipartite;
+
+    my @vertices = $self->get_vertices;
+    my @green  = grep { $self->get_vertex_color($_) eq 'green'; } @vertices;
+    my @red    = grep { $self->get_vertex_color($_) eq 'red'; } @vertices;
+    my @options;
+    my @items;
+
+    for my $g (@green) {
+      if (length($g) >= 2) {
+        @options = @green;
+        @items = @red;
+      }
+    }
+
+    for my $r (@red) {
+      if (length($r) >= 2) {
+        @options = @red;
+        @items = @green;
+      }
+    }
+
+    my %args = @args;
+    my $n_solutions;
+    if (exists $args{n_solutions}) {
+        $n_solutions = $args{n_solutions};
+    }
+    $n_solutions = 1 unless defined $n_solutions;
+
+    my $is_exact;
+    if (exists $args{is_exact}) {
+        $is_exact = $args{is_exact};
+    }
+
+    my @covers;
+    my $found;
+    my %found;
+    my %seen;
+
+    my $lambda = sub {
+      my ($current, $path) = @_;
+
+      my @path_options = grep { $_ ~~ @options } @$path;
+      my $path_options = join ';', sort @path_options;
+
+      if (_covers_all_items(\@path_options, \@items)) {
+        if ($is_exact) {
+          unless (_disjoint(@path_options)) {
+            return;
+          }
+        }
+        unless (exists $found{$path_options}) {
+          push @covers, [@path_options];
+          $found++;
+          $found{$path_options}++;
+          say qq[set_cover: Found a cover -> @path_options] if DEBUG;
+          return if @covers == $n_solutions;
+          return 1;
+        }
+      }
+      return 1;
+    };
+
+    # TODO(rml): Apply some of the problem reductions from [Syslo83]
+    # here, so we can avoid doing so much work in the search.  Note
+    # that in what follows, the "rows" per Syslo et al are what
+    # [Knuth2020] calls the columns, aka the "items" to be
+    # covered. The reductions are:
+
+    # Rule 1R. Zero rows: If there is an item for which there is no
+    # cover, then no solution exists.
+
+    # Rule 1C. Zero columns: If there is an option whose elements do
+    # not cover any item, remove the option.
+
+    # Rule 2. Essential columns: If there is an option one of whose
+    # elements is the *only* cover for one of the items, then push
+    # this option onto the list of COVERS immediately.
+
+    # Now we will perform the reductions.
+
+    # Rule 1R. Zero rows: if there is an item for which there is no
+    # option whose elements cover that item, then no solution exists.
+
+    my @option_elems = uniq sort { $a cmp $b } split //, join '', @options;
+    @option_elems = sort { $a cmp $b } @option_elems;
+
+    my @wanted;
+
+    for my $item (@items) {
+      unless ($item ~~ @option_elems) {
+        goto END;
+      }
+    }
+
+    # Rule 1C. Zero columns: If there is an option whose elements do
+    # not cover any item, remove the option.  Interestingly, we do not
+    # need to implement this - it kind of happens automatically for us
+    # during the graph coloring bipartiteness check, since the options
+    # in question will not be part of the main connected component of
+    # the graph.
+
+    # Now that the reductions have been performed, we will actually
+    # run the exhaustive search.
+
+    my $other = $self->complement;
+
+    for my $item (@items) {
+      $other->remove_vertex($item);
+    }
+
+    for my $o (@options) {
+      $other->exhaustive_search($o, $lambda);
+    }
+    @covers = sort { @$a <=> @$b } @covers;
+    for (0 .. $n_solutions-1) {
+      if ($covers[$_]) {
+        push @wanted, $covers[$_];
+      }
+    }
+
+  END:
+    return @wanted;
+}
+
+=item _covers_all_items
+
+=cut
+
+sub _covers_all_items {
+    ## ArrayRef : ArrayRef -> Boolean
+    my ($the_options, $the_items) = @_;
+    do {
+        say qq[_covers_all_items:];
+        say
+          qq[    checking if options '@$the_options' cover items '@$the_items'];
+    } if DEBUG;
+
+    my @option_elems;
+    my @item_elems;
+
+    @option_elems = uniq sort { $a cmp $b } split //, join '', @$the_options;
+    @option_elems = sort { $a cmp $b } @option_elems;
+    say qq[    option_elems: (@option_elems)] if DEBUG;
+
+    @item_elems = sort { $a cmp $b } @$the_items;
+
+    for (my $i = 0; $i < @item_elems; $i++) {
+        unless ($item_elems[$i] ~~ @option_elems) {
+            say qq[    NO] if DEBUG;
+            return;
+        }
+    }
+    say qq[    YES] if DEBUG;
+    return 1;
+}
+
+=item del
+
+=cut
+
+sub _del {
+    ## ArrayRef Scalar -> State!
+    my ($xs, $item) = @_;
+    for (my $i = 0; $i < @$xs; $i++) {
+        if ($xs->[$i] eq $item) {
+            ## splice ARRAY,OFFSET,LENGTH,LIST
+            splice(@$xs, $i, 1);    # delete element at index $i
+        }
+    }
+}
+
+=item _disjoint
+
+=cut
+
+sub _disjoint {
+    ## Array -> Boolean
+    my (@options) = @_;
+
+    # The set of options is disjoint if, when joined, split, and sorted,
+    # the resulting array contains no duplicate elements.
+    say qq[_disjoint:] if DEBUG;
+
+    my @elems = split //, join '', @options;
+    say qq[    elems: (@elems)] if DEBUG;
+
+    my @uniq = uniq @elems;
+    say qq[    uniq: (@uniq)] if DEBUG;
+
+    unless (@uniq == @elems) {
+        say qq[    _disjoint(@options) == FALSE] if DEBUG;
+        return;
+    }
+
+    say qq[    _disjoint(@options) == TRUE] if DEBUG;
+    return 1;
+}
+
+=item get_anti_neighbors
+
+=cut
+
+sub _get_anti_neighbors {
+    my ($self, $vertex) = @_;
+    my %seen;
+    $seen{$vertex}++;
+    my $neighbors = $self->get_neighbors($vertex);
+    for my $neighbor (@$neighbors) {
+        $seen{$neighbor}++;
+    }
+    my @antineighbors;
+    my @vertices = $self->get_vertices;
+    for my $v (@vertices) {
+        push @antineighbors, $v unless $seen{$v};
+    }
+    return @antineighbors;
+}
+
+=item complement
+
+=cut
+
+sub complement {
+    my ($self) = @_;
+    my @vertices = $self->get_vertices;
+    my $h = YAGL->new(is_directed => $self->is_directed);
+    for my $v (@vertices) {
+        my @antineighbors = $self->_get_anti_neighbors($v);
+        for my $a (@antineighbors) {
+            $h->add_edge($v, $a);
+            my $v_attrs = $self->get_vertex_attributes($v);
+            $h->set_vertex_attribute($v, $v_attrs);
+            my $a_attrs = $self->get_vertex_attributes($a);
+            $h->set_vertex_attribute($a, $a_attrs);
+        }
+    }
+    return $h;
+}
+
 
 1;
 
