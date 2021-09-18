@@ -1234,6 +1234,41 @@ sub has_walk {
     return 1;
 }
 
+=item paths_between
+
+Given two vertices I<START> and I<END>, return a list of all the paths
+between them.
+
+Note that this method is implemented using exhaustive search, so it
+will grind to a halt for larger graphs.
+
+=cut
+
+sub paths_between {
+  my ($self, $start, $end) = @_;
+
+  return () unless defined $start && defined $end;
+
+  # We will get this done with exhaustive search.  We will return true
+  # when the last element in the path is equal to the current element
+  # being inspected; this means that the path ends at the current
+  # element.
+
+  my @paths;
+
+  my $lambda = sub {
+    my ($current, $path) = @_;
+    if ($current eq $end) {
+      push @paths, [@$path];
+      return;
+    }
+  };
+
+  $self->exhaustive_search($start, $lambda);
+  @paths = sort {@$a <=> @$b} @paths;
+  return @paths;
+}
+
 =item find_path_between
 
 Given two vertices START and END in an unweighted graph, find the
