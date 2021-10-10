@@ -412,7 +412,7 @@ sub to_graphviz {
               = $self->get_edge_attribute($vertex, $neighbor, 'weight');
             my $edge_color
               = $self->get_edge_attribute($vertex, $neighbor, 'color');
-            my $penwidth = $edge_color ? "5" : "";
+            my $penwidth     = $edge_color ? "5" : "";
             my $vertex_color = $self->get_vertex_color($neighbor);
             $gv->add_node($neighbor, fillcolor => $vertex_color);
             $gv->add_edge(
@@ -568,9 +568,9 @@ C<color_vertices> method.
 
 sub is_colored {
     ## -> Number
-    my ($self) = @_;
+    my ($self)   = @_;
     my @vertices = $self->get_vertices;
-    my @colors = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -1245,28 +1245,28 @@ will grind to a halt for larger graphs.
 =cut
 
 sub paths_between {
-  my ($self, $start, $end) = @_;
+    my ($self, $start, $end) = @_;
 
-  return () unless defined $start && defined $end;
+    return () unless defined $start && defined $end;
 
-  # We will get this done with exhaustive search.  We will return true
-  # when the last element in the path is equal to the current element
-  # being inspected; this means that the path ends at the current
-  # element.
+    # We will get this done with exhaustive search.  We will return true
+    # when the last element in the path is equal to the current element
+    # being inspected; this means that the path ends at the current
+    # element.
 
-  my @paths;
+    my @paths;
 
-  my $lambda = sub {
-    my ($current, $path) = @_;
-    if ($current eq $end) {
-      push @paths, [@$path];
-      return;
-    }
-  };
+    my $lambda = sub {
+        my ($current, $path) = @_;
+        if ($current eq $end) {
+            push @paths, [@$path];
+            return;
+        }
+    };
 
-  $self->exhaustive_search($start, $lambda);
-  @paths = sort {@$a <=> @$b} @paths;
-  return @paths;
+    $self->exhaustive_search($start, $lambda);
+    @paths = sort { @$a <=> @$b } @paths;
+    return @paths;
 }
 
 =item find_path_between
@@ -2075,8 +2075,6 @@ The C<chromatic_number> method does not actually return the chromatic
 number.  It returns the number of colors that were used to color the
 vertices of the graph using the C<color_vertices> method.
 
-=back
-
 =cut
 
 sub chromatic_number {
@@ -2109,23 +2107,23 @@ sub set_cover {
     die qq[set_cover: Graph is not bipartite!] unless $is_bipartite;
 
     my @vertices = $self->get_vertices;
-    my @green  = grep { $self->get_vertex_color($_) eq 'green'; } @vertices;
-    my @red    = grep { $self->get_vertex_color($_) eq 'red'; } @vertices;
+    my @green    = grep { $self->get_vertex_color($_) eq 'green'; } @vertices;
+    my @red      = grep { $self->get_vertex_color($_) eq 'red'; } @vertices;
     my @options;
     my @items;
 
     for my $g (@green) {
-      if (length($g) >= 2) {
-        @options = @green;
-        @items = @red;
-      }
+        if (length($g) >= 2) {
+            @options = @green;
+            @items   = @red;
+        }
     }
 
     for my $r (@red) {
-      if (length($r) >= 2) {
-        @options = @red;
-        @items = @green;
-      }
+        if (length($r) >= 2) {
+            @options = @red;
+            @items   = @green;
+        }
     }
 
     my %args = @args;
@@ -2146,27 +2144,27 @@ sub set_cover {
     my %seen;
 
     my $lambda = sub {
-      my ($current, $path) = @_;
+        my ($current, $path) = @_;
 
-      my @path_options = grep { $_ ~~ @options } @$path;
-      my $path_options = join ';', sort @path_options;
+        my @path_options = grep { $_ ~~ @options } @$path;
+        my $path_options = join ';', sort @path_options;
 
-      if (_covers_all_items(\@path_options, \@items)) {
-        if ($is_exact) {
-          unless (_disjoint(@path_options)) {
-            return;
-          }
+        if (_covers_all_items(\@path_options, \@items)) {
+            if ($is_exact) {
+                unless (_disjoint(@path_options)) {
+                    return;
+                }
+            }
+            unless (exists $found{$path_options}) {
+                push @covers, [@path_options];
+                $found++;
+                $found{$path_options}++;
+                say qq[set_cover: Found a cover -> @path_options] if DEBUG;
+                return if @covers == $n_solutions;
+                return 1;
+            }
         }
-        unless (exists $found{$path_options}) {
-          push @covers, [@path_options];
-          $found++;
-          $found{$path_options}++;
-          say qq[set_cover: Found a cover -> @path_options] if DEBUG;
-          return if @covers == $n_solutions;
-          return 1;
-        }
-      }
-      return 1;
+        return 1;
     };
 
     # TODO(rml): Apply some of the problem reductions from [Syslo83]
@@ -2196,9 +2194,9 @@ sub set_cover {
     my @wanted;
 
     for my $item (@items) {
-      unless ($item ~~ @option_elems) {
-        goto END;
-      }
+        unless ($item ~~ @option_elems) {
+            goto END;
+        }
     }
 
     # Rule 1C. Zero columns: If there is an option whose elements do
@@ -2214,17 +2212,17 @@ sub set_cover {
     my $other = $self->complement;
 
     for my $item (@items) {
-      $other->remove_vertex($item);
+        $other->remove_vertex($item);
     }
 
     for my $o (@options) {
-      $other->exhaustive_search($o, $lambda);
+        $other->exhaustive_search($o, $lambda);
     }
     @covers = sort { @$a <=> @$b } @covers;
-    for (0 .. $n_solutions-1) {
-      if ($covers[$_]) {
-        push @wanted, $covers[$_];
-      }
+    for (0 .. $n_solutions - 1) {
+        if ($covers[$_]) {
+            push @wanted, $covers[$_];
+        }
     }
 
   END:
@@ -2248,7 +2246,7 @@ sub _covers_all_items {
     my @item_elems;
 
     @option_elems = uniq sort { $a cmp $b } split //, join '', @$the_options;
-    @option_elems = sort { $a cmp $b } @option_elems;
+    @option_elems = sort      { $a cmp $b } @option_elems;
     say qq[    option_elems: (@option_elems)] if DEBUG;
 
     @item_elems = sort { $a cmp $b } @$the_items;
@@ -2327,12 +2325,14 @@ sub _get_anti_neighbors {
 
 =item complement
 
+=back
+
 =cut
 
 sub complement {
-    my ($self) = @_;
+    my ($self)   = @_;
     my @vertices = $self->get_vertices;
-    my $h = YAGL->new(is_directed => $self->is_directed);
+    my $h        = YAGL->new(is_directed => $self->is_directed);
     for my $v (@vertices) {
         my @antineighbors = $self->_get_anti_neighbors($v);
         for my $a (@antineighbors) {
