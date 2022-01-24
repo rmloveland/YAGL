@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use lib 'lib';
-use Test::More tests => 5;
+use Test::More tests => 6;
 use Cwd;
 use YAGL;
 
@@ -68,6 +68,19 @@ my @got5;
 $g5->dfs('a', sub { push @got5, $_[0] });
 
 is_deeply(\@got5, \@expected5, "DFS on an unconnected, undirected graph");
+
+# Test 6 - DFS on a graph that we know the DFS from by checking it against Mathematica.
+
+my $g6 = YAGL->new;
+$g6->read_lst("$cwd/t/25-dfs-05.lst");
+
+my @expected6 = (1, 2, 11, 5, 3, 4, 6, 10, 7, 12, 9, 8);
+
+my @got6;
+$g6->dfs(1, sub { push @got6, $_[0] });
+
+is_deeply(\@got6, \@expected6,
+    "DFS on graph #33128 from hog.grinvin.org (checked against Mathematica)");
 
 # Local Variables:
 # compile-command: "cd .. && perl t/25-dfs.t"
