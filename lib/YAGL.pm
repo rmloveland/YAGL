@@ -402,12 +402,14 @@ sub to_graphviz {
 
     my $gv = GraphViz->new(directed => $self->is_directed, style => 'filled');
 
-    for my $vertex ($self->get_vertices) {
+  VERTEX: for my $vertex ($self->get_vertices) {
+        next VERTEX unless $vertex;
         my $vertex_color = $self->get_vertex_color($vertex);
         $gv->add_node($vertex, style => 'filled', fillcolor => $vertex_color);
         my $neighbors = $self->get_neighbors($vertex);
 
-        for my $neighbor (@$neighbors) {
+      NEIGHBOR: for my $neighbor (@$neighbors) {
+            next NEIGHBOR unless $neighbor;
             my $edge_weight
               = $self->get_edge_attribute($vertex, $neighbor, 'weight');
             my $edge_color
