@@ -658,6 +658,8 @@ sub get_neighbors {
     ## String -> ArrayRef
     my ($self, $vertex) = @_;
 
+    return unless $self->has_vertex($vertex);
+
     if (exists $self->{$vertex}) {
         return $self->{$vertex} if defined $self->{$vertex};
     }
@@ -677,6 +679,7 @@ Return true if the vertex in question is a part of the graph.
 sub has_vertex {
     ## String -> Boolean
     my ($self, $vertex) = @_;
+    return unless defined $vertex;
     if (exists $self->{$vertex} && defined $self->{$vertex}) {
         return 1;
     }
@@ -805,6 +808,7 @@ Given a vertex V and an attribute string, retrieve the value of that attribute.
 sub get_vertex_attribute {
     ## String String -> Value OR undef
     my ($self, $vertex, $attribute) = @_;
+    return unless $self->has_vertex($vertex);
     return $self->{_INTERNAL}->{vertex_attrs}->{$vertex}->{$attribute};
 }
 
@@ -987,6 +991,7 @@ with T for that edge.  For example, a (numeric) weight.
 sub get_edge_attribute {
     ## String String String -> Value OR undef
     my ($self, $start, $end, $attribute) = @_;
+    return unless defined $start && defined $end;
 
     my $pairkey = $start . $end;
     return $self->{_INTERNAL}->{edge_attrs}->{$pairkey}->{$attribute};
