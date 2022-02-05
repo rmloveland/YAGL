@@ -1862,7 +1862,9 @@ sub _remove_neighbor {
         my $this = $self->{$vertex}->[$i];
         next unless defined $this;
         if ($this eq $neighbor) {
-            $self->{$vertex}->[$i] = undef;
+
+# https://perlmaven.com/how-to-eliminate-a-value-in-the-middle-of-an-array-in-perl
+            splice @{$self->{$vertex}}, $i, 1;
         }
     }
 }
