@@ -403,18 +403,18 @@ sub to_graphviz {
     my $gv = GraphViz->new(directed => $self->is_directed, style => 'filled');
 
   VERTEX: for my $vertex ($self->get_vertices) {
-        next VERTEX unless $vertex;
+        next VERTEX unless defined $vertex;
         my $vertex_color = $self->get_vertex_color($vertex);
         $gv->add_node($vertex, style => 'filled', fillcolor => $vertex_color);
         my $neighbors = $self->get_neighbors($vertex);
 
       NEIGHBOR: for my $neighbor (@$neighbors) {
-            next NEIGHBOR unless $neighbor;
+            next NEIGHBOR unless defined $neighbor;
             my $edge_weight
               = $self->get_edge_attribute($vertex, $neighbor, 'weight');
             my $edge_color
               = $self->get_edge_attribute($vertex, $neighbor, 'color');
-            my $penwidth     = $edge_color ? "5" : "";
+            my $penwidth = $edge_color ? "5" : "";
             my $vertex_color = $self->get_vertex_color($neighbor);
             $gv->add_node($neighbor, fillcolor => $vertex_color);
             $gv->add_edge(
@@ -422,9 +422,9 @@ sub to_graphviz {
                 label    => $edge_weight,
                 color    => $edge_color,
                 penwidth => $penwidth,
-            ) unless $seen{$vertex . $neighbor};
-            $seen{$neighbor . $vertex}++ unless $self->is_directed;
-            $seen{$vertex . $neighbor}++;
+            ) unless $seen{$vertex . ';' . $neighbor};
+            $seen{$neighbor . ';' . $vertex}++ unless $self->is_directed;
+            $seen{$vertex . ';' . $neighbor}++;
         }
     }
 
