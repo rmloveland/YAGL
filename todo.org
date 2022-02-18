@@ -140,7 +140,7 @@
    - the # of possible paths between them.  This could also be called
      =$self->connectivity('A', 'B')=
 
-** TODO Replace ad hoc internal spanning tree implementation with a proper Graph object
+** TODO Replace ad hoc internal spanning tree implementation with a proper Graph/YAGL object
 
    In order for this to work, a graph needs to know whether it is a tree, which means it needs:
 
@@ -160,9 +160,182 @@
 
 * To File
 
+** TODO Add =$g->gridgraph= method
+
+   Friday, February 18, 2022:
+
+   This is currently on the branch [[orgit-log:c:/Users/rml/Dropbox/Code/personal/YAGL/::20220211-latin-squares][20220211-latin-squares]]
+   
+   The implementation is only slightly modified from YAGL:
+
+   #+BEGIN_SRC perl
+     sub gridgraph {
+         my ($self, $rows, $cols) = @_;
+
+         my @vs = 1 .. $rows * $cols;
+
+         my $max_weight = 99;    # ($rows >= $cols) ? $rows / 2 : $cols / 2;
+         my $min_weight = 0;
+
+         $self->add_vertex($_) for @vs;
+
+         for my $v (@vs) {
+
+             # Add edges between V and: V+5, V+1, V-1, V-5 (IFF those vertices
+             # exist)
+             my ($up, $down, $left, $right)
+               = ($v - $cols, $v + $cols, $v - 1, $v + 1);
+             for my $direction ($up, $down, $left, $right) {
+                 if ($direction > 0 && $self->has_vertex($direction)) {
+                     $self->add_edge($v, $direction);
+                 }
+             }
+         }
+         for my $v (@vs) {
+             if ($v % $cols == 1 && $self->has_edge($v, $v - 1)) {
+                 say qq[delete edge between: $v -- ], $v - 1;
+                 $self->delete_edge($v, $v - 1);
+             }
+         }
+     }
+
+     sub _grid_edge_weight {
+         my ($self, $u, $v, $rows, $cols) = @_;
+         my $n = $u < $v ? $u : $v;
+         $n = $n % $cols;
+         return $n > $cols / 2 ? $cols - $n : $n;
+     }
+   #+END_SRC
+
+** TODO Consider submitting Brelaz graph coloring method to =Graph= maintainer
+
+   Friday, February 18, 2022:
+
+   This is currently on the branch [[orgit-log:c:/Users/rml/Dropbox/Code/personal/YAGL/::20220211-latin-squares][20220211-latin-squares]]
+   
+   The implementation below is only slightly modified from YAGL.
+
+   #+BEGIN_SRC perl
+     sub get_color_degree {
+         ## String -> Integer
+         my ($self, $vertex) = @_;
+         my $count = 0;
+         my @colors;
+         my @neighbors = $self->neighbors($vertex);
+         for my $neighbor (@neighbors) {
+             my $color = $self->get_vertex_attribute($neighbor, 'color');
+             if ($color) {
+                 $count++;
+                 push @colors, $color;
+             }
+         }
+         return ($count, @colors);
+     }
+
+     sub color_vertices {
+         ## -> State!
+         my ($self) = @_;
+
+         # Ordered by indices
+         my @colors = qw/ black white gray purple orange yellow blue green red /;
+         my @vertices_by_degree
+           = sort { $self->degree($a) > $self->degree($b) } $self->vertices;
+
+         my $v = pop @vertices_by_degree;
+         $self->set_vertex_attribute($v, 'color', $colors[0]);
+
+         my @vertices_by_color_degree
+           = sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
+           $self->vertices;
+
+         while (my $v = pop @vertices_by_color_degree) {
+             my ($count, @adjacent_colors) = $self->get_color_degree($v);
+             for my $color (@colors) {
+                 $self->set_vertex_attribute($v, 'color', $color)
+                   unless $color ~~ @adjacent_colors;
+             }
+             @vertices_by_color_degree
+               = sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
+               @vertices_by_color_degree;
+         }
+     }
+
+   #+END_SRC
+
+*** TODO Figure out why it sometimes uses more (or different) colors than the YAGL version 
+
+    Graph version using 4 colors (this only happens intermittently):
+
+    [[./data/coloring-with-graph.svg][coloring-with-graph.svg]]
+
+    YAGL version using 3 colors:
+
+    [[./data/coloring-with-yagl.svg][coloring-with-yagl.svg]]
+
+** TODO Add =$g->independent_sets= method
+
+   See notebook S013#136 for an algorithm design that may work
+
+** TODO Consider renaming methods and changing inputs/outputs to match =Graph=, where possible
+
+   Examples:
+
+   | YAGL                     | Graph                    | Output Notes                                                           |
+   |--------------------------+--------------------------+------------------------------------------------------------------------|
+   | get_vertices             | vertices                 | Seems similar                                                          |
+   | get_edges                | edges                    | Similar                                                                |
+   | get_neighbors            | neighbors                | Graph returns Array, not ArrayRef                                      |
+   | get,set_vertex_attribute | get,set_vertex_attribute | Graph uses 3 strings, not hashref (see [[sva][below]]).  Applies to edges, too. |
+   | edge_between             | has_edge                 |                                                                        |
+   | remove_edge              | delete_edge              |                                                                        |
+
+   <<sva>>
+   #+BEGIN_SRC perl
+$self->set_vertex_attribute($v, 'color', $color);
+   #+END_SRC
+   
+** TODO Expose =get_anti_neighbors= method?
+
+** TODO Rename $g->find_path_between('a', 'b') to $g->path_between('a','b') ?
+
+   To match the semantics of $g->paths_between (plural)
+
+** TODO Add import/export to format of Hietaniemi's =Graph= library?
+   
+   I'd like to be able to say something like:
+
+   #+BEGIN_SRC perl
+     my $g = YAGL->new;
+     my $h = $g->to_Graph;
+     my $i = $h->to_YAGL;           # Fails unless $h isa Graph
+   #+END_SRC
+
+*** See also
+
+    [[https://metacpan.org/pod/Graph::Reader][Graph::Reader]] and [[https://metacpan.org/pod/Graph::Writer][Graph::Writer]] as [[https://metacpan.org/dist/Graph/view/lib/Graph.pod][mentioned in the Graph docs
+    here]].
+
 ** TODO Add benchmarks to testing
 
 ** TODO Add network flow algorithms
+
+** TODO Add a structured error message of some kind and use it everywhere
+
+   For the very beginnings of what this could be, see [[file:lib/YAGL.pm::if%20($self->is_directed)%20{][here]], which
+   reads:
+
+   #+BEGIN_SRC perl
+     if ($self->is_directed) {
+       my ($package, $filename, $line) = caller();
+       die <<"EOF";
+     on line $line of file $filename:
+         $package\:\:_color_vertices():
+         is not implemented for directed graphs!
+     EOF
+     }
+   #+END_SRC
+
+   This shows up nicely in Emacs compilation buffers.
 
 ** TODO Methods should have checks to bail/error as soon as possible
 
@@ -171,12 +344,14 @@
    - Early false returns of the form =return () unless ...= for
      preconditions, including validity checks as well as mathematical
      preconditions, such as for planarity or Hamiltonian walks
-   
+
 ** TODO Add =k_cliques= method ?
 
    Perhaps this should use the regular expression hack described in
-   http://home.hiwaay.net/~gbacon/perl/clique.html ?
+   https://web.archive.org/web/20050305053226/http://home.hiwaay.net/~gbacon/perl/clique.html
 
+   (also stored [[https://www.evernote.com/shard/s212/nl/24330785/9de7b8da-6944-5268-f5c2-a9919f341ec4][in my Evernote]])
+   
 ** TODO Can =hamiltonian_walk= be repurposed to do TSP approximation?
 
    According to what I'm reading in Vazirani, the answer seems to be
@@ -189,6 +364,8 @@
    - [ ] Write tests, see how good the approximation is (or if it even
      works at all)
    - [ ] Bonus: read in/convert TSPLIB files?
+
+** TODO Support DIMACS format
 
 ** TODO Update CSV reader to update header format, handle comments better
 
