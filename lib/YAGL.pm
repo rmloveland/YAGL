@@ -570,9 +570,9 @@ C<color_vertices> method.
 
 sub is_colored {
     ## -> Number
-    my ($self)   = @_;
+    my ($self) = @_;
     my @vertices = $self->get_vertices;
-    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -2023,8 +2023,8 @@ on line $line of file $filename:
 EOF
     }
 
-    my @colors
-      = qw/ violet indigo orange yellow blue green red/;  # Ordered by indices
+    # Ordered by indices
+    my @colors = qw/ white brown black indigo orange yellow blue green red/;
     my @vertices_by_degree
       = sort { $self->get_degree($a) > $self->get_degree($b) }
       $self->get_vertices;
@@ -2255,7 +2255,7 @@ sub _covers_all_items {
     my @item_elems;
 
     @option_elems = uniq sort { $a cmp $b } split //, join '', @$the_options;
-    @option_elems = sort      { $a cmp $b } @option_elems;
+    @option_elems = sort { $a cmp $b } @option_elems;
     say qq[    option_elems: (@option_elems)] if DEBUG;
 
     @item_elems = sort { $a cmp $b } @$the_items;
@@ -2339,9 +2339,9 @@ sub _get_anti_neighbors {
 =cut
 
 sub complement {
-    my ($self)   = @_;
+    my ($self) = @_;
     my @vertices = $self->get_vertices;
-    my $h        = YAGL->new(is_directed => $self->is_directed);
+    my $h = YAGL->new(is_directed => $self->is_directed);
     for my $v (@vertices) {
         my @antineighbors = $self->_get_anti_neighbors($v);
         for my $a (@antineighbors) {
