@@ -414,7 +414,7 @@ sub to_graphviz {
               = $self->get_edge_attribute($vertex, $neighbor, 'weight');
             my $edge_color
               = $self->get_edge_attribute($vertex, $neighbor, 'color');
-            my $penwidth = $edge_color ? "5" : "";
+            my $penwidth     = $edge_color ? "5" : "";
             my $vertex_color = $self->get_vertex_color($neighbor);
             $gv->add_node($neighbor, fillcolor => $vertex_color);
             $gv->add_edge(
@@ -570,9 +570,9 @@ C<color_vertices> method.
 
 sub is_colored {
     ## -> Number
-    my ($self) = @_;
+    my ($self)   = @_;
     my @vertices = $self->get_vertices;
-    my @colors = grep { $self->get_vertex_color($_) } @vertices;
+    my @colors   = grep { $self->get_vertex_color($_) } @vertices;
 
     return scalar @vertices == scalar @colors;
 }
@@ -2255,7 +2255,7 @@ sub _covers_all_items {
     my @item_elems;
 
     @option_elems = uniq sort { $a cmp $b } split //, join '', @$the_options;
-    @option_elems = sort { $a cmp $b } @option_elems;
+    @option_elems = sort      { $a cmp $b } @option_elems;
     say qq[    option_elems: (@option_elems)] if DEBUG;
 
     @item_elems = sort { $a cmp $b } @$the_items;
@@ -2339,9 +2339,9 @@ sub _get_anti_neighbors {
 =cut
 
 sub complement {
-    my ($self) = @_;
+    my ($self)   = @_;
     my @vertices = $self->get_vertices;
-    my $h = YAGL->new(is_directed => $self->is_directed);
+    my $h        = YAGL->new(is_directed => $self->is_directed);
     for my $v (@vertices) {
         my @antineighbors = $self->_get_anti_neighbors($v);
         for my $a (@antineighbors) {
