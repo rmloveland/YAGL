@@ -131,13 +131,7 @@ code.)
             my $vertex = $p->{vertex};
             $g->set_vertex_color($vertex, 'red');
         }
-
-        my $viz = $g->to_graphviz;
-        open my $fh, '>', 'ladders.dot' or die $!;
-        say $fh $viz;
-        close $fh;
-
-        system qq[dot -O -Tjpg ladders.dot];
+        $g->draw('ladders');
     } if $gv;
 }
 
