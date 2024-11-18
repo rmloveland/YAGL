@@ -80,3 +80,7 @@ __END__
 #   D          G
 # /  \         / \
 # E - F ----- H - I
+
+# Local Variables:
+# compile-command: "perl tsp.pl"
+# End:
