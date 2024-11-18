@@ -6,7 +6,6 @@ use experimentals;
 use lib 'lib';
 use Test::More tests => 1;
 use Cwd;
-use Smart::Match;
 use YAGL;
 
 my $g = YAGL->new;

@@ -12,7 +12,6 @@ use constant SKIP_BIG_TESTS => 1;
 
 my $cwd = getcwd;
 
-
 =head2 Test 1. Exact Cover from 'Algorithm X in 30 Lines!'
 
 Adapted from "Algorithm X in 30 Lines!"
@@ -36,21 +35,20 @@ my $g1 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options1) {
-    for (my $i = 0; $i < scalar @items1; $i++) {
+    for ( my $i = 0; $i < scalar @items1; $i++ ) {
         my $item = $items1[$i];
-        if ($option =~ /$item/) {
-            $g1->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g1->add_edge( $item, $option );
         }
     }
 }
 
-my @got1 = $g1->set_cover(is_exact => 1, n_solutions => 1);
+my @got1 = $g1->set_cover( is_exact => 1, n_solutions => 1 );
 
 my $expected1 = [['adg', 'bcef', 'ih']];
 
-is_deeply(\@got1, $expected1,
-    "Exact cover example from 'Algorithm X in 30 Lines!'");
-
+is_deeply( \@got1, $expected1,
+    "Exact cover example from 'Algorithm X in 30 Lines!'" );
 
 =head2 Test 2. Exact Cover from Knuth
 
@@ -65,7 +63,7 @@ Should return:
 
 =cut
 
-my @options2  = ('ce', 'adg', 'bcf', 'adf', 'bg', 'deg');
+my @options2  = ( 'ce', 'adg', 'bcf', 'adf', 'bg', 'deg' );
 my @items2    = qw/a b c d e f g/;
 my $is_exact2 = 1;
 
@@ -74,28 +72,27 @@ my $g2 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options2) {
-    for (my $i = 0; $i < scalar @items2; $i++) {
+    for ( my $i = 0; $i < scalar @items2; $i++ ) {
         my $item = $items2[$i];
-        if ($option =~ /$item/) {
-            $g2->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g2->add_edge( $item, $option );
         }
     }
 }
 
-unless ($g2->is_bipartite) {
+unless ( $g2->is_bipartite ) {
     die qq[Exact cover only works on bipartite graphs!];
 }
 
 # For Exact Cover problem, pass something truthy as optional final
 # arg '$is_exact'
 
-my @got2 = $g2->set_cover(is_exact => 1, n_solutions => 1);
+my @got2 = $g2->set_cover( is_exact => 1, n_solutions => 1 );
 my $got2 = $got2[0];
 
 my @expected2 = ['adf', 'bg', 'ce'];
 
-is_deeply(\@got2, \@expected2, "Exact cover example from Knuth");
-
+is_deeply( \@got2, \@expected2, "Exact cover example from Knuth" );
 
 =head2 Test 3. Counter-example for greedy algorithm for Set Cover
 
@@ -118,10 +115,10 @@ my $g3 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options_3) {
-    for (my $i = 0; $i < scalar @items_3; $i++) {
+    for ( my $i = 0; $i < scalar @items_3; $i++ ) {
         my $item = $items_3[$i];
-        if ($option =~ /$item/) {
-            $g3->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g3->add_edge( $item, $option );
         }
     }
 }
@@ -129,13 +126,12 @@ for my $option (@options_3) {
 # For Exact Cover problem, pass something truthy as optional final
 # arg '$is_exact'
 
-my @got_3 = $g3->set_cover(is_exact => $is_exact3, n_solutions => 1);
+my @got_3 = $g3->set_cover( is_exact => $is_exact3, n_solutions => 1 );
 
-my $expected_3 = [['abcdefgh','ijklmnop']];
+my $expected_3 = [['abcdefgh', 'ijklmnop']];
 
-is_deeply(\@got_3, $expected_3,
-    "Counter-example for greedy algorithm for set cover");
-
+is_deeply( \@got_3, $expected_3,
+    "Counter-example for greedy algorithm for set cover" );
 
 =head2 Test 4. Set Cover: A Toy Example (Inexact cover)
 
@@ -159,21 +155,20 @@ my $g4 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options4) {
-    for (my $i = 0; $i < scalar @items4; $i++) {
+    for ( my $i = 0; $i < scalar @items4; $i++ ) {
         my $item = $items4[$i];
-        if ($option =~ /$item/) {
-            $g4->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g4->add_edge( $item, $option );
         }
     }
 }
 
-my @got4 = $g4->set_cover(is_exact => $is_exact4, n_solutions => 1);
+my @got4 = $g4->set_cover( is_exact => $is_exact4, n_solutions => 1 );
 
 my $expected4 = [['abef', 'cde']];
 
-is_deeply(\@got4, $expected4,
-    "Set cover: a toy example (tiny inexact cover)");
-
+is_deeply( \@got4, $expected4,
+    "Set cover: a toy example (tiny inexact cover)" );
 
 =head2 Test 5. Graph vertex cover
 
@@ -213,24 +208,23 @@ my $g5 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options5) {
-    for (my $i = 0; $i < @items5; $i++) {
+    for ( my $i = 0; $i < @items5; $i++ ) {
         my $item = $items5[$i];
-        if ($option =~ /$item/) {
-            $g5->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g5->add_edge( $item, $option );
         }
     }
 }
 
-unless ($g5->is_bipartite) {
+unless ( $g5->is_bipartite ) {
     die qq[Set cover only works on bipartite graphs!];
 }
 
-my @got5 = $g5->set_cover(is_exact => $is_exact5, n_solutions => 1);
+my @got5 = $g5->set_cover( is_exact => $is_exact5, n_solutions => 1 );
 
 my $expected5 = [['ab', 'cd', 'ef', 'gh']];
 
-is_deeply(\@got5, $expected5, "Graph vertex cover");
-
+is_deeply( \@got5, $expected5, "Graph vertex cover" );
 
 =head2 Test 6. Find the smallest team of Software developers
 
@@ -254,28 +248,27 @@ my $g6 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options6) {
-    for (my $i = 0; $i < @items6; $i++) {
+    for ( my $i = 0; $i < @items6; $i++ ) {
         my $item = $items6[$i];
-        if ($option =~ /$item/) {
-            $g6->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g6->add_edge( $item, $option );
         }
     }
 }
 
-unless ($g6->is_bipartite) {
+unless ( $g6->is_bipartite ) {
     die qq[Set cover only works on bipartite graphs!];
 }
 
-my @got6 = $g6->set_cover(is_exact => $is_exact6, n_solutions => 1);
+my @got6 = $g6->set_cover( is_exact => $is_exact6, n_solutions => 1 );
 
 my $got6 = $got6[0];
 @$got6 = sort { $a cmp $b } @$got6;
 
 my @expected6 = ['cj', 'drp'];
 
-is_deeply(\@got6, \@expected6,
-    "Find the smallest team of Software developers");
-
+is_deeply( \@got6, \@expected6,
+    "Find the smallest team of Software developers" );
 
 =head2 Test 7. An inexact set cover
 
@@ -304,27 +297,26 @@ my $g7 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options7) {
-    for (my $i = 0; $i < @items7; $i++) {
+    for ( my $i = 0; $i < @items7; $i++ ) {
         my $item = $items7[$i];
-        if ($option =~ /$item/) {
-            $g7->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g7->add_edge( $item, $option );
         }
     }
 }
 
-unless ($g7->is_bipartite) {
+unless ( $g7->is_bipartite ) {
     die qq[Set cover only works on bipartite graphs!];
 }
 
-my @got7 = $g7->set_cover(is_exact => $is_exact7, n_solutions => 1);
+my @got7 = $g7->set_cover( is_exact => $is_exact7, n_solutions => 1 );
 
 my $got7 = $got7[0];
 @$got7 = sort { $a cmp $b } @$got7;
 
-my @expected7 = ('adgj', 'bcehk', 'cfil');
+my @expected7 = ( 'adgj', 'bcehk', 'cfil' );
 
-is_deeply($got7, \@expected7, "Inexact set cover");
-
+is_deeply( $got7, \@expected7, "Inexact set cover" );
 
 =head2 Test 8. Set Cover and Applications to Shortest Superstring (Problem 1)
 
@@ -366,21 +358,20 @@ my $g8 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options8) {
-    for (my $i = 0; $i < @items8; $i++) {
+    for ( my $i = 0; $i < @items8; $i++ ) {
         my $item = $items8[$i];
-        if ($option =~ /$item/) {
-            $g8->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g8->add_edge( $item, $option );
         }
     }
 }
 
-my @got8 = $g8->set_cover(is_exact => $is_exact8, n_solutions => 1);
+my @got8 = $g8->set_cover( is_exact => $is_exact8, n_solutions => 1 );
 
 my $expected8 = [['abcd', 'cefgh', 'ijkl']];
 
-is_deeply(\@got8, $expected8,
-    "Set Cover and Applications to Shortest Superstring (Problem 1)");
-
+is_deeply( \@got8, $expected8,
+    "Set Cover and Applications to Shortest Superstring (Problem 1)" );
 
 =head2 Test 9. Set Cover and Applications to Shortest Superstring (Problem 2)
 
@@ -414,21 +405,20 @@ my $g9 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options9) {
-    for (my $i = 0; $i < @items9; $i++) {
+    for ( my $i = 0; $i < @items9; $i++ ) {
         my $item = $items9[$i];
-        if ($option =~ /$item/) {
-            $g9->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g9->add_edge( $item, $option );
         }
     }
 }
 
-my @got9 = $g9->set_cover(is_exact => $is_exact9, n_solutions => 1);
+my @got9 = $g9->set_cover( is_exact => $is_exact9, n_solutions => 1 );
 
 my $expected9 = [['abcde', 'efghi']];
 
-is_deeply(\@got9, $expected9,
-    "Set Cover and Applications to Shortest Superstring (Problem 2)");
-
+is_deeply( \@got9, $expected9,
+    "Set Cover and Applications to Shortest Superstring (Problem 2)" );
 
 =head2 Test 10. Set Cover Example from Syslo
 
@@ -454,20 +444,19 @@ my $g10 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options10) {
-    for (my $i = 0; $i < @items10; $i++) {
+    for ( my $i = 0; $i < @items10; $i++ ) {
         my $item = $items10[$i];
-        if ($option =~ /$item/) {
-            $g10->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g10->add_edge( $item, $option );
         }
     }
 }
 
-my @got10 = $g10->set_cover(is_exact => $is_exact10, n_solutions => 1);
+my @got10 = $g10->set_cover( is_exact => $is_exact10, n_solutions => 1 );
 
 my $expected10 = [['ace', 'bd']];
 
-is_deeply(\@got10, $expected10, "Set Cover Example from Syslo");
-
+is_deeply( \@got10, $expected10, "Set Cover Example from Syslo" );
 
 =head2 Test 11. Cornell optimization example
 
@@ -516,21 +505,20 @@ my $g11 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options11) {
-    for (my $i = 0; $i < @items11; $i++) {
+    for ( my $i = 0; $i < @items11; $i++ ) {
         my $item = $items11[$i];
-        if ($option =~ /$item/) {
-            $g11->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g11->add_edge( $item, $option );
         }
     }
 }
 
-my @got11 = $g11->set_cover(is_exact => $is_exact11, n_solutions => 2);
+my @got11 = $g11->set_cover( is_exact => $is_exact11, n_solutions => 2 );
 
 my $expected11
   = [['abno', 'beikm', 'cfjln', 'dghl'], ['acdfg', 'beikm', 'cfjln', 'hno']];
 
-is_deeply(\@got11, $expected11, "Cornell optimization example");
-
+is_deeply( \@got11, $expected11, "Cornell optimization example" );
 
 =head2 Test 12. Greedy Approximation - Set Cover (UMD)
 
@@ -548,20 +536,19 @@ my $g12 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options12) {
-    for (my $i = 0; $i < @items12; $i++) {
+    for ( my $i = 0; $i < @items12; $i++ ) {
         my $item = $items12[$i];
-        if ($option =~ /$item/) {
-            $g12->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g12->add_edge( $item, $option );
         }
     }
 }
 
-my @got12 = $g12->set_cover(is_exact => $is_exact12, n_solutions => 1);
+my @got12 = $g12->set_cover( is_exact => $is_exact12, n_solutions => 1 );
 
 my $expected12 = [['abcd', 'efgh', 'ijkl']];
 
-is_deeply(\@got12, $expected12, "Greedy Approximation - Set Cover (UMD)");
-
+is_deeply( \@got12, $expected12, "Greedy Approximation - Set Cover (UMD)" );
 
 =head2 Test 13. Dutta thesis example
 
@@ -585,20 +572,19 @@ my $g13 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options13) {
-    for (my $i = 0; $i < @items13; $i++) {
+    for ( my $i = 0; $i < @items13; $i++ ) {
         my $item = $items13[$i];
-        if ($option =~ /$item/) {
-            $g13->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g13->add_edge( $item, $option );
         }
     }
 }
 
-my @got13 = $g13->set_cover(is_exact => $is_exact13, n_solutions => 1);
+my @got13 = $g13->set_cover( is_exact => $is_exact13, n_solutions => 1 );
 
 my $expected13 = [['adgj', 'beghk', 'cfil']];
 
-is_deeply(\@got13, $expected13, "Dutta thesis example");
-
+is_deeply( \@got13, $expected13, "Dutta thesis example" );
 
 =head2 Test 14. Basic Modeling for Discrete Optimization 1.2.2
 
@@ -615,21 +601,20 @@ my $g14 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options14) {
-    for (my $i = 0; $i < @items14; $i++) {
+    for ( my $i = 0; $i < @items14; $i++ ) {
         my $item = $items14[$i];
-        if ($option =~ /$item/) {
-            $g14->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g14->add_edge( $item, $option );
         }
     }
 }
 
-my @got14 = $g14->set_cover(is_exact => $is_exact14, n_solutions => 1);
+my @got14 = $g14->set_cover( is_exact => $is_exact14, n_solutions => 1 );
 
 my $expected14 = [['abc', 'abfg', 'adf', 'aij', 'efhj']];
 
-is_deeply(\@got14, $expected14,
-    "Basic Modeling for Discrete Optimization 1.2.2");
-
+is_deeply( \@got14, $expected14,
+    "Basic Modeling for Discrete Optimization 1.2.2" );
 
 =head2 Test 15. Rule 1R. Zero Rows
 
@@ -647,19 +632,19 @@ my $g15 = YAGL->new;
 # Build the bipartite graph that represents the problem.
 
 for my $option (@options15) {
-    for (my $i = 0; $i < @items15; $i++) {
+    for ( my $i = 0; $i < @items15; $i++ ) {
         my $item = $items15[$i];
-        if ($option =~ /$item/) {
-            $g15->add_edge($item, $option);
+        if ( $option =~ /$item/ ) {
+            $g15->add_edge( $item, $option );
         }
     }
 }
 
-my @got15 = $g15->set_cover(is_exact => $is_exact15, n_solutions => 1);
+my @got15 = $g15->set_cover( is_exact => $is_exact15, n_solutions => 1 );
 
 my $expected15 = [];
 
-is_deeply(\@got15, $expected15, "Rule 1R. Zero Rows");
+is_deeply( \@got15, $expected15, "Rule 1R. Zero Rows" );
 
 =head2 Test 16. Set Cover Algorithms for Very Large Datasets
 
@@ -685,7 +670,7 @@ bcegiknoqsvwy bcegiknprtuwy acegjlnoqsuwy bdfhikmoqsuwy'
 do {
 
     my $infile = qq[$cwd/data/chess.smallest.pl];
-    my ($items16, $options16) = do $infile;
+    my ( $items16, $options16 ) = do $infile;
 
     say qq[Can't open $infile: $!] if $!;
 
@@ -693,22 +678,22 @@ do {
 
     my $g16 = YAGL->new;
 
-# Build the bipartite graph that represents the problem.
+    # Build the bipartite graph that represents the problem.
 
     for my $option (@$options16) {
-        for (my $i = 0; $i < @$items16; $i++) {
+        for ( my $i = 0; $i < @$items16; $i++ ) {
             my $item = $items16->[$i];
-            if ($option =~ /$item/) {
-                $g16->add_edge($item, $option);
+            if ( $option =~ /$item/ ) {
+                $g16->add_edge( $item, $option );
             }
         }
     }
 
-    unless ($g16->is_bipartite) {
+    unless ( $g16->is_bipartite ) {
         die qq[Set cover only works on bipartite graphs!];
     }
 
-    my @got16 = $g16->set_cover(is_exact => $is_exact16, n_solutions => 1);
+    my @got16 = $g16->set_cover( is_exact => $is_exact16, n_solutions => 1 );
     @got16 = sort { $a cmp $b } @got16;
 
     say qq[GOT16: @got16];
@@ -724,8 +709,8 @@ do {
         ]
     ];
 
-    is_deeply(\@got16, \@$expected16,
-        "Set Cover Algorithms for Very Large Datasets");
+    is_deeply( \@got16, \@$expected16,
+        "Set Cover Algorithms for Very Large Datasets" );
 
 } unless SKIP_BIG_TESTS;
 

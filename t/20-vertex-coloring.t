@@ -3509,3 +3509,9 @@ ok( $n2 == 4, "Chromatic number of H is 4 as expected." );
 $g->uncolor_vertices;
 
 ok( !$g->is_colored, "G is once again uncolored, as expected." );
+
+__END__
+
+# Local Variables:
+# compile-command: "cd .. && perl t/20-vertex-coloring.t"
+# End:

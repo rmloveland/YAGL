@@ -4,9 +4,7 @@ use strict;
 use warnings;
 no warnings 'recursion';
 use feature qw/ say state current_sub /;
-use Smart::Match;
 use Text::CSV;
-use GraphViz;
 use Hash::PriorityQueue;
 use Storable;
 use List::Util qw/ uniq /;
@@ -14,7 +12,6 @@ use List::Util qw/ uniq /;
 use constant DEBUG => undef;
 
 our $VERSION = '0.1';
-no warnings 'experimental';    # For Smart::Match
 
 =pod
 
@@ -205,8 +202,6 @@ number.
 
 =back
 
-=back
-
 =cut
 
 sub generate_random_vertices {
@@ -252,6 +247,8 @@ sub generate_random_vertices {
         $self->add_edge($pair->[0], $pair->[1], {weight => $pair->[2]});
     }
 }
+
+=back
 
 =head2 SERIALIZATION
 
@@ -396,39 +393,53 @@ Generate a Graphviz representation of this graph (really, a string).
 
 sub to_graphviz {
     ## ArrayRef -> String
-    my ($self) = @_;
+    my ( $self ) = @_;
 
+    my @buffer;
     my %seen;
 
-    my $gv = GraphViz->new(directed => $self->is_directed, style => 'filled');
+    push @buffer, qq[graph { \n];
 
-  VERTEX: for my $vertex ($self->get_vertices) {
+    VERTEX: for my $vertex ( $self->get_vertices ) {
         next VERTEX unless defined $vertex;
-        my $vertex_color = $self->get_vertex_color($vertex);
-        $gv->add_node($vertex, style => 'filled', fillcolor => $vertex_color);
         my $neighbors = $self->get_neighbors($vertex);
 
-      NEIGHBOR: for my $neighbor (@$neighbors) {
+        # "graph" is a keyword in `dot` and must be quoted.
+        $vertex = qq["graph"] if $vertex =~ /graph/;
+
+        NEIGHBOR: for my $neighbor (@$neighbors) {
             next NEIGHBOR unless defined $neighbor;
+
+            # "graph" is a keyword in `dot` and must be quoted.
+            $neighbor = qq["graph"] if $neighbor =~ /graph/;
+
+            # We create a line in the *.dot file for every
+            # vertex-neighbor pair. This is necessary to add the edge
+            # labels (in this case, weights).
+            push @buffer, $vertex;
+            push @buffer, qq[ -- ];
+            push @buffer, qq[ { ];
+
             my $edge_weight
               = $self->get_edge_attribute($vertex, $neighbor, 'weight');
             my $edge_color
               = $self->get_edge_attribute($vertex, $neighbor, 'color');
-            my $penwidth     = $edge_color ? "5" : "";
+            my $penwidth     = $edge_color ? "penwidth=5" : '';
             my $vertex_color = $self->get_vertex_color($neighbor);
-            $gv->add_node($neighbor, fillcolor => $vertex_color);
-            $gv->add_edge(
-                $vertex, $neighbor,
-                label    => $edge_weight,
-                color    => $edge_color,
-                penwidth => $penwidth,
-            ) unless $seen{$vertex . ';' . $neighbor};
+            my $fillcolor = $vertex_color ? qq[fillcolor=$vertex_color] : '';
+            my $label_edge_weight = $edge_weight ? qq{[label=$edge_weight]} : '';
+            my $vertex_label = qq[label=$neighbor];
+            my $color_edge_color = $edge_color ? qq[color=$edge_color] : '';
+            unless ($seen{$vertex . ';' . $neighbor}) {
+                push @buffer, qq{$neighbor [$fillcolor $vertex_label $color_edge_color $penwidth]};
+              }
             $seen{$neighbor . ';' . $vertex}++ unless $self->is_directed;
             $seen{$vertex . ';' . $neighbor}++;
-        }
+            push @buffer, qq[ } $label_edge_weight\n];
+          }
     }
-
-    return $gv->as_svg;
+    push @buffer, qq[ } ];
+    return join ' ', @buffer;
 }
 
 =item draw
@@ -449,11 +460,12 @@ sub draw {
     die qq[draw() must be passed a filename argument!] unless $basename;
 
     my $tmpdir   = $ENV{Temp} || $ENV{TMPDIR} || '/tmp';
-    my $filename = qq[$tmpdir/$basename.svg];
+    my $filename = qq[$tmpdir/$basename.dot];
     my $viz      = $self->to_graphviz;
     open my $fh, '>', $filename or die $!;
     say $fh $viz;
     close $fh;
+    system qq[dot -O -Tjpg $filename];
 }
 
 =back
@@ -499,7 +511,7 @@ sub is_complete {
     @vertices = sort { ($a || '') cmp($b || '') } @vertices;
     my @neighbors = sort { ($a || '') cmp($b || '') } @$neighbors;
 
-    return 1 if @vertices ~~ @neighbors;
+    return 1 if _array_eq(\@vertices, \@neighbors);
 
     return;
 }
@@ -955,7 +967,7 @@ sub edge_between {
     return 1 if $a eq $b;
 
     my $neighbors = $self->get_neighbors($a);
-    if ($b ~~ @$neighbors) {
+    if (_memberp($b, $neighbors)) {
         return 1;
     }
     else { return; }
@@ -1095,11 +1107,10 @@ yet exist, they will be created.
 =cut
 
 sub add_edges {
-    my ($self, @edges) = @_;
-
+    my ( $self, @edges ) = @_;
     for my $elem (@edges) {
-        my ($a, $b, $attrs) = @$elem;
-        $self->add_edge($a, $b, $attrs);
+        my ( $a, $b, $attrs ) = @$elem;
+        $self->add_edge( $a, $b, $attrs );
     }
 }
 
@@ -1754,44 +1765,43 @@ sub clone {
     return $copy;
 }
 
-=item equals
-
-Given two graphs I<A> and I<B>, The C<equals> method checks to see
-whether they are identical.  It checks the edges, vertices, and edge
-attributes to do so.
-
 =back
-
-=cut
-
-sub equals {
-    my ($self, $other) = @_;
-
-    return unless $self->isa('YAGL') && $other->isa('YAGL');
-
-    my @xs = $self->get_vertices;
-    my @ys = $other->get_vertices;
-
-    return unless @xs ~~ @ys;
-
-    my @es = $self->get_edges;
-    my @fs = $other->get_edges;
-
-    return unless @es ~~ @fs;
-
-    my $self_attrs  = $self->_edge_attrs;
-    my $other_attrs = $other->_edge_attrs;
-
-    return unless %$self_attrs ~~ %$other_attrs;
-
-    # TODO(rml): This method should also check vertex attributes.
-
-    return 1;
-}
 
 =head2 INTERNAL HELPER METHODS
 
 =over
+
+=item _array_eq
+
+Given two array references, are their contents equal?  NB. Only works on flat, non-nested arrays.
+
+=cut
+
+sub _array_eq {
+    my ( $xs, $ys ) = @_;
+    my $x = scalar @$xs;
+    my $y = scalar @$ys;
+    return unless $x == $y;
+    for ( my $i = 0 ; $i < @$xs ; $i++ ) {
+        my ( $this, $that ) = ( $xs->[$i], $ys->[$i] );
+        return unless $this eq $that;
+    }
+    return 1;
+}
+
+=item _memberp
+
+Given a string element and an array, return true if the element is in the array.
+
+=cut
+
+sub _memberp {
+    my ( $item, $array_ref ) = @_;
+    for my $element (@$array_ref) {
+        return 1 if $element eq $item;
+    }
+    return;
+}
 
 =item _add_neighbor
 
@@ -1816,7 +1826,9 @@ EOF
     if ($self->has_vertex($vertex)) {
         my $neighbors = $self->get_neighbors($vertex);
         for my $value (@$new_neighbor) {
-            push @$neighbors, $value unless $value ~~ @$neighbors;
+          unless (_memberp($value, $neighbors)) {
+            push @$neighbors, $value;
+          }
         }
         $self->{$vertex} = $neighbors;
     }
@@ -2040,7 +2052,7 @@ EOF
         my ($count, @adjacent_colors) = $self->get_color_degree($v);
         for my $color (@colors) {
             $self->set_vertex_color($v, $color)
-              unless $color ~~ @adjacent_colors;
+              unless _memberp($color, \@adjacent_colors);
         }
         @vertices_by_color_degree
           = sort { $self->get_color_degree($a) > $self->get_color_degree($b) }
@@ -2155,7 +2167,7 @@ sub set_cover {
     my $lambda = sub {
         my ($current, $path) = @_;
 
-        my @path_options = grep { $_ ~~ @options } @$path;
+        my @path_options = grep { _memberp($_, \@options) } @$path;
         my $path_options = join ';', sort @path_options;
 
         if (_covers_all_items(\@path_options, \@items)) {
@@ -2203,7 +2215,7 @@ sub set_cover {
     my @wanted;
 
     for my $item (@items) {
-        unless ($item ~~ @option_elems) {
+        unless (_memberp($item, \@option_elems)) {
             goto END;
         }
     }
@@ -2261,7 +2273,7 @@ sub _covers_all_items {
     @item_elems = sort { $a cmp $b } @$the_items;
 
     for (my $i = 0; $i < @item_elems; $i++) {
-        unless ($item_elems[$i] ~~ @option_elems) {
+        unless (_memberp($item_elems[$i], \@option_elems)) {
             say qq[    NO] if DEBUG;
             return;
         }
