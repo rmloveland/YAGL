@@ -393,7 +393,7 @@ Generate a Graphviz representation of this graph (really, a string).
 
 sub to_graphviz {
     ## ArrayRef -> String
-    my ( $self ) = @_;
+    my ( $self, $path ) = @_;
 
     my @buffer;
     my %seen;
@@ -402,6 +402,10 @@ sub to_graphviz {
 
     VERTEX: for my $vertex ( $self->get_vertices ) {
         next VERTEX unless defined $vertex;
+        if (defined $path && _memberp($vertex, $path)) {
+          push @buffer, qq{$vertex [style=filled fillcolor=red] \n};
+        }
+
         my $neighbors = $self->get_neighbors($vertex);
 
         # "graph" is a keyword in `dot` and must be quoted.
@@ -409,6 +413,8 @@ sub to_graphviz {
 
         NEIGHBOR: for my $neighbor (@$neighbors) {
             next NEIGHBOR unless defined $neighbor;
+            next NEIGHBOR if $seen{$vertex . ';' . $neighbor};
+            next NEIGHBOR if $seen{$neighbor . ';' . $vertex};
 
             # "graph" is a keyword in `dot` and must be quoted.
             $neighbor = qq["graph"] if $neighbor =~ /graph/;
@@ -416,6 +422,10 @@ sub to_graphviz {
             # We create a line in the *.dot file for every
             # vertex-neighbor pair. This is necessary to add the edge
             # labels (in this case, weights).
+            if (defined $path && _memberp($neighbor, $path)) {
+              push @buffer, qq{$neighbor [style=filled fillcolor=red] \n};
+            }
+
             push @buffer, $vertex;
             push @buffer, qq[ -- ];
             push @buffer, qq[ { ];
@@ -455,13 +465,13 @@ in C<$TMPDIR>.
 
 sub draw {
     ## String -> State! IO!
-    my ($self, $basename) = @_;
+    my ($self, $basename, $path) = @_;
 
     die qq[draw() must be passed a filename argument!] unless $basename;
 
     my $tmpdir   = $ENV{Temp} || $ENV{TMPDIR} || '/tmp';
     my $filename = qq[$tmpdir/$basename.dot];
-    my $viz      = $self->to_graphviz;
+    my $viz      = $path ? $self->to_graphviz($path) : $self->to_graphviz;
     open my $fh, '>', $filename or die $!;
     say $fh $viz;
     close $fh;
@@ -1798,7 +1808,9 @@ Given a string element and an array, return true if the element is in the array.
 sub _memberp {
     my ( $item, $array_ref ) = @_;
     for my $element (@$array_ref) {
-        return 1 if $element eq $item;
+        if ($element eq $item) {
+          return 1;
+        }
     }
     return;
 }
