@@ -144,3 +144,9 @@ my $expected_01 = [
 
 is_deeply( $expected_01, \@got_01,
     "Dijkstra's algorithm works as expected - test #2." );
+
+__END__
+
+# Local Variables:
+# compile-command: "cd .. && perl t/04-dijkstra.t"
+# End:
