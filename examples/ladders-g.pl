@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use autodie;
 use feature qw/ say /;
-use Graph;
+use Graph::Undirected;
 
 sub main {
 
