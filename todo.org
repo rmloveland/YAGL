@@ -144,12 +144,12 @@
 
    In order for this to work, a graph needs to know whether it is a tree, which means it needs:
 
-   - [ ] g->is_tree method
-   - [ ] g->is_connected
+   - [ ] =g->is_tree= method
+   - [ ] =g->is_connected=
 
    Further, you will need a way to walk the tree, which requires:
 
-  - [ ] g->vertex->prev method
+  - [ ] =g->vertex->prev= method
     - This will replaces the current =$st->{$vertex}->{prev}=
       ad-hoc-ness
 
