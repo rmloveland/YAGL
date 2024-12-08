@@ -55,8 +55,6 @@ $g2->read_csv(qq[$cwd/data/three-triangles.csv]);
 
 my @path = map {$_->{vertex}} $g2->dijkstra('a', 'i');
 
-say STDERR qq[PATH: '@path'];
-
 chomp(my $got2 = $g2->to_graphviz(\@path));
 
 my $expected2 = <<"EOF";
