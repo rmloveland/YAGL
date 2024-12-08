@@ -687,6 +687,10 @@ vertices of the graph using the C<color_vertices> method.
 
 =back
 
+=head1 BUGS
+
+Undoubtedly! Please file any issues at L<https://github.com/rmloveland/YAGL>.
+
 =head1 AUTHOR
 
 Richard Loveland <r@rmloveland.com>

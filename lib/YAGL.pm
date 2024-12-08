@@ -2418,6 +2418,10 @@ sub complement {
 
 =back
 
+=head1 BUGS
+
+Undoubtedly! Please file any issues at L<https://github.com/rmloveland/YAGL>.
+
 =head1 AUTHOR
 
 Richard Loveland <r@rmloveland.com>
