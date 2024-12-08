@@ -37,7 +37,9 @@ version 0.1
     $g->add_edge( 'I_AM_A_TEST', 'abc123', { weight => 12345 } );
 
     # Write the graph out to a CSV file.  This file can be read back
-    # in later with the 'read_csv' method.
+    # in later with the 'read_csv' method. The CSV format is limited,
+    # it can only store the following columns:
+    # node,neighbor,weight,is_directed
 
     $g->write_csv('foo.csv');
 
@@ -61,6 +63,14 @@ version 0.1
     # language for passing along to graphviz tools like `dot`.
 
     my $dot_string = $g->to_graphviz;
+
+    # Color the vertices
+
+    $g->color_vertices;
+
+    # Find a Hamiltonian cycle in the graph, if any exist:
+
+    $g->hamiltonian_walks(closed => 1, n_solutions => 1);
 
 =head1 DESCRIPTION
 
@@ -201,10 +211,10 @@ Generate a Graphviz representation of this graph (really, a string).
 
 Given a file name, dumps a representation of the graph (as GraphViz)
 and uses C<dot> to build an image of the graph.  All of this happens
-in C<$TMPDIR>.
+in C<$TMPDIR>. This assumes you have a copy of C<dot> on your system.
 
     $g->draw('24-ham-00');
-    # To view the file, open $TMPDIR/24-ham-00.svg
+    # To view the file, open $TMPDIR/24-ham-00.jpg
 
 =back
 
@@ -247,6 +257,13 @@ C<color_vertices> method.
 Return true if this is a directed graph.  Graphs can only be marked as
 directed during object initialization, by setting the C<is_directed>
 argument to C<new>.
+
+=item C<is_bipartite>
+
+Returns true if the graph G is bipartite.  False otherwise.
+
+Note that this method operates on a copy of the graph, to avoid
+overwriting any existing vertex colorings.
 
 =back
 
@@ -457,6 +474,14 @@ Given an optional argument, will determine if it is a closed walk.
     $walk = qw/a f d b c e l m j k i h g/;
     $g->has_walk($walk, {closed => 1});
 
+=item paths_between
+
+Given two vertices I<START> and I<END>, return a list of all the paths
+between them.
+
+Note that this method is implemented using exhaustive search, so it
+will grind to a halt for larger graphs.
+
 =item find_path_between
 
 Given two vertices START and END in an unweighted graph, find the
@@ -532,17 +557,19 @@ The C<is_planar> method tests whether a graph is planar.
 
 Given a graph object, the C<clone> method makes a fresh copy of that object.
 
-=item equals
-
-Given two graphs I<A> and I<B>, The C<equals> method checks to see
-whether they are identical.  It checks the edges, vertices, and edge
-attributes to do so.
-
 =back
 
 =head2 INTERNAL HELPER METHODS
 
 =over
+
+=item _array_eq
+
+Given two array references, are their contents equal?  NB. Only works on flat, non-nested arrays.
+
+=item _memberp
+
+Given a string element and an array, return true if the element is in the array.
 
 =item _add_neighbor
 
@@ -620,6 +647,18 @@ The C<chromatic_number> method does not actually return the chromatic
 number.  It returns the number of colors that were used to color the
 vertices of the graph using the C<color_vertices> method.
 
+=item set_cover
+
+=item _covers_all_items
+
+=item del
+
+=item _disjoint
+
+=item get_anti_neighbors
+
+=item complement
+
 =back
 
 =pod
@@ -631,6 +670,8 @@ vertices of the graph using the C<color_vertices> method.
 =item Even, Shimon. I<Graph Algorithms>.
 
 =item Skiena, Steven. I<Implementing Discrete Mathematics>.
+
+=item Sedgewick, Robert. I<Algorithms, 2nd ed.>
 
 =back
 
@@ -652,7 +693,7 @@ Richard Loveland <r@rmloveland.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2019, 2020, 2021 by Rich Loveland
+This software is copyright (c) 2019, 2020, 2021, 2022, 2023, 2024 by Rich Loveland
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
