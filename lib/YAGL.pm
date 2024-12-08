@@ -52,7 +52,9 @@ version 0.1
     $g->add_edge( 'I_AM_A_TEST', 'abc123', { weight => 12345 } );
 
     # Write the graph out to a CSV file.  This file can be read back
-    # in later with the 'read_csv' method.
+    # in later with the 'read_csv' method. The CSV format is limited,
+    # it can only store the following columns:
+    # node,neighbor,weight,is_directed
 
     $g->write_csv('foo.csv');
 
@@ -76,6 +78,14 @@ version 0.1
     # language for passing along to graphviz tools like `dot`.
 
     my $dot_string = $g->to_graphviz;
+
+    # Color the vertices
+
+    $g->color_vertices;
+
+    # Find a Hamiltonian cycle in the graph, if any exist:
+
+    $g->hamiltonian_walks(closed => 1, n_solutions => 1);
 
 =head1 DESCRIPTION
 
@@ -456,10 +466,10 @@ sub to_graphviz {
 
 Given a file name, dumps a representation of the graph (as GraphViz)
 and uses C<dot> to build an image of the graph.  All of this happens
-in C<$TMPDIR>.
+in C<$TMPDIR>. This assumes you have a copy of C<dot> on your system.
 
     $g->draw('24-ham-00');
-    # To view the file, open $TMPDIR/24-ham-00.svg
+    # To view the file, open $TMPDIR/24-ham-00.jpg
 
 =cut
 
@@ -2392,6 +2402,8 @@ sub complement {
 
 =item Skiena, Steven. I<Implementing Discrete Mathematics>.
 
+=item Sedgewick, Robert. I<Algorithms, 2nd ed.>
+
 =back
 
 =head1 SEE ALSO
@@ -2412,7 +2424,7 @@ Richard Loveland <r@rmloveland.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2019, 2020, 2021 by Rich Loveland
+This software is copyright (c) 2019, 2020, 2021, 2022, 2023, 2024 by Rich Loveland
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
