@@ -1,8 +1,7 @@
+# Generated files, backup files, etc.
+
 *~
 TAGS
-
-# Generated files, etc.
-
 Build*
 Makefile*
 *.tar.gz
@@ -25,3 +24,5 @@ lib/YAGL_flymake.pm
 # Devel::Cover
 
 cover_db/
+
+# eof
